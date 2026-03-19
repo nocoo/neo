@@ -1,0 +1,133 @@
+/**
+ * SettingsView component tests.
+ */
+
+import { describe, it, expect, vi, beforeEach } from "vitest";
+import { render, screen, fireEvent, act } from "@testing-library/react";
+
+// ── Hoisted mocks ────────────────────────────────────────────────────────
+
+const { mockSettingsVM } = vi.hoisted(() => {
+  const mockSettingsVM = {
+    settings: {
+      userId: "test-user",
+      encryptionKeyHash: null,
+      theme: "system",
+      language: "en",
+    },
+    encryptionEnabled: false,
+    loading: false,
+    busy: false,
+    error: null,
+    handleUpdateTheme: vi.fn().mockResolvedValue(true),
+    handleUpdateLanguage: vi.fn().mockResolvedValue(true),
+    handleUpdateEncryption: vi.fn().mockResolvedValue(true),
+    reload: vi.fn().mockResolvedValue(undefined),
+    clearError: vi.fn(),
+  };
+
+  return { mockSettingsVM };
+});
+
+vi.mock("@/viewmodels/useSettingsViewModel", () => ({
+  useSettingsViewModel: () => mockSettingsVM,
+}));
+
+import { SettingsView } from "@/components/settings-view";
+
+beforeEach(() => {
+  vi.clearAllMocks();
+  mockSettingsVM.loading = false;
+  mockSettingsVM.busy = false;
+  mockSettingsVM.error = null;
+  mockSettingsVM.encryptionEnabled = false;
+  mockSettingsVM.settings = {
+    userId: "test-user",
+    encryptionKeyHash: null,
+    theme: "system",
+    language: "en",
+  };
+});
+
+// ── Tests ────────────────────────────────────────────────────────────────
+
+describe("SettingsView", () => {
+  it("renders page header", () => {
+    render(<SettingsView />);
+    expect(screen.getByText("Settings")).toBeDefined();
+  });
+
+  it("shows loading state", () => {
+    mockSettingsVM.loading = true;
+    render(<SettingsView />);
+    expect(screen.getByText("Loading settings...")).toBeDefined();
+  });
+
+  it("renders theme selector", () => {
+    render(<SettingsView />);
+    expect(screen.getByLabelText("Theme")).toBeDefined();
+  });
+
+  it("renders language selector", () => {
+    render(<SettingsView />);
+    expect(screen.getByLabelText("Display Language")).toBeDefined();
+  });
+
+  it("calls handleUpdateTheme on change", async () => {
+    render(<SettingsView />);
+
+    await act(async () => {
+      fireEvent.change(screen.getByLabelText("Theme"), {
+        target: { value: "dark" },
+      });
+    });
+
+    expect(mockSettingsVM.handleUpdateTheme).toHaveBeenCalledWith("dark");
+  });
+
+  it("calls handleUpdateLanguage on change", async () => {
+    render(<SettingsView />);
+
+    await act(async () => {
+      fireEvent.change(screen.getByLabelText("Display Language"), {
+        target: { value: "zh" },
+      });
+    });
+
+    expect(mockSettingsVM.handleUpdateLanguage).toHaveBeenCalledWith("zh");
+  });
+
+  it("shows encryption enabled", () => {
+    mockSettingsVM.encryptionEnabled = true;
+    render(<SettingsView />);
+    expect(screen.getByTestId("encryption-status").textContent).toBe("Enabled");
+  });
+
+  it("shows encryption disabled", () => {
+    render(<SettingsView />);
+    expect(screen.getByTestId("encryption-status").textContent).toBe("Disabled");
+  });
+
+  it("shows error banner", () => {
+    mockSettingsVM.error = "Something went wrong";
+    render(<SettingsView />);
+    expect(screen.getByText("Something went wrong")).toBeDefined();
+  });
+
+  it("dismisses error", () => {
+    mockSettingsVM.error = "Error";
+    render(<SettingsView />);
+    fireEvent.click(screen.getByText("Dismiss"));
+    expect(mockSettingsVM.clearError).toHaveBeenCalled();
+  });
+
+  it("reloads settings on button click", async () => {
+    render(<SettingsView />);
+
+    await act(async () => {
+      fireEvent.click(screen.getByText("Reload Settings"));
+    });
+
+    expect(mockSettingsVM.reload).toHaveBeenCalled();
+  });
+});
