@@ -492,16 +492,16 @@ worker/test/
 
 ### Phase 6: PWA + 离线 (8 commits)
 
-| # | Commit | 内容 |
-|---|--------|------|
-| 75 | `feat: configure serwist for pwa integration` | next.config.ts update |
-| 76 | `feat: implement service worker with caching strategies` | app/sw.ts |
-| 77 | `feat: configure complete pwa manifest` | app/manifest.ts |
-| 78 | `feat: implement offline queue with indexeddb` | lib/offline-queue.ts, ~15 tests |
-| 79 | `feat: implement background sync for offline operations` | ~10 tests |
-| 80 | `feat: register web+otpauth protocol handler` | lib/protocol-handler.ts |
-| 81 | `feat: create offline fallback page` | app/offline/ |
-| 82 | `feat: add pwa install prompt component` |  |
+| # | Commit | 内容 | Status |
+|---|--------|------|--------|
+| 75 | `feat: configure serwist for pwa integration` | next.config.ts update | ✅ |
+| 76 | `feat: implement service worker with caching strategies` | app/sw.ts | ✅ |
+| 77 | `feat: configure complete pwa manifest` | app/manifest.ts | ✅ |
+| 78 | `feat: implement offline queue with indexeddb` | lib/offline-queue.ts, 17 tests | ✅ |
+| 79 | `feat: implement background sync for offline operations` | 12 tests | ✅ |
+| 80 | `feat: register web+otpauth protocol handler` | lib/protocol-handler.ts, 11 tests | ✅ |
+| 81 | `feat: create offline fallback page` | app/offline/, 8 tests | ✅ |
+| 82 | `feat: add pwa install prompt component` | 10 tests, 639 total | ✅ |
 
 ### Phase 7: E2E 测试 + 部署 (10 commits)
 
