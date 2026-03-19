@@ -4,7 +4,7 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   output: "standalone",
-  allowedDevOrigins: ["https://neo.dev.hexly.ai"],
+  allowedDevOrigins: ["neo.dev.hexly.ai"],
 };
 
 // Only apply Serwist webpack plugin for production builds.
