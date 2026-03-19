@@ -9,6 +9,22 @@ import { Archive, Download, Trash2, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useBackupViewModel } from "@/viewmodels/useBackupViewModel";
 import { useDashboardState } from "@/contexts/dashboard-context";
+import type { Backup } from "@/models/types";
+
+/**
+ * Trigger a JSON file download in the browser.
+ */
+function downloadBackup(backup: Backup): void {
+  const blob = new Blob([backup.data], { type: "application/json" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = backup.filename;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
 
 // ── Component ────────────────────────────────────────────────────────────
 
@@ -110,7 +126,7 @@ export function BackupView() {
                   {backup.createdAt.toLocaleDateString()}
                 </p>
               </div>
-              <Button variant="ghost" size="icon" className="h-8 w-8" aria-label={`Download ${backup.filename}`}>
+              <Button variant="ghost" size="icon" className="h-8 w-8" aria-label={`Download ${backup.filename}`} onClick={() => downloadBackup(backup)}>
                 <Download className="h-3.5 w-3.5" />
               </Button>
             </div>

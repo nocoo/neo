@@ -143,4 +143,22 @@ describe("BackupView", () => {
     // loadBackups called once on mount + once on refresh
     expect(mockBackupVM.loadBackups).toHaveBeenCalledTimes(2);
   });
+
+  it("triggers download when download button clicked", () => {
+    mockBackupVM.backups = [sampleBackup];
+    mockBackupVM.backupCount = 1;
+
+    // Spy on URL.createObjectURL and URL.revokeObjectURL
+    const createObjectURL = vi.fn().mockReturnValue("blob:mock");
+    const revokeObjectURL = vi.fn();
+    globalThis.URL.createObjectURL = createObjectURL;
+    globalThis.URL.revokeObjectURL = revokeObjectURL;
+
+    render(<BackupView />);
+
+    fireEvent.click(screen.getByLabelText("Download backup_20260319.json"));
+
+    expect(createObjectURL).toHaveBeenCalledWith(expect.any(Blob));
+    expect(revokeObjectURL).toHaveBeenCalledWith("blob:mock");
+  });
 });
