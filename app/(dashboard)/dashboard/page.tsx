@@ -1,10 +1,14 @@
-export default function DashboardPage() {
+import { getDashboardData } from "@/actions/dashboard";
+import { DashboardProvider } from "@/contexts/dashboard-context";
+import { SecretsView } from "@/components/secrets-view";
+
+export default async function DashboardPage() {
+  const result = await getDashboardData();
+  const initialData = result.success ? result.data : undefined;
+
   return (
-    <div>
-      <h1 className="text-2xl font-semibold">Secrets</h1>
-      <p className="mt-2 text-muted-foreground">
-        Manage your 2FA secrets here.
-      </p>
-    </div>
+    <DashboardProvider initialData={initialData}>
+      <SecretsView />
+    </DashboardProvider>
   );
 }
