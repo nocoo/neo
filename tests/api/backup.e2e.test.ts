@@ -26,6 +26,7 @@ import {
   getBackupCount,
   createManualBackup,
   cleanupBackups,
+  restoreBackup,
 } from "@/actions/backup";
 
 // ── Reset ────────────────────────────────────────────────────────────────
@@ -172,6 +173,58 @@ describe("Backup operations — API E2E", () => {
 
       const countAfter = await getBackupCount();
       expect(countAfter.data).toBe(2);
+    });
+  });
+
+  // ── Restore ─────────────────────────────────────────────────────────
+
+  describe("restoreBackup", () => {
+    it("restores secrets from backup data", async () => {
+      const backupData = JSON.stringify([
+        { name: "GitHub", secret: "JBSWY3DPEHPK3PXP" },
+        { name: "AWS", secret: "GEZDGNBVGY3TQOJQ" },
+      ]);
+
+      const result = await restoreBackup(backupData);
+      expect(result.success).toBe(true);
+      expect(result.data!.imported).toBe(2);
+      expect(result.data!.skipped).toBe(0);
+      expect(result.data!.duplicates).toBe(0);
+    });
+
+    it("skips duplicates from existing secrets", async () => {
+      // Import first
+      await restoreBackup(JSON.stringify([
+        { name: "GitHub", secret: "JBSWY3DPEHPK3PXP" },
+      ]));
+
+      // Try to restore the same data again
+      const result = await restoreBackup(JSON.stringify([
+        { name: "GitHub", secret: "JBSWY3DPEHPK3PXP" },
+        { name: "AWS", secret: "GEZDGNBVGY3TQOJQ" },
+      ]));
+
+      expect(result.success).toBe(true);
+      expect(result.data!.imported).toBe(1);
+      expect(result.data!.duplicates).toBe(1);
+    });
+
+    it("rejects empty backup data", async () => {
+      const result = await restoreBackup("");
+      expect(result.success).toBe(false);
+      expect(result.error).toContain("required");
+    });
+
+    it("rejects invalid JSON", async () => {
+      const result = await restoreBackup("not json");
+      expect(result.success).toBe(false);
+      expect(result.error).toContain("Invalid JSON");
+    });
+
+    it("rejects empty array", async () => {
+      const result = await restoreBackup("[]");
+      expect(result.success).toBe(false);
+      expect(result.error).toContain("no secrets");
     });
   });
 });

@@ -4,8 +4,8 @@
  * BackupView — client component for backup management.
  */
 
-import { useEffect, useCallback } from "react";
-import { Archive, Download, Trash2, RefreshCw } from "lucide-react";
+import { useEffect, useCallback, useRef } from "react";
+import { Archive, Download, Trash2, RefreshCw, Upload, RotateCcw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useBackupViewModel } from "@/viewmodels/useBackupViewModel";
 import { useDashboardState } from "@/contexts/dashboard-context";
@@ -31,6 +31,7 @@ function downloadBackup(backup: Backup): void {
 export function BackupView() {
   const vm = useBackupViewModel();
   const { secrets } = useDashboardState();
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Load backups on mount
   useEffect(() => {
@@ -55,6 +56,35 @@ export function BackupView() {
     await vm.handleCreateBackup(secretsJson);
   }, [secrets, vm]);
 
+  // Restore from an existing backup in the list
+  const handleRestoreFromBackup = useCallback(
+    async (backup: Backup) => {
+      await vm.handleRestore(backup.data);
+    },
+    [vm]
+  );
+
+  // Upload and restore from a JSON file
+  const handleFileRestore = useCallback(
+    async (event: React.ChangeEvent<HTMLInputElement>) => {
+      const file = event.target.files?.[0];
+      if (!file) return;
+
+      try {
+        const text = await file.text();
+        await vm.handleRestore(text);
+      } catch {
+        // Error will be set in vm
+      }
+
+      // Reset file input so the same file can be selected again
+      if (fileInputRef.current) {
+        fileInputRef.current.value = "";
+      }
+    },
+    [vm]
+  );
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -69,6 +99,23 @@ export function BackupView() {
           </p>
         </div>
         <div className="flex items-center gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => fileInputRef.current?.click()}
+            disabled={vm.busy}
+          >
+            <Upload className="h-4 w-4 mr-1" />
+            Upload Restore
+          </Button>
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept=".json"
+            className="hidden"
+            onChange={handleFileRestore}
+            data-testid="restore-file-input"
+          />
           <Button
             variant="outline"
             size="sm"
@@ -126,9 +173,14 @@ export function BackupView() {
                   {backup.createdAt.toLocaleDateString()}
                 </p>
               </div>
-              <Button variant="ghost" size="icon" className="h-8 w-8" aria-label={`Download ${backup.filename}`} onClick={() => downloadBackup(backup)}>
-                <Download className="h-3.5 w-3.5" />
-              </Button>
+              <div className="flex items-center gap-1">
+                <Button variant="ghost" size="icon" className="h-8 w-8" aria-label={`Restore ${backup.filename}`} onClick={() => handleRestoreFromBackup(backup)} disabled={vm.busy}>
+                  <RotateCcw className="h-3.5 w-3.5" />
+                </Button>
+                <Button variant="ghost" size="icon" className="h-8 w-8" aria-label={`Download ${backup.filename}`} onClick={() => downloadBackup(backup)}>
+                  <Download className="h-3.5 w-3.5" />
+                </Button>
+              </div>
             </div>
           ))}
         </div>

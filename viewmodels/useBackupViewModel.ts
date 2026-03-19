@@ -12,6 +12,7 @@ import {
   getBackups as getBackupsAction,
   createManualBackup as createManualBackupAction,
   cleanupBackups as cleanupBackupsAction,
+  restoreBackup as restoreBackupAction,
 } from "@/actions/backup";
 import type { Backup } from "@/models/types";
 
@@ -35,6 +36,8 @@ export interface BackupViewModelActions {
   loadBackups: () => Promise<void>;
   /** Create a manual backup of the given secrets JSON. */
   handleCreateBackup: (secretsJson: string) => Promise<boolean>;
+  /** Restore secrets from backup data (JSON string). */
+  handleRestore: (backupData: string) => Promise<{ imported: number; skipped: number; duplicates: number } | null>;
   /** Delete old backups beyond retention limit. */
   handleCleanup: () => Promise<{ deleted: number } | null>;
   /** Clear error state. */
@@ -98,6 +101,31 @@ export function useBackupViewModel(): BackupViewModel {
     [handleBackupCreated]
   );
 
+  // ── Restore from backup ──────────────────────────────────────────────
+
+  const handleRestore = useCallback(
+    async (
+      backupData: string
+    ): Promise<{ imported: number; skipped: number; duplicates: number } | null> => {
+      setBusy(true);
+      setError(null);
+      try {
+        const result = await restoreBackupAction(backupData);
+        if (result.success) {
+          return result.data;
+        }
+        setError(result.error);
+        return null;
+      } catch {
+        setError("Failed to restore backup");
+        return null;
+      } finally {
+        setBusy(false);
+      }
+    },
+    []
+  );
+
   // ── Cleanup old backups ───────────────────────────────────────────────
 
   const handleCleanup = useCallback(
@@ -136,6 +164,7 @@ export function useBackupViewModel(): BackupViewModel {
     error,
     loadBackups,
     handleCreateBackup,
+    handleRestore,
     handleCleanup,
     clearError,
   };

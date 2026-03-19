@@ -9,7 +9,8 @@
 import { getScopedDB } from "@/lib/auth-context";
 import { generateBackupFilename } from "@/models/backup";
 import { BACKUP_MAX_COUNT } from "@/models/constants";
-import type { ActionResult, Backup } from "@/models/types";
+import { batchImportSecrets } from "@/actions/secrets";
+import type { ActionResult, Backup, CreateSecretInput } from "@/models/types";
 
 /**
  * Simple FNV-1a hash for backup change detection.
@@ -133,5 +134,60 @@ export async function cleanupBackups(): Promise<ActionResult<{ deleted: number }
   } catch (error) {
     console.error("Failed to cleanup backups:", error);
     return { success: false, error: "Failed to cleanup backups" };
+  }
+}
+
+/**
+ * Restore secrets from a backup.
+ *
+ * Parses the backup JSON data and imports via batchImportSecrets,
+ * which handles duplicate detection automatically.
+ */
+export async function restoreBackup(
+  backupData: string
+): Promise<ActionResult<{ imported: number; skipped: number; duplicates: number }>> {
+  try {
+    const db = await getScopedDB();
+    if (!db) return { success: false, error: "Unauthorized" };
+
+    if (!backupData) {
+      return { success: false, error: "Backup data is required" };
+    }
+
+    // Parse the backup JSON
+    let parsed: unknown[];
+    try {
+      parsed = JSON.parse(backupData);
+      if (!Array.isArray(parsed)) {
+        return { success: false, error: "Invalid backup data format" };
+      }
+    } catch {
+      return { success: false, error: "Invalid JSON data" };
+    }
+
+    if (parsed.length === 0) {
+      return { success: false, error: "Backup contains no secrets" };
+    }
+
+    // Convert backup entries to CreateSecretInput
+    const inputs: CreateSecretInput[] = parsed.map((entry) => {
+      const e = entry as Record<string, unknown>;
+      return {
+        name: (e.name as string) || "",
+        account: (e.account as string) || undefined,
+        secret: (e.secret as string) || "",
+        type: e.type as CreateSecretInput["type"],
+        digits: e.digits as number | undefined,
+        period: e.period as number | undefined,
+        algorithm: e.algorithm as CreateSecretInput["algorithm"],
+        counter: e.counter as number | undefined,
+      };
+    });
+
+    // Delegate to batchImportSecrets (handles dedup + validation)
+    return await batchImportSecrets(inputs);
+  } catch (error) {
+    console.error("Failed to restore backup:", error);
+    return { success: false, error: "Failed to restore backup" };
   }
 }

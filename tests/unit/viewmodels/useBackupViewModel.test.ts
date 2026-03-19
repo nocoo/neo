@@ -11,12 +11,14 @@ const {
   mockGetBackups,
   mockCreateManualBackup,
   mockCleanupBackups,
+  mockRestoreBackup,
   mockUseDashboardState,
   mockHandleBackupCreated,
 } = vi.hoisted(() => {
   const mockGetBackups = vi.fn();
   const mockCreateManualBackup = vi.fn();
   const mockCleanupBackups = vi.fn();
+  const mockRestoreBackup = vi.fn();
   const mockUseDashboardState = vi.fn();
   const mockHandleBackupCreated = vi.fn();
 
@@ -24,6 +26,7 @@ const {
     mockGetBackups,
     mockCreateManualBackup,
     mockCleanupBackups,
+    mockRestoreBackup,
     mockUseDashboardState,
     mockHandleBackupCreated,
   };
@@ -33,6 +36,7 @@ vi.mock("@/actions/backup", () => ({
   getBackups: mockGetBackups,
   createManualBackup: mockCreateManualBackup,
   cleanupBackups: mockCleanupBackups,
+  restoreBackup: mockRestoreBackup,
 }));
 
 vi.mock("@/contexts/dashboard-context", () => ({
@@ -267,6 +271,53 @@ describe("useBackupViewModel", () => {
       });
 
       expect(result.current.error).toBe("Failed to cleanup backups");
+    });
+  });
+
+  describe("handleRestore", () => {
+    it("restores from backup data and returns result", async () => {
+      mockRestoreBackup.mockResolvedValue({
+        success: true,
+        data: { imported: 3, skipped: 0, duplicates: 1 },
+      });
+
+      const { result } = renderHook(() => useBackupViewModel());
+
+      let restoreResult: { imported: number; skipped: number; duplicates: number } | null;
+      await act(async () => {
+        restoreResult = await result.current.handleRestore('[{"name":"A","secret":"JBSWY3DPEHPK3PXP"}]');
+      });
+
+      expect(restoreResult!).toEqual({ imported: 3, skipped: 0, duplicates: 1 });
+      expect(mockRestoreBackup).toHaveBeenCalledWith('[{"name":"A","secret":"JBSWY3DPEHPK3PXP"}]');
+    });
+
+    it("sets error on failure", async () => {
+      mockRestoreBackup.mockResolvedValue({
+        success: false,
+        error: "Invalid JSON data",
+      });
+
+      const { result } = renderHook(() => useBackupViewModel());
+
+      const restoreResult = await act(async () => {
+        return await result.current.handleRestore("bad data");
+      });
+
+      expect(restoreResult).toBeNull();
+      expect(result.current.error).toBe("Invalid JSON data");
+    });
+
+    it("sets generic error on exception", async () => {
+      mockRestoreBackup.mockRejectedValue(new Error("fail"));
+
+      const { result } = renderHook(() => useBackupViewModel());
+
+      await act(async () => {
+        await result.current.handleRestore("[]");
+      });
+
+      expect(result.current.error).toBe("Failed to restore backup");
     });
   });
 

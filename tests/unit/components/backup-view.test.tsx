@@ -16,6 +16,7 @@ const { mockBackupVM, mockUseDashboardState } = vi.hoisted(() => {
     error: null,
     loadBackups: vi.fn(),
     handleCreateBackup: vi.fn(),
+    handleRestore: vi.fn(),
     handleCleanup: vi.fn(),
     clearError: vi.fn(),
   };
@@ -160,5 +161,33 @@ describe("BackupView", () => {
 
     expect(createObjectURL).toHaveBeenCalledWith(expect.any(Blob));
     expect(revokeObjectURL).toHaveBeenCalledWith("blob:mock");
+  });
+
+  it("renders restore button for each backup", () => {
+    mockBackupVM.backups = [sampleBackup];
+    mockBackupVM.backupCount = 1;
+
+    render(<BackupView />);
+
+    expect(screen.getByLabelText("Restore backup_20260319.json")).toBeDefined();
+  });
+
+  it("calls handleRestore when restore button clicked", async () => {
+    mockBackupVM.backups = [sampleBackup];
+    mockBackupVM.backupCount = 1;
+    mockBackupVM.handleRestore.mockResolvedValue({ imported: 0, skipped: 0, duplicates: 0 });
+
+    render(<BackupView />);
+
+    await act(async () => {
+      fireEvent.click(screen.getByLabelText("Restore backup_20260319.json"));
+    });
+
+    expect(mockBackupVM.handleRestore).toHaveBeenCalledWith("[]");
+  });
+
+  it("renders upload restore button", () => {
+    render(<BackupView />);
+    expect(screen.getByText("Upload Restore")).toBeDefined();
   });
 });
