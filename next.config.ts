@@ -2,15 +2,19 @@ import withSerwistInit from "@serwist/next";
 
 import type { NextConfig } from "next";
 
-const withSerwist = withSerwistInit({
-  swSrc: "app/sw.ts",
-  swDest: "public/sw.js",
-  disable: process.env.NODE_ENV === "development",
-});
-
 const nextConfig: NextConfig = {
   output: "standalone",
   allowedDevOrigins: ["https://neo.dev.hexly.ai"],
 };
 
-export default withSerwist(nextConfig);
+// Only apply Serwist webpack plugin for production builds.
+// In dev mode (Turbopack), skip it to avoid the webpack/turbopack mismatch warning.
+const isDev = process.env.NODE_ENV === "development";
+
+const withSerwist = withSerwistInit({
+  swSrc: "app/sw.ts",
+  swDest: "public/sw.js",
+  disable: isDev,
+});
+
+export default isDev ? nextConfig : withSerwist(nextConfig);
