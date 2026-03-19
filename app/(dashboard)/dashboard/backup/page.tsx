@@ -1,10 +1,14 @@
-export default function BackupPage() {
+import { getDashboardData } from "@/actions/dashboard";
+import { DashboardProvider } from "@/contexts/dashboard-context";
+import { BackupView } from "@/components/backup-view";
+
+export default async function BackupPage() {
+  const result = await getDashboardData();
+  const initialData = result.success ? result.data : undefined;
+
   return (
-    <div>
-      <h1 className="text-2xl font-semibold">Backup</h1>
-      <p className="mt-2 text-muted-foreground">
-        Manage your backups here.
-      </p>
-    </div>
+    <DashboardProvider initialData={initialData}>
+      <BackupView />
+    </DashboardProvider>
   );
 }
