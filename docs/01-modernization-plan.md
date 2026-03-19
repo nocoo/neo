@@ -321,7 +321,135 @@ neo/
 
 ---
 
-## 五、原子化提交计划
+## 五、原项目测试保留计划
+
+原项目共 ~593 个测试用例，全部保留并迁移到 TypeScript。下表列出每个测试文件的迁移策略。
+
+### 5.1 测试清单与迁移映射
+
+| 原文件 | 用例数 | 迁移目标 | 迁移策略 |
+|--------|--------|----------|----------|
+| `tests/setup.js` | — | `src/test/setup.ts` | 重写为 TS；Web Crypto polyfill 保留，新增 jest-dom + matchMedia + i18n |
+| `tests/otp/generator.test.js` | ~63 | `src/test/models/otp.test.ts` | **直接迁移**，RFC 6238/4226 测试向量全部保留，修复 P1 (counter 64 位统一) |
+| `tests/utils/encryption.test.js` | 24 | `src/test/models/encryption.test.ts` | **直接迁移**，AES-GCM 往返测试、篡改检测、IV 随机性全部保留 |
+| `tests/utils/validation.test.js` | 56 | `src/test/models/validation.test.ts` | **直接迁移**，Base32 校验、OTP 参数验证、密钥强度、排序、重复检测全部保留 |
+| `tests/utils/auth.test.js` | 54 | `src/test/models/auth.test.ts` | **迁移并修复 P6**：不再复制生产代码，改为直接 import 导出函数测试 |
+| `tests/utils/auth.integration.test.js` | 31 | `src/test/api/auth.e2e.test.ts` | **迁移为 L3 API E2E**：首次设置→登录→访问→刷新全链路保留 |
+| `tests/utils/backup.test.js` | 51 | `src/test/models/backup.test.ts` | **直接迁移**，防抖机制、加密/明文备份、自动清理、性能指标全部保留 |
+| `tests/utils/logger.test.js` | 66 | `worker/test/utils/logger.test.ts` | **直接迁移**，5 级日志、脱敏、PerformanceTimer、请求中间件全部保留；修复 P5 (null data) |
+| `tests/utils/monitoring.test.js` | ~79 | `worker/test/utils/monitoring.test.ts` | **直接迁移**，ErrorMonitor/PerformanceMonitor/MonitoringManager、Sentry 集成全部保留 |
+| `tests/utils/rateLimit.test.js` | 54 | `worker/test/middleware/rate-limit.test.ts` | **直接迁移**，固定窗口算法、5 种预设、withRateLimit 中间件、客户端识别全部保留 |
+| `tests/utils/rateLimitSlidingWindow.test.js` | 12 | `worker/test/middleware/rate-limit-sliding.test.ts` | **直接迁移**，滑动窗口、窗口边界攻击防护（关键安全测试）全部保留 |
+| `tests/utils/response.test.js` | 30 | `worker/test/utils/response.test.ts` | **直接迁移**，JSON/Error/Success/HTML 四种响应、安全头全部保留 |
+| `tests/utils/security.test.js` | 44 | `worker/test/middleware/security.test.ts` | **直接迁移**，CORS 同源判断、CSP、预检请求、IPv6、localhost 互通全部保留 |
+| `tests/api/secrets.test.js` | 30 | `src/test/api/secrets.e2e.test.ts` | **迁移为 L3 API E2E**：CRUD 全流程、加密透明性全部保留 |
+| `tests/api/batch.test.js` | 16 | `src/test/api/batch.e2e.test.ts` | **迁移为 L3 API E2E**：批量导入、部分失败、大批量全部保留 |
+| `tests/api/backup.test.js` | 34 | `src/test/api/backup.e2e.test.ts` | **迁移为 L3 API E2E**：备份创建/列表/恢复/导出(TXT/JSON/CSV)全部保留 |
+| `tests/router/handler.test.js` | 49 | `worker/test/router.test.ts` | **直接迁移**，路由分发、认证检查、405/404、CORS 预检全部保留 |
+
+### 5.2 迁移原则
+
+1. **用例数量不减少** — 原有 ~593 个用例全部保留，只增不减
+2. **JS → TS** — 所有测试文件从 `.js` 迁移到 `.ts`/`.tsx`，添加类型标注
+3. **MockKV 升级** — 原项目手工 MockKV 类统一提取为 `src/test/helpers/mock-kv.ts`，增加 TTL 过期模拟
+4. **RFC 向量不改** — OTP 的 RFC 6238/4226 官方测试向量原封不动保留
+5. **安全测试不改** — 滑动窗口边界攻击防护、JWT 篡改检测、AES-GCM 完整性校验原封不动保留
+6. **已知 bug 修复后更新断言** — P5 (logger null data) 修复后，测试从"验证抛异常"改为"验证正常处理"
+7. **P6 修复** — `auth.test.ts` 不再复制生产代码，改为直接 import 测试
+
+### 5.3 测试文件最终分布
+
+迁移完成后的测试目录结构：
+
+```
+src/test/
+├── setup.ts                              ← 从 tests/setup.js 迁移 + 扩展
+├── helpers/
+│   ├── mock-kv.ts                        ← 统一 MockKV 类（从各测试文件提取合并）
+│   ├── mock-env.ts                       ← createMockEnv() 工厂
+│   └── mock-request.ts                   ← createMockRequest() 工厂
+│
+├── models/                               ← L1 Model 层 UT（从原 tests/utils/ + tests/otp/ 迁移）
+│   ├── otp.test.ts                       ← 63 用例，RFC 向量
+│   ├── encryption.test.ts                ← 24 用例
+│   ├── validation.test.ts                ← 56 用例
+│   ├── auth.test.ts                      ← 54 用例（修复 P6，直接 import）
+│   ├── backup.test.ts                    ← 51 用例
+│   ├── import-parsers.test.ts            ← 新增，用原项目 20 个 fixture 文件编写
+│   └── export-formatters.test.ts         ← 新增，用原项目 17 个 fixture 文件编写
+│
+├── viewmodels/                           ← L1 ViewModel 层 UT（全部新增）
+│   ├── useAuthViewModel.test.ts
+│   ├── useSecretsViewModel.test.ts
+│   ├── useOtpViewModel.test.ts
+│   ├── useBackupViewModel.test.ts
+│   ├── useImportViewModel.test.ts
+│   ├── useExportViewModel.test.ts
+│   ├── useSearchViewModel.test.ts
+│   └── useToolsViewModel.test.ts
+│
+├── components/                           ← L1 Component 层 UT（全部新增）
+│   ├── SecretCard.test.tsx
+│   ├── OtpDisplay.test.tsx
+│   ├── CountdownRing.test.tsx
+│   └── QrScanner.test.tsx
+│
+├── pages/                                ← L1 Page 层冒烟测试（全部新增）
+│   ├── LoginPage.test.tsx
+│   ├── SetupPage.test.tsx
+│   ├── DashboardPage.test.tsx
+│   ├── BackupPage.test.tsx
+│   ├── ToolsPage.test.tsx
+│   └── SettingsPage.test.tsx
+│
+├── api/                                  ← L3 API E2E（从原 tests/api/ + auth.integration 迁移）
+│   ├── auth.e2e.test.ts                  ← 31 用例（从 auth.integration.test.js）
+│   ├── secrets.e2e.test.ts               ← 30 用例
+│   ├── batch.e2e.test.ts                 ← 16 用例
+│   ├── backup.e2e.test.ts                ← 34 用例
+│   ├── favicon.e2e.test.ts               ← 新增
+│   └── otp.e2e.test.ts                   ← 新增
+│
+├── e2e/                                  ← L4 BDD E2E Playwright（全部新增）
+│   ├── setup-flow.spec.ts
+│   ├── login-flow.spec.ts
+│   ├── secrets-crud.spec.ts
+│   ├── otp-generation.spec.ts
+│   ├── import-export.spec.ts
+│   └── backup-restore.spec.ts
+│
+└── fixtures/                             ← 从原 tests/fixtures/ 完整保留
+    ├── imports/                           ← 20 个导入格式文件
+    └── exports/                           ← 17 个导出格式文件
+
+worker/test/
+├── router.test.ts                        ← 49 用例（从 tests/router/handler.test.js）
+├── utils/
+│   ├── logger.test.ts                    ← 66 用例
+│   ├── monitoring.test.ts                ← 79 用例
+│   └── response.test.ts                  ← 30 用例
+└── middleware/
+    ├── rate-limit.test.ts                ← 54 用例
+    ├── rate-limit-sliding.test.ts        ← 12 用例
+    └── security.test.ts                  ← 44 用例
+```
+
+### 5.4 用例数量对比
+
+| 类别 | 原项目 | 迁移保留 | 新增 | 合计 |
+|------|--------|----------|------|------|
+| Model UT (OTP/加密/验证/认证/备份) | 248 | 248 | ~120 (import/export parsers) | ~368 |
+| Worker UT (日志/监控/响应/限流/安全/路由) | 334 | 334 | — | 334 |
+| ViewModel UT | 0 | — | ~64 | ~64 |
+| Component UT | 0 | — | ~32 | ~32 |
+| Page 冒烟测试 | 0 | — | ~24 | ~24 |
+| API E2E (L3) | 11 (auth integration) | 111 | ~20 (favicon/otp) | ~131 |
+| BDD E2E (L4) | 0 | — | ~30 | ~30 |
+| **合计** | **~593** | **~593** | **~290** | **~983** |
+
+---
+
+## 六、原子化提交计划 {#commits}
 
 每个 commit 仅含一个逻辑变更，确保可通过测试且可构建。
 
@@ -407,7 +535,7 @@ neo/
 
 ---
 
-## 六、版本管理
+## 七、版本管理
 
 - **版本号来源**：`package.json` (单一事实来源)
 - **显示位置**：Sidebar badge (`v0.1.0`), `/api/live` 返回
