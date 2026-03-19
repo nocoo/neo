@@ -7,11 +7,13 @@
 import { Button } from "@/components/ui/button";
 import { useSettingsViewModel } from "@/viewmodels/useSettingsViewModel";
 import { Shield, Palette, Globe } from "lucide-react";
+import { useTheme } from "next-themes";
 
 // ── Component ────────────────────────────────────────────────────────────
 
 export function SettingsView() {
   const vm = useSettingsViewModel();
+  const { setTheme, theme: activeTheme } = useTheme();
 
   if (vm.loading) {
     return (
@@ -57,8 +59,12 @@ export function SettingsView() {
           </label>
           <select
             id="theme-select"
-            value={vm.settings?.theme ?? "system"}
-            onChange={(e) => vm.handleUpdateTheme(e.target.value)}
+            value={activeTheme ?? "system"}
+            onChange={(e) => {
+              const newTheme = e.target.value;
+              setTheme(newTheme);
+              vm.handleUpdateTheme(newTheme);
+            }}
             disabled={vm.busy}
             className="w-full max-w-xs rounded-md border border-input bg-background px-3 py-2 text-sm"
           >
@@ -89,6 +95,9 @@ export function SettingsView() {
             <option value="en">English</option>
             <option value="zh">Chinese</option>
           </select>
+          <p className="text-xs text-muted-foreground">
+            Multi-language support coming soon. Your preference is saved for future use.
+          </p>
         </div>
       </div>
 

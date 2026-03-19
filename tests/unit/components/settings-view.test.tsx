@@ -7,7 +7,7 @@ import { render, screen, fireEvent, act } from "@testing-library/react";
 
 // ── Hoisted mocks ────────────────────────────────────────────────────────
 
-const { mockSettingsVM } = vi.hoisted(() => {
+const { mockSettingsVM, mockSetTheme } = vi.hoisted(() => {
   const mockSettingsVM = {
     settings: {
       userId: "test-user",
@@ -26,11 +26,20 @@ const { mockSettingsVM } = vi.hoisted(() => {
     clearError: vi.fn(),
   };
 
-  return { mockSettingsVM };
+  const mockSetTheme = vi.fn();
+
+  return { mockSettingsVM, mockSetTheme };
 });
 
 vi.mock("@/viewmodels/useSettingsViewModel", () => ({
   useSettingsViewModel: () => mockSettingsVM,
+}));
+
+vi.mock("next-themes", () => ({
+  useTheme: () => ({
+    theme: "system",
+    setTheme: mockSetTheme,
+  }),
 }));
 
 import { SettingsView } from "@/components/settings-view";
@@ -73,7 +82,7 @@ describe("SettingsView", () => {
     expect(screen.getByLabelText("Display Language")).toBeDefined();
   });
 
-  it("calls handleUpdateTheme on change", async () => {
+  it("calls setTheme and handleUpdateTheme on change", async () => {
     render(<SettingsView />);
 
     await act(async () => {
@@ -82,6 +91,7 @@ describe("SettingsView", () => {
       });
     });
 
+    expect(mockSetTheme).toHaveBeenCalledWith("dark");
     expect(mockSettingsVM.handleUpdateTheme).toHaveBeenCalledWith("dark");
   });
 
@@ -119,6 +129,11 @@ describe("SettingsView", () => {
     render(<SettingsView />);
     fireEvent.click(screen.getByText("Dismiss"));
     expect(mockSettingsVM.clearError).toHaveBeenCalled();
+  });
+
+  it("shows coming soon note for language", () => {
+    render(<SettingsView />);
+    expect(screen.getByText(/coming soon/i)).toBeDefined();
   });
 
   it("reloads settings on button click", async () => {
