@@ -15,7 +15,7 @@ export interface ImportDialogProps {
   open: boolean;
   onClose: () => void;
   onParse: (content: string, format?: ImportFormat) => void;
-  onImport: (secrets: { name: string; secret: string; account?: string }[]) => Promise<{ imported: number; skipped: number } | null>;
+  onImport: (secrets: { name: string; secret: string; account?: string }[]) => Promise<{ imported: number; skipped: number; duplicates: number } | null>;
   parsedSecrets: ParsedSecret[];
   detectedFormat: ImportFormat | null;
   error: string | null;

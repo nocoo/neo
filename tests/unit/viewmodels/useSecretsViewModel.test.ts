@@ -464,7 +464,7 @@ describe("useSecretsViewModel", () => {
     it("imports and reloads secrets on success", async () => {
       mockBatchImport.mockResolvedValue({
         success: true,
-        data: { imported: 3, skipped: 1 },
+        data: { imported: 3, skipped: 1, duplicates: 0 },
       });
       mockGetSecrets.mockResolvedValue({
         success: true,
@@ -473,7 +473,7 @@ describe("useSecretsViewModel", () => {
 
       const { result } = renderHook(() => useSecretsViewModel());
 
-      let importResult: { imported: number; skipped: number } | null;
+      let importResult: { imported: number; skipped: number; duplicates: number } | null;
       await act(async () => {
         importResult = await result.current.handleBatchImport([
           { name: "A", secret: "AAAA" },
@@ -481,7 +481,7 @@ describe("useSecretsViewModel", () => {
         ]);
       });
 
-      expect(importResult!).toEqual({ imported: 3, skipped: 1 });
+      expect(importResult!).toEqual({ imported: 3, skipped: 1, duplicates: 0 });
       expect(mockHandleSecretsReloaded).toHaveBeenCalledWith([sampleSecret, sampleSecret2]);
     });
 
@@ -493,7 +493,7 @@ describe("useSecretsViewModel", () => {
 
       const { result } = renderHook(() => useSecretsViewModel());
 
-      let importResult: { imported: number; skipped: number } | null;
+      let importResult: { imported: number; skipped: number; duplicates: number } | null;
       await act(async () => {
         importResult = await result.current.handleBatchImport([]);
       });

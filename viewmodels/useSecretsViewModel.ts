@@ -47,7 +47,7 @@ export interface SecretsViewModelActions {
   handleCreate: (input: CreateSecretInput) => Promise<boolean>;
   handleUpdate: (input: UpdateSecretInput) => Promise<boolean>;
   handleDelete: (id: string) => Promise<boolean>;
-  handleBatchImport: (secrets: CreateSecretInput[]) => Promise<{ imported: number; skipped: number } | null>;
+  handleBatchImport: (secrets: CreateSecretInput[]) => Promise<{ imported: number; skipped: number; duplicates: number } | null>;
   refreshOtp: (secretId: string) => Promise<void>;
   clearError: () => void;
 }
@@ -226,7 +226,7 @@ export function useSecretsViewModel(): SecretsViewModel {
   const handleBatchImport = useCallback(
     async (
       importSecrets: CreateSecretInput[]
-    ): Promise<{ imported: number; skipped: number } | null> => {
+    ): Promise<{ imported: number; skipped: number; duplicates: number } | null> => {
       setBusy(true);
       setError(null);
       try {

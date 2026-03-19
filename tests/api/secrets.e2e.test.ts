@@ -356,8 +356,37 @@ describe("Secret CRUD — API E2E", () => {
         { name: "C", secret: "GEZDGNBVGY3TQOJQ" },
       ]);
 
+      // A, B, C all have different names — all should be imported
       const count = await getSecretCount();
       expect(count.data).toBe(3);
+    });
+
+    it("skips within-batch duplicates (same name + secret)", async () => {
+      const result = await batchImportSecrets([
+        { name: "GitHub", secret: "JBSWY3DPEHPK3PXP" },
+        { name: "GitHub", secret: "JBSWY3DPEHPK3PXP" },
+      ]);
+
+      expect(result.success).toBe(true);
+      expect(result.data!.imported).toBe(1);
+      expect(result.data!.duplicates).toBe(1);
+    });
+
+    it("skips duplicates of existing secrets", async () => {
+      // Create a secret first
+      await createSecret({ name: "GitHub", secret: "JBSWY3DPEHPK3PXP" });
+
+      const result = await batchImportSecrets([
+        { name: "GitHub", secret: "JBSWY3DPEHPK3PXP" },
+        { name: "AWS", secret: "GEZDGNBVGY3TQOJQ" },
+      ]);
+
+      expect(result.success).toBe(true);
+      expect(result.data!.imported).toBe(1);
+      expect(result.data!.duplicates).toBe(1);
+
+      const count = await getSecretCount();
+      expect(count.data).toBe(2); // 1 original + 1 new
     });
   });
 });

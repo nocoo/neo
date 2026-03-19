@@ -296,6 +296,7 @@ describe("getSecretCount", () => {
 
 describe("batchImportSecrets", () => {
   it("imports valid secrets", async () => {
+    mockGetSecrets.mockResolvedValue([]);
     mockCreateSecret.mockResolvedValue(sampleSecret);
     const result = await batchImportSecrets([
       { name: "GitHub", secret: "JBSWY3DPEHPK3PXP" },
@@ -309,6 +310,7 @@ describe("batchImportSecrets", () => {
   });
 
   it("skips invalid secrets", async () => {
+    mockGetSecrets.mockResolvedValue([]);
     mockCreateSecret.mockResolvedValue(sampleSecret);
     const result = await batchImportSecrets([
       { name: "GitHub", secret: "JBSWY3DPEHPK3PXP" },
@@ -338,6 +340,7 @@ describe("batchImportSecrets", () => {
   });
 
   it("handles individual create failures", async () => {
+    mockGetSecrets.mockResolvedValue([]);
     mockCreateSecret
       .mockResolvedValueOnce(sampleSecret)
       .mockRejectedValueOnce(new Error("Conflict"));
@@ -349,6 +352,36 @@ describe("batchImportSecrets", () => {
     if (result.success) {
       expect(result.data.imported).toBe(1);
       expect(result.data.skipped).toBe(1);
+    }
+  });
+
+  it("skips duplicates against existing secrets", async () => {
+    mockGetSecrets.mockResolvedValue([
+      { ...sampleSecret, name: "GitHub", secret: "JBSWY3DPEHPK3PXP" },
+    ]);
+    mockCreateSecret.mockResolvedValue(sampleSecret);
+    const result = await batchImportSecrets([
+      { name: "GitHub", secret: "JBSWY3DPEHPK3PXP" },
+      { name: "AWS", secret: "GEZDGNBVGY3TQOJQ" },
+    ]);
+    expect(result.success).toBe(true);
+    if (result.success) {
+      expect(result.data.imported).toBe(1);
+      expect(result.data.duplicates).toBe(1);
+    }
+  });
+
+  it("skips within-batch duplicates", async () => {
+    mockGetSecrets.mockResolvedValue([]);
+    mockCreateSecret.mockResolvedValue(sampleSecret);
+    const result = await batchImportSecrets([
+      { name: "GitHub", secret: "JBSWY3DPEHPK3PXP" },
+      { name: "GitHub", secret: "JBSWY3DPEHPK3PXP" },
+    ]);
+    expect(result.success).toBe(true);
+    if (result.success) {
+      expect(result.data.imported).toBe(1);
+      expect(result.data.duplicates).toBe(1);
     }
   });
 

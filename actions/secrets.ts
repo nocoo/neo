@@ -180,7 +180,7 @@ export async function getSecretCount(): Promise<ActionResult<number>> {
  */
 export async function batchImportSecrets(
   secrets: CreateSecretInput[]
-): Promise<ActionResult<{ imported: number; skipped: number }>> {
+): Promise<ActionResult<{ imported: number; skipped: number; duplicates: number }>> {
   try {
     const db = await getScopedDB();
     if (!db) return { success: false, error: "Unauthorized" };
@@ -193,8 +193,18 @@ export async function batchImportSecrets(
       return { success: false, error: "Maximum 100 secrets per import" };
     }
 
+    // Load existing secrets for duplicate detection (name + secret combo)
+    const existing = await db.getSecrets();
+    const existingKeys = new Set(
+      existing.map((s) => `${s.name.toLowerCase()}::${s.secret.toLowerCase()}`)
+    );
+
+    // Track within-batch duplicates too
+    const batchKeys = new Set<string>();
+
     let imported = 0;
     let skipped = 0;
+    let duplicates = 0;
 
     for (const input of secrets) {
       try {
@@ -203,13 +213,23 @@ export async function batchImportSecrets(
           continue;
         }
 
+        const normalizedSecret = input.secret.toUpperCase().replace(/\s/g, "");
+        const dedupKey = `${input.name.trim().toLowerCase()}::${normalizedSecret.toLowerCase()}`;
+
+        // Skip if duplicate of existing secret or already in this batch
+        if (existingKeys.has(dedupKey) || batchKeys.has(dedupKey)) {
+          duplicates++;
+          continue;
+        }
+        batchKeys.add(dedupKey);
+
         const id = `s_${Date.now().toString(36)}_${Math.random().toString(36).substring(2, 8)}`;
 
         await db.createSecret({
           id,
           name: input.name.trim(),
           account: input.account?.trim() || null,
-          secret: input.secret.toUpperCase().replace(/\s/g, ""),
+          secret: normalizedSecret,
           type: input.type ?? OTP_DEFAULTS.type,
           digits: input.digits ?? OTP_DEFAULTS.digits,
           period: input.period ?? OTP_DEFAULTS.period,
@@ -222,7 +242,7 @@ export async function batchImportSecrets(
       }
     }
 
-    return { success: true, data: { imported, skipped } };
+    return { success: true, data: { imported, skipped, duplicates } };
   } catch (error) {
     console.error("Failed to batch import secrets:", error);
     return { success: false, error: "Failed to import secrets" };
