@@ -11,6 +11,7 @@
 
 import type { Env } from "./types";
 import { handleRequest } from "./router";
+import { runCronBackup } from "./backup";
 
 export default {
   async fetch(
@@ -23,9 +24,9 @@ export default {
 
   async scheduled(
     _event: ScheduledEvent,
-    _env: Env,
-    _ctx: ExecutionContext
+    env: Env,
+    ctx: ExecutionContext
   ): Promise<void> {
-    // TODO: implement cron backup (commit #51)
+    ctx.waitUntil(runCronBackup(env));
   },
 };
