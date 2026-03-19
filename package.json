@@ -12,6 +12,8 @@
     "test:unit": "vitest run --exclude 'tests/api/**'",
     "test:unit:coverage": "vitest run --exclude 'tests/api/**' --coverage",
     "test:api": "vitest run tests/api",
+    "test:e2e:pw": "bun x playwright test",
+    "test:e2e:pw:ui": "bun x playwright test --ui",
     "test:coverage": "vitest run --coverage",
     "prepare": "husky"
   },
@@ -54,5 +56,11 @@
     "*.{ts,tsx}": [
       "eslint --max-warnings=0"
     ]
-  }
+  },
+  "browserslist": [
+    "chrome >= 96",
+    "firefox >= 95",
+    "safari >= 15.4",
+    "edge >= 96"
+  ]
 }
