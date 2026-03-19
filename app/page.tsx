@@ -4,11 +4,17 @@ import { signIn, auth } from "@/auth";
 import { redirect } from "next/navigation";
 import { headers } from "next/headers";
 
-export default async function Home() {
+export default async function Home({
+  searchParams,
+}: {
+  searchParams: Promise<{ callbackUrl?: string }>;
+}) {
   const session = await auth();
   if (session?.user) {
     redirect("/dashboard");
   }
+
+  const { callbackUrl } = await searchParams;
 
   return (
     <div className="relative flex min-h-screen items-center justify-center bg-background p-4 overflow-hidden">
@@ -82,7 +88,9 @@ export default async function Home() {
                     h.get("x-forwarded-host") ||
                     h.get("host") ||
                     "localhost:7021";
-                  const redirectTo = `${proto}://${host}/dashboard`;
+                  // Use callbackUrl if provided (from middleware redirect), fallback to /dashboard
+                  const path = callbackUrl && callbackUrl.startsWith("/") ? callbackUrl : "/dashboard";
+                  const redirectTo = `${proto}://${host}${path}`;
                   await signIn("google", { redirectTo });
                 }}
               >
