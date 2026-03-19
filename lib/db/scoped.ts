@@ -171,7 +171,11 @@ export class ScopedDB {
   }
 
   async deleteOldBackups(keepCount: number): Promise<number> {
-    // Get IDs of backups to keep
+    // Count total before deletion
+    const totalBefore = await this.getBackupCount();
+    if (totalBefore <= keepCount) return 0;
+
+    // Get IDs of backups to keep (most recent N)
     const keepers = await executeD1Query<{ id: string }>(
       "SELECT id FROM backups WHERE user_id = ? ORDER BY created_at DESC LIMIT ?",
       [this.userId, keepCount]
@@ -186,9 +190,9 @@ export class ScopedDB {
       [this.userId, ...keepIds]
     );
 
-    // Return approximate count
-    const totalBefore = await this.getBackupCount();
-    return Math.max(0, totalBefore - keepCount);
+    // Count after deletion to get actual deleted count
+    const totalAfter = await this.getBackupCount();
+    return totalBefore - totalAfter;
   }
 
   // ── User Settings ────────────────────────────────────────────────────────

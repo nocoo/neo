@@ -155,5 +155,23 @@ describe("Backup operations — API E2E", () => {
       const result = await cleanupBackups();
       expect(result.success).toBe(true);
     });
+
+    it("returns correct deleted count when over limit", async () => {
+      // Create 5 backups, then delete all but 2 via MockScopedDB directly
+      for (let i = 0; i < 5; i++) {
+        await createManualBackup(JSON.stringify([{ name: `S${i}` }]));
+      }
+
+      const countBefore = await getBackupCount();
+      expect(countBefore.data).toBe(5);
+
+      // Use the mock DB directly to test deleteOldBackups with keepCount=2
+      const db = createMockScopedDB();
+      const deleted = await db.deleteOldBackups(2);
+      expect(deleted).toBe(3);
+
+      const countAfter = await getBackupCount();
+      expect(countAfter.data).toBe(2);
+    });
   });
 });
