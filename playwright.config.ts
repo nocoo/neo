@@ -31,7 +31,7 @@ export default defineConfig({
   ],
 
   webServer: {
-    command: "PLAYWRIGHT=1 bun run dev -- -p 27021",
+    command: "PLAYWRIGHT=1 ALLOWED_EMAILS=e2e@test.local bun run dev -- -p 27021",
     url: "http://localhost:27021",
     reuseExistingServer: !process.env.CI,
     timeout: 120000,

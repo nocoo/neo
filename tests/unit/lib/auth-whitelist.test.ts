@@ -51,4 +51,14 @@ describe("isEmailAllowed", () => {
   it("denies an unlisted email", () => {
     expect(isEmailAllowed("eve@evil.com", "alice@example.com")).toBe(false);
   });
+
+  // ── Playwright E2E scenario ──────────────────────────────────────
+
+  it("allows e2e@test.local when ALLOWED_EMAILS includes it", () => {
+    expect(isEmailAllowed("e2e@test.local", "e2e@test.local")).toBe(true);
+  });
+
+  it("denies e2e@test.local when ALLOWED_EMAILS is unset", () => {
+    expect(isEmailAllowed("e2e@test.local", "")).toBe(false);
+  });
 });
