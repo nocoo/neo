@@ -410,8 +410,44 @@ describe("detectImportFormat", () => {
     expect(detectImportFormat(JSON.stringify({ version: 1, accounts: [] }))).toBe("lastpass");
   });
 
+  it("detects Proton", () => {
+    expect(detectImportFormat(JSON.stringify({ entries: [{ content: { uri: "otpauth://totp/X?secret=A" } }] }))).toBe("proton");
+  });
+
+  it("detects Authenticator Pro", () => {
+    expect(detectImportFormat(JSON.stringify({ Authenticators: [] }))).toBe("authenticator-pro");
+  });
+
+  it("detects FreeOTP+", () => {
+    expect(detectImportFormat(JSON.stringify({ tokens: [] }))).toBe("freeotp-plus");
+  });
+
+  it("detects andOTP", () => {
+    expect(detectImportFormat(JSON.stringify([{ thumbnail: "default" }]))).toBe("andotp");
+  });
+
+  it("detects Raivo", () => {
+    expect(detectImportFormat(JSON.stringify([{ issuer: "X" }]))).toBe("raivo");
+  });
+
+  it("detects generic JSON with secrets array", () => {
+    expect(detectImportFormat(JSON.stringify({ secrets: [{ secret: "A" }] }))).toBe("generic-json");
+  });
+
+  it("detects generic JSON for unknown JSON structure", () => {
+    expect(detectImportFormat(JSON.stringify({ unknown: true }))).toBe("generic-json");
+  });
+
   it("detects CSV", () => {
     expect(detectImportFormat("name,secret\nTest,ABC")).toBe("generic-csv");
+  });
+
+  it("detects CSV with Chinese headers", () => {
+    expect(detectImportFormat("服务名称,密钥\nTest,ABC")).toBe("generic-csv");
+  });
+
+  it("detects CSV with login_totp header", () => {
+    expect(detectImportFormat("name,login_totp\nTest,ABC")).toBe("generic-csv");
   });
 
   it("detects multi-line otpauth URIs", () => {
@@ -420,6 +456,10 @@ describe("detectImportFormat", () => {
 
   it("returns null for unrecognized content", () => {
     expect(detectImportFormat("random garbage")).toBeNull();
+  });
+
+  it("returns null for invalid JSON", () => {
+    expect(detectImportFormat("{invalid json")).toBeNull();
   });
 });
 
@@ -441,5 +481,66 @@ describe("parseImport", () => {
 
   it("returns empty for unrecognized content", () => {
     expect(parseImport("garbage")).toHaveLength(0);
+  });
+
+  it("routes to 2fas parser with explicit format", () => {
+    const json = JSON.stringify({ services: [{ name: "X", secret: "ABC", otp: { tokenType: "TOTP" } }], schemaVersion: 3 });
+    expect(parseImport(json, "2fas")).toHaveLength(1);
+  });
+
+  it("routes to bitwarden parser with explicit format", () => {
+    const json = JSON.stringify({ items: [{ name: "X", login: { totp: "ABCD" } }] });
+    expect(parseImport(json, "bitwarden")).toHaveLength(1);
+  });
+
+  it("routes to andotp parser with explicit format", () => {
+    const json = JSON.stringify([{ secret: "ABC", issuer: "X", thumbnail: "default" }]);
+    expect(parseImport(json, "andotp")).toHaveLength(1);
+  });
+
+  it("routes to lastpass parser with explicit format", () => {
+    const json = JSON.stringify({ version: 1, accounts: [{ issuerName: "X", secret: "ABC" }] });
+    expect(parseImport(json, "lastpass")).toHaveLength(1);
+  });
+
+  it("routes to proton parser with explicit format", () => {
+    const json = JSON.stringify({ entries: [{ content: { uri: "otpauth://totp/X?secret=ABC" } }] });
+    expect(parseImport(json, "proton")).toHaveLength(1);
+  });
+
+  it("routes to authenticator-pro parser with explicit format", () => {
+    const json = JSON.stringify({ Authenticators: [{ Secret: "ABC", Type: 1 }] });
+    expect(parseImport(json, "authenticator-pro")).toHaveLength(1);
+  });
+
+  it("routes to freeotp-plus parser with explicit format", () => {
+    const json = JSON.stringify({ tokens: [{ secret: [72, 101], type: "TOTP" }] });
+    expect(parseImport(json, "freeotp-plus")).toHaveLength(1);
+  });
+
+  it("routes to google-authenticator parser", () => {
+    expect(parseImport("otpauth://totp/X?secret=ABC", "google-authenticator")).toHaveLength(1);
+  });
+
+  it("routes to ente-auth parser", () => {
+    expect(parseImport("otpauth://totp/X?secret=ABC", "ente-auth")).toHaveLength(1);
+  });
+
+  it("routes to winauth parser", () => {
+    expect(parseImport("otpauth://totp/X?secret=ABC", "winauth")).toHaveLength(1);
+  });
+
+  it("routes to raivo parser with explicit format", () => {
+    const json = JSON.stringify([{ issuer: "X", secret: "ABC", algorithm: "SHA1", kind: "TOTP", timer: 30 }]);
+    expect(parseImport(json, "raivo")).toHaveLength(1);
+  });
+
+  it("routes to generic-json parser with explicit format", () => {
+    const json = JSON.stringify({ secrets: [{ name: "X", secret: "ABC" }] });
+    expect(parseImport(json, "generic-json")).toHaveLength(1);
+  });
+
+  it("routes to generic-csv parser with explicit format", () => {
+    expect(parseImport("name,secret\nX,ABC", "generic-csv")).toHaveLength(1);
   });
 });

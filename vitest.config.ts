@@ -34,18 +34,21 @@ export default defineConfig({
         ".next/",
         // Config/schema/type-only files
         "lib/db/schema.ts",
+        "models/types.ts",
         // Thin wrappers
         "app/api/auth/**",
         // Shadcn/UI auto-generated primitives
         "components/ui/",
       ],
-      // TODO: enable thresholds once model layer is complete
-      // thresholds: {
-      //   lines: 90,
-      //   functions: 85,
-      //   branches: 80,
-      //   statements: 90,
-      // },
+      // Model layer thresholds (Phase 3 complete)
+      thresholds: {
+        "models/**": {
+          lines: 90,
+          functions: 90,
+          branches: 80,
+          statements: 90,
+        },
+      },
     },
   },
   resolve: {
