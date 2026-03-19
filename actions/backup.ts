@@ -7,7 +7,7 @@
  */
 
 import { getScopedDB } from "@/lib/auth-context";
-import { generateBackupFilename } from "@/models/backup";
+import { generateBackupFilename, deserializeBackup } from "@/models/backup";
 import { BACKUP_MAX_COUNT } from "@/models/constants";
 import { batchImportSecrets } from "@/actions/secrets";
 import type { ActionResult, Backup, CreateSecretInput } from "@/models/types";
@@ -140,8 +140,13 @@ export async function cleanupBackups(): Promise<ActionResult<{ deleted: number }
 /**
  * Restore secrets from a backup.
  *
- * Parses the backup JSON data and imports via batchImportSecrets,
- * which handles duplicate detection automatically.
+ * Supports multiple backup formats:
+ *   - Plain array of secrets (manual backup format)
+ *   - { version, secrets, ... } object (worker cron format)
+ *   - { secrets: [...] } without version (legacy)
+ *
+ * Encrypted backups cannot be restored through the UI — they require
+ * server-side decryption which is not available in this path.
  */
 export async function restoreBackup(
   backupData: string
@@ -154,15 +159,19 @@ export async function restoreBackup(
       return { success: false, error: "Backup data is required" };
     }
 
-    // Parse the backup JSON
-    let parsed: unknown[];
-    try {
-      parsed = JSON.parse(backupData);
-      if (!Array.isArray(parsed)) {
-        return { success: false, error: "Invalid backup data format" };
+    // Attempt to deserialize using the multi-format parser
+    const parsed = deserializeBackup(backupData);
+
+    if (!parsed) {
+      // Could be encrypted data (AES-GCM ciphertext) or truly invalid JSON
+      try {
+        JSON.parse(backupData);
+        // Valid JSON but unrecognized structure
+        return { success: false, error: "Unrecognized backup format. If this is an encrypted backup, it cannot be restored through the UI." };
+      } catch {
+        // Not valid JSON — might be encrypted ciphertext
+        return { success: false, error: "Invalid backup data. This may be an encrypted backup that requires the encryption key to restore." };
       }
-    } catch {
-      return { success: false, error: "Invalid JSON data" };
     }
 
     if (parsed.length === 0) {

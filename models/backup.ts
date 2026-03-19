@@ -95,8 +95,8 @@ export function deserializeBackup(json: string): ParsedSecret[] | null {
   try {
     const data = JSON.parse(json);
 
-    // Handle version 1 format
-    if (data.version === 1 && Array.isArray(data.secrets)) {
+    // Handle version 1 format (version can be number 1 or string "1.0")
+    if ((data.version === 1 || data.version === "1.0") && Array.isArray(data.secrets)) {
       return data.secrets;
     }
 

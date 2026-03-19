@@ -215,16 +215,50 @@ describe("Backup operations — API E2E", () => {
       expect(result.error).toContain("required");
     });
 
-    it("rejects invalid JSON", async () => {
+    it("rejects invalid/encrypted data", async () => {
       const result = await restoreBackup("not json");
       expect(result.success).toBe(false);
-      expect(result.error).toContain("Invalid JSON");
+      expect(result.error).toContain("encrypted");
     });
 
     it("rejects empty array", async () => {
       const result = await restoreBackup("[]");
       expect(result.success).toBe(false);
       expect(result.error).toContain("no secrets");
+    });
+
+    it("restores from worker cron format (version 1 object)", async () => {
+      const cronBackup = JSON.stringify({
+        timestamp: "2026-03-20T00:00:00Z",
+        version: "1.0",
+        count: 2,
+        secrets: [
+          { id: "s1", name: "GitHub", account: null, secret: "JBSWY3DPEHPK3PXP", type: "totp", digits: 6, period: 30, algorithm: "SHA-1", counter: 0 },
+          { id: "s2", name: "AWS", account: null, secret: "GEZDGNBVGY3TQOJQ", type: "totp", digits: 6, period: 30, algorithm: "SHA-1", counter: 0 },
+        ],
+      });
+
+      const result = await restoreBackup(cronBackup);
+      expect(result.success).toBe(true);
+      expect(result.data!.imported).toBe(2);
+    });
+
+    it("restores from {secrets} format without version", async () => {
+      const legacyBackup = JSON.stringify({
+        secrets: [
+          { name: "GitHub", secret: "JBSWY3DPEHPK3PXP" },
+        ],
+      });
+
+      const result = await restoreBackup(legacyBackup);
+      expect(result.success).toBe(true);
+      expect(result.data!.imported).toBe(1);
+    });
+
+    it("rejects unrecognized JSON object", async () => {
+      const result = await restoreBackup('{"foo": "bar"}');
+      expect(result.success).toBe(false);
+      expect(result.error).toContain("Unrecognized backup format");
     });
   });
 });
