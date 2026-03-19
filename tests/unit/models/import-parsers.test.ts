@@ -19,6 +19,7 @@ import {
   parseRaivo,
   parseGenericJSON,
   parseGenericCSV,
+  parseStepTwo,
   detectImportFormat,
   parseImport,
 } from "@/models/import-parsers";
@@ -387,6 +388,79 @@ describe("parseGenericCSV", () => {
   });
 });
 
+// ── parseStepTwo ──────────────────────────────────────────────────────────
+
+describe("parseStepTwo", () => {
+  const sampleRtf = `{\\rtf1\\ansi\\ansicpg1252\\cocoartf2868
+\\cocoatextscaling0\\cocoaplatform0{\\fonttbl\\f0\\fnil\\fcharset0 HelveticaNeue-Bold;\\f1\\fnil\\fcharset0 HelveticaNeue;}
+{\\colortbl;\\red255\\green255\\blue255;}
+{\\*\\expandedcolortbl;;}
+\\pard\\tx560\\pardirnatural\\partightenfactor0
+
+\\f0\\b\\fs36 \\cf0 Your Step Two Data in iCloud\\uc0\\u8232
+\\fs28 as of January 1, 2026\\
+
+\\f1\\b0 This document contains a copy of all of your data that Step Two has stored in iCloud.\\
+
+\\f0\\b This document contains plaintext secret keys.\\
+\\
+
+\\fs36 Accounts\\
+
+\\f1\\b0\\fs28 Last Modified: January 1, 2026\\
+Account Name: GitHub\\uc0\\u8232 Email Address or Username: user@example.com\\u8232 Secret Key: JBSWY3DPEHPK3PXP\\u8232 Hash Algorithm: sha1\\u8232 Period: 30 seconds\\u8232 Digits: 6\\u8232 Color: Default color\\u8232 \\u8232 Account Name: Google\\u8232 Email Address or Username: user@gmail.com\\u8232 Secret Key: MFRGGZDFMY\\u8232 Hash Algorithm: sha256\\u8232 Period: 60 seconds\\u8232 Digits: 8\\u8232 Color: Blue\\
+}`;
+
+  it("parses Step Two RTF with multiple accounts", () => {
+    const results = parseStepTwo(sampleRtf);
+    expect(results).toHaveLength(2);
+    expect(results[0].name).toBe("GitHub");
+    expect(results[0].account).toBe("user@example.com");
+    expect(results[0].secret).toBe("JBSWY3DPEHPK3PXP");
+    expect(results[0].type).toBe("totp");
+    expect(results[0].digits).toBe(6);
+    expect(results[0].period).toBe(30);
+    expect(results[0].algorithm).toBe("SHA-1");
+  });
+
+  it("handles SHA-256 algorithm and non-default digits/period", () => {
+    const results = parseStepTwo(sampleRtf);
+    expect(results[1].name).toBe("Google");
+    expect(results[1].algorithm).toBe("SHA-256");
+    expect(results[1].digits).toBe(8);
+    expect(results[1].period).toBe(60);
+  });
+
+  it("handles account with empty username", () => {
+    const rtf = [
+      "{\\rtf1\\ansi Your Step Two Data in iCloud",
+      "Account Name: NoEmail\u2028Email Address or Username: \u2028Secret Key: ABCDEF\u2028Hash Algorithm: sha1\u2028Period: 30 seconds\u2028Digits: 6\u2028Color: Default color",
+      "}",
+    ].join("\n");
+    const results = parseStepTwo(rtf);
+    expect(results).toHaveLength(1);
+    expect(results[0].name).toBe("NoEmail");
+    expect(results[0].account).toBe("");
+  });
+
+  it("skips entries without secret key", () => {
+    const rtf = `{\\rtf1\\ansi Your Step Two Data in iCloud
+Account Name: NoSecret\\uc0\\u8232 Email Address or Username: user\\u8232 Hash Algorithm: sha1\\u8232 Period: 30 seconds\\u8232 Digits: 6
+}`;
+    const results = parseStepTwo(rtf);
+    expect(results).toHaveLength(0);
+  });
+
+  it("handles unicode characters in account names", () => {
+    const rtf = `{\\rtf1\\ansi Your Step Two Data in iCloud
+Account Name: \\uc0\\u29926 \\u24037 \\u8232 Email Address or Username: user\\u8232 Secret Key: ABCDEF\\u8232 Hash Algorithm: sha1\\u8232 Period: 30 seconds\\u8232 Digits: 6\\u8232 Color: Default color
+}`;
+    const results = parseStepTwo(rtf);
+    expect(results).toHaveLength(1);
+    expect(results[0].secret).toBe("ABCDEF");
+  });
+});
+
 // ── detectImportFormat ──────────────────────────────────────────────────────
 
 describe("detectImportFormat", () => {
@@ -452,6 +526,10 @@ describe("detectImportFormat", () => {
 
   it("detects multi-line otpauth URIs", () => {
     expect(detectImportFormat("Some header\notpauth://totp/T?secret=A")).toBe("otpauth-uri");
+  });
+
+  it("detects Step Two RTF", () => {
+    expect(detectImportFormat("{\\rtf1\\ansi Your Step Two Data in iCloud\\nAccount Name: X")).toBe("step-two");
   });
 
   it("returns null for unrecognized content", () => {
@@ -533,6 +611,13 @@ describe("parseImport", () => {
   it("routes to raivo parser with explicit format", () => {
     const json = JSON.stringify([{ issuer: "X", secret: "ABC", algorithm: "SHA1", kind: "TOTP", timer: 30 }]);
     expect(parseImport(json, "raivo")).toHaveLength(1);
+  });
+
+  it("routes to step-two parser with explicit format", () => {
+    const rtf = `{\\rtf1\\ansi Your Step Two Data in iCloud
+Account Name: Test\\uc0\\u8232 Email Address or Username: user\\u8232 Secret Key: JBSWY3DP\\u8232 Hash Algorithm: sha1\\u8232 Period: 30 seconds\\u8232 Digits: 6\\u8232 Color: Default color
+}`;
+    expect(parseImport(rtf, "step-two")).toHaveLength(1);
   });
 
   it("routes to generic-json parser with explicit format", () => {

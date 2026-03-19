@@ -450,6 +450,92 @@ export function parseRaivo(json: string): ParsedSecret[] {
     .filter((s): s is ParsedSecret => s !== null);
 }
 
+// ── Step Two (macOS/iOS) ────────────────────────────────────────────────────
+
+/**
+ * Parse Step Two iCloud Data Report (RTF format).
+ *
+ * Step Two exports an RTF document with structured account entries.
+ * Each entry has: Account Name, Email Address or Username, Secret Key,
+ * Hash Algorithm, Period, Digits, and Color.
+ * Fields are separated by Unicode Line Separator (U+2028).
+ */
+export function parseStepTwo(rtf: string): ParsedSecret[] {
+  const text = stripRtf(rtf);
+
+  // Split into account blocks — each block starts with "Account Name:"
+  const blocks = text.split(/(?=Account Name:)/i).filter((b) => b.includes("Secret Key:"));
+
+  return blocks
+    .map((block): ParsedSecret | null => {
+      const get = (label: string): string => {
+        const re = new RegExp(`${label}:[^\\S\\n]*([^\\n]*)`, "i");
+        const match = block.match(re);
+        return match?.[1]?.trim() || "";
+      };
+
+      const secret = get("Secret Key").toUpperCase().replace(/\s/g, "");
+      if (!secret) return null;
+
+      const algorithmRaw = get("Hash Algorithm");
+      const periodRaw = get("Period").replace(/\s*seconds?/i, "");
+      const digitsRaw = get("Digits");
+
+      return {
+        name: get("Account Name") || "Unknown",
+        account: get("Email Address or Username"),
+        secret,
+        type: "totp",
+        digits: parseInt(digitsRaw, 10) || 6,
+        period: parseInt(periodRaw, 10) || 30,
+        algorithm: normalizeAlgorithm(algorithmRaw),
+        counter: 0,
+      };
+    })
+    .filter((s): s is ParsedSecret => s !== null);
+}
+
+/**
+ * Strip RTF control words and extract plain text.
+ * Handles unicode escapes (\uN), curly braces, and common control words.
+ */
+function stripRtf(rtf: string): string {
+  let text = rtf;
+
+  // Remove RTF header groups like {\fonttbl...}, {\colortbl...}, {\*\expandedcolortbl...}
+  text = text.replace(/\{\\(?:\*\\)?(?:fonttbl|colortbl|expandedcolortbl|stylesheet|info)[^{}]*(?:\{[^{}]*\}[^{}]*)*\}/g, "");
+
+  // Convert Unicode escapes \uN to actual characters (skip the trailing replacement char)
+  text = text.replace(/\\uc0\s*/g, "");
+  text = text.replace(/\\u(\d+)(?:\s|\\[A-Za-z]+\s*|[^A-Za-z])?/g, (_match, code) => {
+    return String.fromCharCode(parseInt(code, 10));
+  });
+
+  // Remove remaining RTF control words (e.g., \f0, \b, \fs28, \pard..., \par)
+  // \par and \line become newlines
+  text = text.replace(/\\par\b\s*/g, "\n");
+  text = text.replace(/\\line\b\s*/g, "\n");
+  text = text.replace(/\\\\/g, "\\");
+  text = text.replace(
+    new RegExp("\\\\'" + "([0-9a-fA-F]{2})", "g"),
+    (_m, hex) => String.fromCharCode(parseInt(hex as string, 16))
+  );
+  text = text.replace(/\\[A-Za-z]+\d*\s?/g, "");
+
+  // Remove curly braces
+  text = text.replace(/[{}]/g, "");
+
+  // Normalize Unicode Line Separator (U+2028) and other separators to newline
+  text = text.replace(/[\u2028\u2029\u2008\u2009\u200A\u202F\u205F\u8239]/g, "\n");
+  // Also handle \u8232 as literal text leftover (decimal for U+2028)
+  text = text.replace(/\u2028/g, "\n");
+
+  // Clean up multiple blank lines
+  text = text.replace(/\n{3,}/g, "\n\n");
+
+  return text.trim();
+}
+
 // ── Generic JSON ────────────────────────────────────────────────────────────
 
 /**
@@ -552,6 +638,7 @@ export type ImportFormat =
   | "ente-auth"
   | "winauth"
   | "raivo"
+  | "step-two"
   | "generic-json"
   | "generic-csv";
 
@@ -563,6 +650,9 @@ export function detectImportFormat(content: string): ImportFormat | null {
 
   // OTPAuth URIs
   if (trimmed.startsWith("otpauth://")) return "otpauth-uri";
+
+  // RTF (Step Two iCloud Data Report)
+  if (trimmed.startsWith("{\\rtf") && /Step Two/i.test(trimmed)) return "step-two";
 
   // JSON formats
   if (trimmed.startsWith("{") || trimmed.startsWith("[")) {
@@ -643,6 +733,8 @@ export function parseImport(
       return parseWinAuth(content);
     case "raivo":
       return parseRaivo(content);
+    case "step-two":
+      return parseStepTwo(content);
     case "generic-json":
       return parseGenericJSON(content);
     case "generic-csv":

@@ -114,6 +114,7 @@ export type ImportFormat =
   | "winauth"
   | "totp-auth"
   | "raivo"
+  | "step-two"
   | "generic-json"
   | "generic-csv";
 

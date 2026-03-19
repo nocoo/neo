@@ -100,7 +100,7 @@ export function ImportDialog({
             <input
               id="import-file"
               type="file"
-              accept=".json,.txt,.csv"
+              accept=".json,.txt,.csv,.rtf"
               onChange={handleFileUpload}
               className="hidden"
               aria-label="Upload import file"
