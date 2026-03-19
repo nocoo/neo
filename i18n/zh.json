@@ -1,0 +1,82 @@
+{
+  "common": {
+    "appName": "Neo",
+    "loading": "加载中...",
+    "error": "出了点问题",
+    "save": "保存",
+    "cancel": "取消",
+    "delete": "删除",
+    "confirm": "确认",
+    "back": "返回",
+    "search": "搜索...",
+    "noResults": "未找到结果",
+    "copy": "复制",
+    "copied": "已复制！"
+  },
+  "auth": {
+    "signIn": "登录",
+    "signInWithGoogle": "使用 Google 登录",
+    "signOut": "退出登录",
+    "unauthorized": "您无权访问此应用",
+    "tagline": "安全管理您的双因素认证密钥"
+  },
+  "nav": {
+    "secrets": "密钥",
+    "backup": "备份",
+    "tools": "工具",
+    "settings": "设置"
+  },
+  "secrets": {
+    "title": "密钥管理",
+    "addSecret": "添加密钥",
+    "editSecret": "编辑密钥",
+    "deleteSecret": "删除密钥",
+    "deleteConfirm": "确定要删除这个密钥吗？",
+    "name": "名称",
+    "account": "账户",
+    "secret": "密钥",
+    "type": "类型",
+    "digits": "位数",
+    "period": "周期（秒）",
+    "algorithm": "算法",
+    "counter": "计数器",
+    "copyOtp": "复制 OTP",
+    "otpCopied": "OTP 已复制到剪贴板",
+    "import": "导入",
+    "export": "导出",
+    "noSecrets": "暂无密钥。添加您的第一个双因素认证密钥。"
+  },
+  "backup": {
+    "title": "备份管理",
+    "createBackup": "创建备份",
+    "restoreBackup": "恢复备份",
+    "backupList": "备份历史",
+    "noBackups": "暂无备份",
+    "backupCreated": "备份创建成功",
+    "backupRestored": "备份恢复成功",
+    "preview": "预览",
+    "encrypted": "已加密",
+    "plaintext": "明文"
+  },
+  "tools": {
+    "title": "开发者工具",
+    "qrEncode": "QR 编码",
+    "qrDecode": "QR 解码",
+    "base32Encode": "Base32 编码",
+    "base32Decode": "Base32 解码",
+    "keyStrength": "密钥强度检查",
+    "randomKey": "随机密钥生成",
+    "totpVisualizer": "TOTP 时间步长可视化"
+  },
+  "settings": {
+    "title": "设置",
+    "encryption": "加密",
+    "enableEncryption": "启用加密",
+    "encryptionKey": "加密密钥",
+    "theme": "主题",
+    "language": "语言",
+    "themeSystem": "跟随系统",
+    "themeLight": "浅色",
+    "themeDark": "深色"
+  }
+}

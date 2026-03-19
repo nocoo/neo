@@ -1,0 +1,82 @@
+{
+  "common": {
+    "appName": "Neo",
+    "loading": "Loading...",
+    "error": "Something went wrong",
+    "save": "Save",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "confirm": "Confirm",
+    "back": "Back",
+    "search": "Search...",
+    "noResults": "No results found",
+    "copy": "Copy",
+    "copied": "Copied!"
+  },
+  "auth": {
+    "signIn": "Sign in",
+    "signInWithGoogle": "Continue with Google",
+    "signOut": "Sign out",
+    "unauthorized": "You are not authorized to access this application",
+    "tagline": "Manage your 2FA secrets securely"
+  },
+  "nav": {
+    "secrets": "Secrets",
+    "backup": "Backup",
+    "tools": "Tools",
+    "settings": "Settings"
+  },
+  "secrets": {
+    "title": "Secrets",
+    "addSecret": "Add Secret",
+    "editSecret": "Edit Secret",
+    "deleteSecret": "Delete Secret",
+    "deleteConfirm": "Are you sure you want to delete this secret?",
+    "name": "Name",
+    "account": "Account",
+    "secret": "Secret Key",
+    "type": "Type",
+    "digits": "Digits",
+    "period": "Period (seconds)",
+    "algorithm": "Algorithm",
+    "counter": "Counter",
+    "copyOtp": "Copy OTP",
+    "otpCopied": "OTP copied to clipboard",
+    "import": "Import",
+    "export": "Export",
+    "noSecrets": "No secrets yet. Add your first 2FA secret."
+  },
+  "backup": {
+    "title": "Backup",
+    "createBackup": "Create Backup",
+    "restoreBackup": "Restore Backup",
+    "backupList": "Backup History",
+    "noBackups": "No backups yet",
+    "backupCreated": "Backup created successfully",
+    "backupRestored": "Backup restored successfully",
+    "preview": "Preview",
+    "encrypted": "Encrypted",
+    "plaintext": "Plaintext"
+  },
+  "tools": {
+    "title": "Developer Tools",
+    "qrEncode": "QR Encode",
+    "qrDecode": "QR Decode",
+    "base32Encode": "Base32 Encode",
+    "base32Decode": "Base32 Decode",
+    "keyStrength": "Key Strength Check",
+    "randomKey": "Random Key Generator",
+    "totpVisualizer": "TOTP Visualizer"
+  },
+  "settings": {
+    "title": "Settings",
+    "encryption": "Encryption",
+    "enableEncryption": "Enable Encryption",
+    "encryptionKey": "Encryption Key",
+    "theme": "Theme",
+    "language": "Language",
+    "themeSystem": "System",
+    "themeLight": "Light",
+    "themeDark": "Dark"
+  }
+}
