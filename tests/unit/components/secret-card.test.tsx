@@ -105,6 +105,18 @@ describe("SecretCard", () => {
     expect(writeText).toHaveBeenCalledWith("123456");
   });
 
+  it("shows copied feedback overlay after clicking", async () => {
+    const writeText = vi.fn().mockResolvedValue(undefined);
+    Object.assign(navigator, { clipboard: { writeText } });
+
+    render(<SecretCard secret={sampleSecret} otp={sampleOtp} />);
+
+    fireEvent.click(screen.getByTestId("secret-card-s_test_1"));
+
+    // "Copied!" overlay should be visible
+    expect(screen.getByText("Copied!")).toBeDefined();
+  });
+
   it("renders data-testid attribute", () => {
     render(<SecretCard secret={sampleSecret} />);
     expect(screen.getByTestId("secret-card-s_test_1")).toBeDefined();

@@ -13,13 +13,11 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import type { Secret, OtpResult } from "@/models/types";
 
-// ── Color palette ─────────────────────────────────────────────────────────
+// ── Color palette (no white/black — all saturated colors) ─────────────────
 
 export const CARD_THEMES = [
-  { key: "default",  bg: "bg-card",              text: "text-card-foreground",   accent: "text-muted-foreground", progressBg: "bg-muted",         progressFill: "bg-primary",      progressWarn: "bg-destructive" },
   { key: "red",      bg: "bg-red-500",           text: "text-white",             accent: "text-red-100",          progressBg: "bg-red-400/40",    progressFill: "bg-white/70",     progressWarn: "bg-yellow-300"  },
   { key: "emerald",  bg: "bg-emerald-600",       text: "text-white",             accent: "text-emerald-100",      progressBg: "bg-emerald-400/40",progressFill: "bg-white/70",     progressWarn: "bg-yellow-300"  },
-  { key: "zinc",     bg: "bg-zinc-800",          text: "text-white",             accent: "text-zinc-300",         progressBg: "bg-zinc-600/40",   progressFill: "bg-white/70",     progressWarn: "bg-yellow-300"  },
   { key: "blue",     bg: "bg-blue-500",          text: "text-white",             accent: "text-blue-100",         progressBg: "bg-blue-400/40",   progressFill: "bg-white/70",     progressWarn: "bg-yellow-300"  },
   { key: "purple",   bg: "bg-purple-500",        text: "text-white",             accent: "text-purple-100",       progressBg: "bg-purple-400/40", progressFill: "bg-white/70",     progressWarn: "bg-yellow-300"  },
   { key: "amber",    bg: "bg-amber-500",         text: "text-white",             accent: "text-amber-100",        progressBg: "bg-amber-400/40",  progressFill: "bg-white/70",     progressWarn: "bg-yellow-300"  },
@@ -92,17 +90,28 @@ export function SecretCard({ secret, otp, onEdit, onDelete }: SecretCardProps) {
   return (
     <div
       className={cn(
-        "group relative flex flex-col justify-between rounded-2xl p-4 transition-all hover:scale-[1.02] hover:shadow-lg cursor-pointer min-h-[130px]",
+        "group relative flex flex-col justify-between rounded-2xl p-4 cursor-pointer min-h-[130px]",
+        "transition-all duration-200 hover:scale-[1.02] hover:shadow-lg",
         theme.bg,
         theme.text,
-        // Default card variant gets a border
-        theme.bg === "bg-card" && "border border-border",
-        // Visual feedback when copied
-        copied && "ring-2 ring-white/50"
+        // Copy feedback: brief scale-down + bright ring
+        copied
+          ? "scale-95 ring-2 ring-white shadow-lg"
+          : ""
       )}
       data-testid={`secret-card-${secret.id}`}
       onClick={handleCopy}
     >
+      {/* Copied toast overlay */}
+      <div
+        className={cn(
+          "absolute inset-0 flex items-center justify-center rounded-2xl bg-black/20 transition-opacity duration-200 pointer-events-none z-10",
+          copied ? "opacity-100" : "opacity-0"
+        )}
+      >
+        <span className="text-white text-sm font-semibold drop-shadow">Copied!</span>
+      </div>
+
       {/* Top row: info */}
       <div className="flex items-start justify-between gap-2">
         <div className="min-w-0 flex-1">
@@ -153,12 +162,7 @@ export function SecretCard({ secret, otp, onEdit, onDelete }: SecretCardProps) {
               e.stopPropagation();
               onEdit(secret);
             }}
-            className={cn(
-              "h-7 w-7",
-              theme.bg === "bg-card"
-                ? "hover:bg-accent"
-                : "hover:bg-white/20 text-white"
-            )}
+            className="h-7 w-7 hover:bg-white/20 text-white"
             aria-label={`Edit ${secret.name}`}
           >
             <Pencil className="h-3 w-3" />
@@ -172,12 +176,7 @@ export function SecretCard({ secret, otp, onEdit, onDelete }: SecretCardProps) {
               e.stopPropagation();
               onDelete(secret.id);
             }}
-            className={cn(
-              "h-7 w-7",
-              theme.bg === "bg-card"
-                ? "hover:bg-destructive/10 text-destructive"
-                : "hover:bg-white/20 text-white"
-            )}
+            className="h-7 w-7 hover:bg-white/20 text-white"
             aria-label={`Delete ${secret.name}`}
           >
             <Trash2 className="h-3 w-3" />

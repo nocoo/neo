@@ -237,6 +237,61 @@ describe("SecretFormDialog", () => {
         })
       );
     });
+
+    it("includes color in update submission", async () => {
+      const onUpdate = vi.fn().mockResolvedValue(true);
+      const coloredSecret = { ...sampleSecret, color: "blue" };
+
+      render(
+        <SecretFormDialog
+          open={true}
+          secret={coloredSecret}
+          onClose={vi.fn()}
+          onUpdate={onUpdate}
+        />
+      );
+
+      // Switch color from blue to orange
+      fireEvent.click(screen.getByLabelText("Orange"));
+
+      await act(async () => {
+        fireEvent.submit(screen.getByText("Update").closest("form")!);
+      });
+
+      expect(onUpdate).toHaveBeenCalledWith(
+        expect.objectContaining({
+          color: "orange",
+        })
+      );
+    });
+
+    it("clears color when switching to Auto in edit mode", async () => {
+      const onUpdate = vi.fn().mockResolvedValue(true);
+      const coloredSecret = { ...sampleSecret, color: "red" };
+
+      render(
+        <SecretFormDialog
+          open={true}
+          secret={coloredSecret}
+          onClose={vi.fn()}
+          onUpdate={onUpdate}
+        />
+      );
+
+      // Switch from red to Auto
+      fireEvent.click(screen.getByLabelText("Auto"));
+
+      await act(async () => {
+        fireEvent.submit(screen.getByText("Update").closest("form")!);
+      });
+
+      // color should be "" (empty string) which the server converts to null
+      expect(onUpdate).toHaveBeenCalledWith(
+        expect.objectContaining({
+          color: "",
+        })
+      );
+    });
   });
 
   describe("dialog behavior", () => {

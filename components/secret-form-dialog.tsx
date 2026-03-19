@@ -19,7 +19,6 @@ const COLOR_OPTIONS: { key: CardThemeKey | ""; label: string; swatch: string }[]
   { key: "",         label: "Auto",    swatch: "bg-gradient-to-br from-gray-300 to-gray-500" },
   { key: "red",      label: "Red",     swatch: "bg-red-500" },
   { key: "emerald",  label: "Emerald", swatch: "bg-emerald-600" },
-  { key: "zinc",     label: "Zinc",    swatch: "bg-zinc-800" },
   { key: "blue",     label: "Blue",    swatch: "bg-blue-500" },
   { key: "purple",   label: "Purple",  swatch: "bg-purple-500" },
   { key: "amber",    label: "Amber",   swatch: "bg-amber-500" },
@@ -100,7 +99,8 @@ export function SecretFormDialog({
       if (isEdit && secret && onUpdate) {
         const input: UpdateSecretInput = { id: secret.id, name: name.trim() };
         if (account.trim()) input.account = account.trim();
-        if (color !== undefined) input.color = color || undefined;
+        // Always send color so switching to Auto clears any saved value
+        input.color = color || "";
         const success = await onUpdate(input);
         if (success) onClose();
       } else if (onCreate) {
