@@ -2,10 +2,11 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Shield, Key, Archive, Wrench, Settings } from "lucide-react";
+import { Shield, Key, Archive, Wrench, Settings, LogOut } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { VERSION } from "@/lib/version";
 import { ThemeToggle } from "@/components/theme-toggle";
+import { handleSignOut } from "@/actions/auth";
 
 const navItems = [
   { href: "/dashboard", label: "Secrets", icon: Key },
@@ -57,13 +58,15 @@ export function AppSidebar() {
       {/* Footer */}
       <div className="flex items-center justify-between border-t border-sidebar-border px-4 py-3">
         <ThemeToggle />
-        {/* Sign out button — wired up in Phase 2 */}
-        <button
-          type="button"
-          className="text-xs text-sidebar-foreground/50 hover:text-sidebar-foreground transition-colors cursor-pointer"
-        >
-          Sign out
-        </button>
+        <form action={handleSignOut}>
+          <button
+            type="submit"
+            className="flex items-center gap-1 text-xs text-sidebar-foreground/50 hover:text-sidebar-foreground transition-colors cursor-pointer"
+          >
+            <LogOut className="h-3 w-3" />
+            Sign out
+          </button>
+        </form>
       </div>
     </aside>
   );
