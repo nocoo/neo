@@ -2,8 +2,9 @@
  * Router tests.
  */
 
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, beforeEach } from "vitest";
 import { handleRequest } from "../src/router";
+import { clearAllRateLimits } from "../src/rate-limit";
 import type { Env } from "../src/types";
 
 const mockEnv = {} as Env;
@@ -14,6 +15,10 @@ function makeRequest(path: string, method = "GET", host = "localhost:8787"): Req
     headers: { host },
   });
 }
+
+beforeEach(() => {
+  clearAllRateLimits();
+});
 
 describe("handleRequest", () => {
   it("routes /otp/:secret to OTP handler", async () => {
@@ -62,5 +67,16 @@ describe("handleRequest", () => {
     const req = makeRequest("/otp/INVALID!@#");
     const res = await handleRequest(req, mockEnv);
     expect(res.status).toBe(400);
+  });
+
+  it("rate limits excessive requests", async () => {
+    // OTP preset allows 60 per minute — send 61
+    for (let i = 0; i < 60; i++) {
+      const req = makeRequest("/otp/JBSWY3DPEHPK3PXP?format=json");
+      await handleRequest(req, mockEnv);
+    }
+    const req = makeRequest("/otp/JBSWY3DPEHPK3PXP?format=json");
+    const res = await handleRequest(req, mockEnv);
+    expect(res.status).toBe(429);
   });
 });

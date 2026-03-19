@@ -8,6 +8,12 @@ import { handleOtp } from "./otp";
 import { handleFavicon } from "./favicon";
 import { createJsonResponse } from "./utils/response";
 import { getSecurityHeaders, createPreflightResponse } from "./security";
+import {
+  checkRateLimit,
+  getClientIdentifier,
+  createRateLimitResponse,
+  RATE_LIMIT_PRESETS,
+} from "./rate-limit";
 
 /**
  * Route incoming requests to the appropriate handler.
@@ -23,6 +29,21 @@ export async function handleRequest(
 
   const url = new URL(request.url);
   const path = url.pathname;
+
+  // Apply rate limiting (skip health check)
+  if (path !== "/health") {
+    const clientId = getClientIdentifier(request);
+    const preset = path.startsWith("/otp/")
+      ? RATE_LIMIT_PRESETS.otp
+      : RATE_LIMIT_PRESETS.api;
+    const rateLimitResult = checkRateLimit(clientId, preset);
+    if (!rateLimitResult.allowed) {
+      return withSecurityHeaders(
+        request,
+        createRateLimitResponse(rateLimitResult)
+      );
+    }
+  }
 
   // GET /otp/:secret
   const otpMatch = path.match(/^\/otp\/(.+)$/);
