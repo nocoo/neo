@@ -4,6 +4,7 @@
  * DeleteConfirmDialog — confirmation dialog for secret deletion.
  */
 
+import { createPortal } from "react-dom";
 import { Button } from "@/components/ui/button";
 import { AlertTriangle } from "lucide-react";
 
@@ -33,7 +34,7 @@ export function DeleteConfirmDialog({
 }: DeleteConfirmDialogProps) {
   if (!open) return null;
 
-  return (
+  return createPortal(
     <div
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/50"
       role="dialog"
@@ -64,6 +65,7 @@ export function DeleteConfirmDialog({
           </Button>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }

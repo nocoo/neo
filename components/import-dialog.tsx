@@ -5,6 +5,7 @@
  */
 
 import { useState, useCallback } from "react";
+import { createPortal } from "react-dom";
 import { Button } from "@/components/ui/button";
 import { Upload, X } from "lucide-react";
 import type { ParsedSecret, ImportFormat } from "@/models/types";
@@ -72,7 +73,7 @@ export function ImportDialog({
 
   if (!open) return null;
 
-  return (
+  return createPortal(
     <div
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/50"
       role="dialog"
@@ -172,6 +173,7 @@ export function ImportDialog({
           </div>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }

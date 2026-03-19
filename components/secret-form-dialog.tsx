@@ -5,6 +5,7 @@
  */
 
 import { useState, useCallback, useEffect } from "react";
+import { createPortal } from "react-dom";
 import { Button } from "@/components/ui/button";
 import { X } from "lucide-react";
 import type { Secret, CreateSecretInput, UpdateSecretInput } from "@/models/types";
@@ -93,7 +94,7 @@ export function SecretFormDialog({
 
   if (!open) return null;
 
-  return (
+  return createPortal(
     <div
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/50"
       role="dialog"
@@ -176,6 +177,7 @@ export function SecretFormDialog({
           </div>
         </form>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }
