@@ -11,6 +11,8 @@
  */
 
 import type { Env } from "./types";
+import { sha256Hex, encryptAesGcm } from "./utils/crypto";
+import { generateId } from "./utils/id";
 
 /** Maximum number of backups to retain per user. */
 const MAX_BACKUPS = 100;
@@ -26,19 +28,6 @@ interface SecretRow {
   period: number;
   algorithm: string;
   counter: number;
-}
-
-/** Backup row shape from D1 query. */
-interface BackupRow {
-  id: string;
-  user_id: string;
-  filename: string;
-  data: string;
-  secret_count: number;
-  encrypted: number;
-  reason: string;
-  hash: string;
-  created_at: number;
 }
 
 /**
@@ -64,48 +53,7 @@ export async function computeSecretsHash(
     }))
     .sort((a, b) => a.id.localeCompare(b.id));
 
-  const data = new TextEncoder().encode(JSON.stringify(hashData));
-  const hashBuffer = await crypto.subtle.digest("SHA-256", data);
-  return Array.from(new Uint8Array(hashBuffer))
-    .map((b) => b.toString(16).padStart(2, "0"))
-    .join("");
-}
-
-/**
- * Encrypt data using AES-GCM 256-bit.
- * Returns format: `v1:<iv_base64>:<ciphertext_base64>`
- */
-async function encryptBackupData(
-  plaintext: string,
-  encryptionKey: string
-): Promise<string> {
-  const keyBytes = Uint8Array.from(atob(encryptionKey), (c) => c.charCodeAt(0));
-  const key = await crypto.subtle.importKey(
-    "raw",
-    keyBytes,
-    { name: "AES-GCM" },
-    false,
-    ["encrypt"]
-  );
-
-  const iv = crypto.getRandomValues(new Uint8Array(12));
-  const encoded = new TextEncoder().encode(plaintext);
-  const ciphertext = await crypto.subtle.encrypt(
-    { name: "AES-GCM", iv, tagLength: 128 },
-    key,
-    encoded
-  );
-
-  const ivB64 = btoa(String.fromCharCode(...iv));
-  const ctB64 = btoa(String.fromCharCode(...new Uint8Array(ciphertext)));
-  return `v1:${ivB64}:${ctB64}`;
-}
-
-/** Generate a unique backup ID. */
-function generateBackupId(): string {
-  const timestamp = Date.now().toString(36);
-  const random = Math.random().toString(36).substring(2, 8);
-  return `bk_${timestamp}_${random}`;
+  return sha256Hex(JSON.stringify(hashData));
 }
 
 /** Generate a timestamped backup filename. */
@@ -189,14 +137,14 @@ export async function backupUserSecrets(
   let encrypted = 0;
 
   if (env.ENCRYPTION_KEY) {
-    finalData = await encryptBackupData(backupData, env.ENCRYPTION_KEY);
+    finalData = await encryptAesGcm(backupData, env.ENCRYPTION_KEY);
     encrypted = 1;
   } else {
     finalData = backupData;
   }
 
   // 6. Insert backup row
-  const backupId = generateBackupId();
+  const backupId = generateId("bk");
   const filename = generateBackupFilename();
   const now = Math.floor(Date.now() / 1000);
 
