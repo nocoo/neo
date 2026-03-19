@@ -1,0 +1,53 @@
+# Dependencies
+node_modules
+.pnp
+.pnp.js
+
+# Build output
+.next
+out
+build
+dist
+
+# Testing
+coverage
+test-results
+playwright-report
+blob-report
+tests
+
+# Development
+.env
+.env*.local
+.wrangler
+wrangler.toml
+worker
+
+# IDE
+.idea
+.vscode
+*.swp
+*.swo
+
+# Git
+.git
+.gitignore
+
+# Misc
+*.md
+*.pem
+.DS_Store
+.turbo
+.claude
+
+# Debug logs
+npm-debug.log*
+yarn-debug.log*
+bun-debug.log*
+
+# Config files not needed at runtime
+vitest.config.ts
+playwright.config.ts
+eslint.config.mjs
+drizzle.config.ts
+tsconfig.json
