@@ -39,7 +39,7 @@
 | **密钥管理** | CRUD + 批量导入（≤100 条）+ 重复检测 |
 | **导入** | 18+ 格式：Aegis, andOTP, 2FAS, Authenticator Pro, Bitwarden, Ente Auth, FreeOTP/FreeOTP+, LastPass, Proton, WinAuth, Google Authenticator 等 |
 | **导出** | 17+ 格式：含加密格式（TOTP Auth, FreeOTP） |
-| **认证** | PBKDF2 100K iterations 密码哈希 + JWT(HS256, 30 天) + HttpOnly Cookie |
+| **认证** | ~~PBKDF2 密码~~ → Google OAuth 登录 (前端) + API Key header (Worker) |
 | **加密存储** | AES-GCM 256-bit，格式 `v1:<iv>:<ciphertext>`，可选开启，自动检测 |
 | **备份** | 事件驱动（防抖 5 分钟）+ Cron 定时（每日 UTC 16:00），保留最新 100 个 |
 | **PWA** | Service Worker, 离线队列 (IndexedDB), Background Sync, Protocol handler |
@@ -58,6 +58,7 @@
 | P4 | `worker.js` ↔ `shared.js` 循环依赖 | `generateDataHash/saveDataHash` 移入 `utils/` |
 | P5 | `logger.info('Test', null)` 抛 TypeError | 添加 null guard |
 | P6 | auth.js 未导出内部函数，测试复制实现代码 | 导出函数，直接测试 |
+| P7 | 认证系统为密码 + JWT，不适合现代化个人项目 | 替换为 Google OAuth + API Key（见第八章） |
 
 ---
 
@@ -128,7 +129,7 @@ neo/
 │   │   ├── otp.ts                  ← TOTP/HOTP 生成算法 (Web Crypto)
 │   │   ├── encryption.ts           ← AES-GCM 加解密
 │   │   ├── validation.ts           ← Schema 验证 + Base32 校验
-│   │   ├── auth.ts                 ← PBKDF2 哈希 + JWT 生成/验证
+│   │   ├── google-auth.ts          ← Google id_token 验证 (JWKS + RS256)
 │   │   ├── backup.ts               ← 备份管理逻辑
 │   │   ├── import-parsers.ts       ← 18+ 导入格式解析器
 │   │   ├── export-formatters.ts    ← 17+ 导出格式生成器
@@ -137,7 +138,7 @@ neo/
 │   ├── viewmodels/                 ← React hooks (组合 model + API)
 │   │   ├── useSecretsViewModel.ts  ← 密钥列表 + CRUD
 │   │   ├── useOtpViewModel.ts      ← OTP 生成 + 倒计时
-│   │   ├── useAuthViewModel.ts     ← 登录/设置/会话状态
+│   │   ├── useAuthViewModel.ts     ← Google 登录/登出/会话状态
 │   │   ├── useBackupViewModel.ts   ← 备份列表 + 创建/恢复
 │   │   ├── useImportViewModel.ts   ← 导入流程
 │   │   ├── useExportViewModel.ts   ← 导出流程
@@ -145,12 +146,11 @@ neo/
 │   │   └── useToolsViewModel.ts    ← 开发者工具
 │   │
 │   ├── pages/                      ← View 层
-│   │   ├── LoginPage.tsx           ← 登录页（独立，无 sidebar）
-│   │   ├── SetupPage.tsx           ← 首次设置页
+│   │   ├── LoginPage.tsx           ← Google 登录页（独立，无 sidebar）
 │   │   ├── DashboardPage.tsx       ← 密钥列表 + OTP 显示（主页面）
 │   │   ├── BackupPage.tsx          ← 备份管理
 │   │   ├── ToolsPage.tsx           ← 开发者工具集
-│   │   ├── SettingsPage.tsx        ← 设置（主题、密码、加密）
+│   │   ├── SettingsPage.tsx        ← 设置（主题、加密配置）
 │   │   └── NotFound.tsx            ← 404
 │   │
 │   ├── components/
@@ -198,10 +198,10 @@ neo/
 │   │   │   ├── batch.ts            ← 批量导入
 │   │   │   ├── backup.ts           ← 备份 API
 │   │   │   ├── restore.ts          ← 恢复 + 导出
-│   │   │   ├── auth.ts             ← 登录/设置/刷新
+│   │   │   ├── auth.ts             ← Google token 验证 + 邮箱白名单
 │   │   │   └── favicon.ts          ← Favicon 代理
 │   │   ├── middleware/
-│   │   │   ├── auth.ts             ← JWT 验证中间件
+│   │   │   ├── auth.ts             ← 认证中间件 (Google token 或 API Key)
 │   │   │   ├── rate-limit.ts       ← 限流中间件
 │   │   │   └── cors.ts             ← CORS 中间件
 │   │   └── utils/
@@ -273,11 +273,8 @@ neo/
 
 | 端点 | 方法 | 测试场景 |
 |------|------|----------|
-| `POST /api/setup` | POST | 首次设置密码、密码强度校验、重复设置拒绝 |
-| `POST /api/login` | POST | 正确/错误密码、限流、JWT 返回 |
-| `POST /api/refresh-token` | POST | 有效/过期/篡改 token |
-| `GET /api/secrets` | GET | 空列表、有数据、加密数据 |
-| `POST /api/secrets` | POST | 添加密钥、重复检测、弱密钥警告 |
+| `GET /api/secrets` | GET | 空列表、有数据、加密数据、无认证 401 |
+| `POST /api/secrets` | POST | 添加密钥、重复检测、弱密钥警告、API Key 认证、Google token 认证 |
 | `PUT /api/secrets/:id` | PUT | 更新、不存在的 ID |
 | `DELETE /api/secrets/:id` | DELETE | 删除、限流(sensitive) |
 | `POST /api/secrets/batch` | POST | 批量导入、上限 100、部分失败 |
@@ -292,8 +289,7 @@ neo/
 
 | 流程 | 步骤 |
 |------|------|
-| **首次设置** | 打开应用 → 设置密码 → 跳转主页 |
-| **登录** | 打开应用 → 输入密码 → 看到密钥列表 |
+| **Google 登录** | 打开应用 → 点击 Sign in with Google → 认证 → 跳转 dashboard |
 | **添加密钥** | 登录 → 添加密钥表单 → 填写 → 保存 → 列表中出现 |
 | **OTP 生成** | 登录 → 查看密钥 → OTP 显示 + 倒计时 → 复制 |
 | **导入导出** | 登录 → 导入文件 → 预览 → 确认 → 验证数据 → 导出 → 验证文件 |
@@ -333,8 +329,8 @@ neo/
 | `tests/otp/generator.test.js` | ~63 | `src/test/models/otp.test.ts` | **直接迁移**，RFC 6238/4226 测试向量全部保留，修复 P1 (counter 64 位统一) |
 | `tests/utils/encryption.test.js` | 24 | `src/test/models/encryption.test.ts` | **直接迁移**，AES-GCM 往返测试、篡改检测、IV 随机性全部保留 |
 | `tests/utils/validation.test.js` | 56 | `src/test/models/validation.test.ts` | **直接迁移**，Base32 校验、OTP 参数验证、密钥强度、排序、重复检测全部保留 |
-| `tests/utils/auth.test.js` | 54 | `src/test/models/auth.test.ts` | **迁移并修复 P6**：不再复制生产代码，改为直接 import 导出函数测试 |
-| `tests/utils/auth.integration.test.js` | 31 | `src/test/api/auth.e2e.test.ts` | **迁移为 L3 API E2E**：首次设置→登录→访问→刷新全链路保留 |
+| `tests/utils/auth.test.js` | 54 | `src/test/models/google-auth.test.ts` | **重写**：密码哈希/JWT 用例移除；新增 Google JWKS 验证、RS256 签名、邮箱白名单测试；`requiresAuth` 路径判断保留适配 |
+| `tests/utils/auth.integration.test.js` | 31 | `src/test/api/auth.e2e.test.ts` | **重写为 L3 API E2E**：密码登录链路移除；新增 API Key 认证、Google token 认证、白名单拒绝、无认证 401 |
 | `tests/utils/backup.test.js` | 51 | `src/test/models/backup.test.ts` | **直接迁移**，防抖机制、加密/明文备份、自动清理、性能指标全部保留 |
 | `tests/utils/logger.test.js` | 66 | `worker/test/utils/logger.test.ts` | **直接迁移**，5 级日志、脱敏、PerformanceTimer、请求中间件全部保留；修复 P5 (null data) |
 | `tests/utils/monitoring.test.js` | ~79 | `worker/test/utils/monitoring.test.ts` | **直接迁移**，ErrorMonitor/PerformanceMonitor/MonitoringManager、Sentry 集成全部保留 |
@@ -355,7 +351,7 @@ neo/
 4. **RFC 向量不改** — OTP 的 RFC 6238/4226 官方测试向量原封不动保留
 5. **安全测试不改** — 滑动窗口边界攻击防护、JWT 篡改检测、AES-GCM 完整性校验原封不动保留
 6. **已知 bug 修复后更新断言** — P5 (logger null data) 修复后，测试从"验证抛异常"改为"验证正常处理"
-7. **P6 修复** — `auth.test.ts` 不再复制生产代码，改为直接 import 测试
+7. **认证测试重写** — 原密码/JWT 测试不再适用，重写为 Google token 验证 + API Key 认证测试（见第七章 7.9 节）
 
 ### 5.3 测试文件最终分布
 
@@ -373,7 +369,7 @@ src/test/
 │   ├── otp.test.ts                       ← 63 用例，RFC 向量
 │   ├── encryption.test.ts                ← 24 用例
 │   ├── validation.test.ts                ← 56 用例
-│   ├── auth.test.ts                      ← 54 用例（修复 P6，直接 import）
+│   ├── google-auth.test.ts               ← 重写（JWKS、RS256、白名单、路径判断）
 │   ├── backup.test.ts                    ← 51 用例
 │   ├── import-parsers.test.ts            ← 新增，用原项目 20 个 fixture 文件编写
 │   └── export-formatters.test.ts         ← 新增，用原项目 17 个 fixture 文件编写
@@ -396,14 +392,13 @@ src/test/
 │
 ├── pages/                                ← L1 Page 层冒烟测试（全部新增）
 │   ├── LoginPage.test.tsx
-│   ├── SetupPage.test.tsx
 │   ├── DashboardPage.test.tsx
 │   ├── BackupPage.test.tsx
 │   ├── ToolsPage.test.tsx
 │   └── SettingsPage.test.tsx
 │
 ├── api/                                  ← L3 API E2E（从原 tests/api/ + auth.integration 迁移）
-│   ├── auth.e2e.test.ts                  ← 31 用例（从 auth.integration.test.js）
+│   ├── auth.e2e.test.ts                  ← 重写（API Key + Google token + 白名单）
 │   ├── secrets.e2e.test.ts               ← 30 用例
 │   ├── batch.e2e.test.ts                 ← 16 用例
 │   ├── backup.e2e.test.ts                ← 34 用例
@@ -411,8 +406,7 @@ src/test/
 │   └── otp.e2e.test.ts                   ← 新增
 │
 ├── e2e/                                  ← L4 BDD E2E Playwright（全部新增）
-│   ├── setup-flow.spec.ts
-│   ├── login-flow.spec.ts
+│   ├── google-login.spec.ts
 │   ├── secrets-crud.spec.ts
 │   ├── otp-generation.spec.ts
 │   ├── import-export.spec.ts
@@ -472,8 +466,8 @@ worker/test/
 | 8 | `feat: add types and constants` | `models/types.ts` + `models/constants.ts`，单一常量来源 |
 | 9 | `feat: add otp generator model with rfc test vectors` | `models/otp.ts` + `test/models/otp.test.ts`，TOTP/HOTP, SHA-1/256/512 |
 | 10 | `feat: add encryption model` | `models/encryption.ts` + test，AES-GCM 256-bit |
-| 11 | `feat: add validation model` | `models/validation.ts` + test，Base32, 密码强度, Schema |
-| 12 | `feat: add auth model` | `models/auth.ts` + test，PBKDF2, JWT，修复 P6 |
+| 11 | `feat: add validation model` | `models/validation.ts` + test，Base32, Schema |
+| 12 | `feat: add google auth model` | `models/google-auth.ts` + test，JWKS 获取、RS256 验证、邮箱白名单 |
 | 13 | `feat: add import parsers model` | `models/import-parsers.ts` + test，18+ 格式 |
 | 14 | `feat: add export formatters model` | `models/export-formatters.ts` + test，17+ 格式 |
 | 15 | `feat: add backup model` | `models/backup.ts` + test |
@@ -483,7 +477,7 @@ worker/test/
 | # | Commit | 内容 |
 |---|--------|------|
 | 16 | `feat: add worker entry and router` | `worker/src/index.ts` + `router.ts`，修复 P4 循环依赖 |
-| 17 | `feat: add auth api endpoints` | setup / login / refresh-token |
+| 17 | `feat: add auth middleware` | Google token 验证 + API Key + 邮箱白名单 |
 | 18 | `feat: add secrets crud api` | GET/POST/PUT/DELETE /api/secrets |
 | 19 | `feat: add batch import api` | POST /api/secrets/batch |
 | 20 | `feat: add backup and restore api` | backup CRUD + restore + export |
@@ -497,7 +491,7 @@ worker/test/
 
 | # | Commit | 内容 |
 |---|--------|------|
-| 26 | `feat: add auth viewmodel` | `useAuthViewModel` + test |
+| 26 | `feat: add auth viewmodel` | `useAuthViewModel` (Google GSI login/logout/session) + test |
 | 27 | `feat: add secrets viewmodel` | `useSecretsViewModel` + test |
 | 28 | `feat: add otp viewmodel with countdown` | `useOtpViewModel` + test |
 | 29 | `feat: add backup viewmodel` | `useBackupViewModel` + test |
@@ -509,12 +503,12 @@ worker/test/
 
 | # | Commit | 内容 |
 |---|--------|------|
-| 33 | `feat: add login and setup pages` | LoginPage, SetupPage + 冒烟测试 |
+| 33 | `feat: add login page with google sign-in` | LoginPage (Google GSI 按钮) + 冒烟测试 |
 | 34 | `feat: add dashboard page with secret cards` | DashboardPage, SecretCard, OtpDisplay, CountdownRing |
 | 35 | `feat: add import and export dialogs` | ImportDialog, ExportDialog |
 | 36 | `feat: add backup page` | BackupPage |
 | 37 | `feat: add tools page` | ToolsPage (QR, Base32, KeyGen, etc.) |
-| 38 | `feat: add settings page` | SettingsPage (主题, 密码修改, 加密配置) |
+| 38 | `feat: add settings page` | SettingsPage (主题, 加密配置) |
 | 39 | `feat: add pwa support` | Service Worker, manifest, 离线队列 |
 
 ### Phase 6: E2E 测试
@@ -535,7 +529,214 @@ worker/test/
 
 ---
 
-## 七、版本管理
+## 七、认证架构（Google OAuth + API Key）
+
+原项目使用密码 + JWT 认证。新项目替换为 **Google OAuth 登录 + API Key header 认证**。
+
+参考实现：`../zhe`（NextAuth v5 + Google Provider），适配为 React SPA + Cloudflare Worker 架构。
+
+### 7.1 认证流程总览
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                        浏览器 (React SPA)                        │
+│                                                                   │
+│  1. 用户点击 "Sign in with Google"                                 │
+│  2. Google Identity Services (GSI) 弹窗                           │
+│  3. 用户授权 → 拿到 Google id_token (JWT)                          │
+│  4. 前端存储 id_token → 每次 API 请求带 Authorization: Bearer <token>│
+│                                                                   │
+└──────────────────────────┬────────────────────────────────────────┘
+                           │ fetch + Authorization header
+                           ▼
+┌──────────────────────────────────────────────────────────────────┐
+│                     Cloudflare Worker (API)                       │
+│                                                                   │
+│  auth middleware 检查两种认证方式（任一通过即可）：                     │
+│                                                                   │
+│  方式 A: Google id_token                                          │
+│    ├─ 解码 JWT header → 获取 kid                                   │
+│    ├─ 从 Google JWKS 端点获取公钥（缓存）                            │
+│    ├─ 验证 JWT 签名 + iss + aud + exp                              │
+│    ├─ 提取 email → 检查 ALLOWED_EMAILS 白名单                      │
+│    └─ 通过 → 继续处理请求                                          │
+│                                                                   │
+│  方式 B: API Key                                                  │
+│    ├─ 读取 X-API-Key header                                       │
+│    ├─ 对比 env.API_KEY (wrangler secret)                           │
+│    └─ 匹配 → 继续处理请求                                          │
+│                                                                   │
+│  均未通过 → 401 Unauthorized                                       │
+└──────────────────────────────────────────────────────────────────┘
+```
+
+### 7.2 前端认证（Google Identity Services）
+
+**不使用 NextAuth**（zhe 的方案依赖 Next.js SSR），改用 Google GSI 纯前端 SDK：
+
+```
+依赖：google.accounts.id (script tag 加载，无 npm 包)
+```
+
+**认证状态管理**：
+
+| 存储 | 内容 | 用途 |
+|------|------|------|
+| `localStorage("google_id_token")` | Google id_token (JWT) | API 请求认证 |
+| `localStorage("google_user")` | `{ name, email, picture }` | UI 显示 |
+| React Context (`AuthProvider`) | `{ isAuthenticated, user, token, login, logout }` | 组件消费 |
+
+**Token 刷新**：Google id_token 有效期约 1 小时。使用 GSI 的 `google.accounts.id.initialize({ auto_select: true })` 实现静默刷新。token 过期后 API 返回 401，前端捕获后触发重新登录。
+
+**登出**：清除 localStorage + `google.accounts.id.disableAutoSelect()` + 跳转登录页。
+
+### 7.3 Worker API 认证中间件
+
+```typescript
+// worker/src/middleware/auth.ts
+
+type AuthMethod = 'google' | 'api-key';
+
+interface AuthResult {
+  authenticated: boolean;
+  method: AuthMethod;
+  email?: string;         // Google 登录时有值
+}
+
+async function verifyAuth(request: Request, env: Env): Promise<AuthResult> {
+  // 方式 B: API Key（优先检查，最快）
+  const apiKey = request.headers.get('X-API-Key');
+  if (apiKey && apiKey === env.API_KEY) {
+    return { authenticated: true, method: 'api-key' };
+  }
+
+  // 方式 A: Google id_token
+  const authHeader = request.headers.get('Authorization');
+  if (authHeader?.startsWith('Bearer ')) {
+    const token = authHeader.slice(7);
+    const payload = await verifyGoogleToken(token, env);
+    if (payload && isEmailAllowed(payload.email, env)) {
+      return { authenticated: true, method: 'google', email: payload.email };
+    }
+  }
+
+  return { authenticated: false, method: 'api-key' };
+}
+```
+
+### 7.4 Google Token 验证（Worker 端）
+
+```typescript
+// worker/src/utils/google-auth.ts
+
+const GOOGLE_JWKS_URL = 'https://www.googleapis.com/oauth2/v3/certs';
+const GOOGLE_ISSUER = 'https://accounts.google.com';
+
+interface GoogleTokenPayload {
+  iss: string;        // https://accounts.google.com
+  aud: string;        // Google Client ID
+  sub: string;        // Google 用户唯一 ID
+  email: string;
+  email_verified: boolean;
+  name: string;
+  picture: string;
+  exp: number;
+  iat: number;
+}
+
+async function verifyGoogleToken(token: string, env: Env): Promise<GoogleTokenPayload | null> {
+  // 1. 解码 header 获取 kid
+  // 2. 从 JWKS 获取对应公钥（KV 缓存 1 小时）
+  // 3. Web Crypto API 验证 RS256 签名
+  // 4. 验证 iss === GOOGLE_ISSUER
+  // 5. 验证 aud === env.GOOGLE_CLIENT_ID
+  // 6. 验证 exp > now
+  // 7. 验证 email_verified === true
+  // 返回 payload 或 null
+}
+```
+
+**JWKS 缓存策略**：Google 公钥缓存在 KV 中（key: `google_jwks`，TTL: 1 小时），避免每次请求都调 Google。
+
+### 7.5 邮箱白名单
+
+```typescript
+// worker/src/utils/google-auth.ts
+
+function isEmailAllowed(email: string, env: Env): boolean {
+  // ALLOWED_EMAILS = "user@gmail.com,other@gmail.com"
+  const allowed = (env.ALLOWED_EMAILS || '').split(',').map(e => e.trim().toLowerCase());
+  return allowed.includes(email.toLowerCase());
+}
+```
+
+| 环境变量 | 值示例 | 说明 |
+|----------|--------|------|
+| `ALLOWED_EMAILS` | `your@gmail.com` | 逗号分隔的允许登录邮箱列表 |
+| `GOOGLE_CLIENT_ID` | `61634268058-xxx.apps.googleusercontent.com` | Google OAuth Client ID |
+| `API_KEY` | `neo-api-key-xxx` | 固定 API Key (wrangler secret) |
+
+### 7.6 公开路径（免认证）
+
+| 路径 | 说明 |
+|------|------|
+| `GET /api/live` | 健康检查 |
+| `GET /api/favicon/:domain` | Favicon 代理 |
+| `GET /otp/:secret` | 快速 OTP 生成（公开工具） |
+| `OPTIONS *` | CORS 预检 |
+
+其他所有 `/api/*` 路径都需要认证。
+
+### 7.7 与原项目认证的对比
+
+| 维度 | 原项目 | 新项目 |
+|------|--------|--------|
+| 登录方式 | 密码表单 | Google OAuth |
+| 密码存储 | PBKDF2 100K iterations 哈希存 KV | 无密码存储 |
+| 会话 | 手工 JWT + HttpOnly Cookie | Google id_token + Bearer header |
+| API 认证 | Cookie 中的 JWT | API Key header 或 Google token |
+| 白名单 | 无（单用户靠密码） | `ALLOWED_EMAILS` 邮箱白名单 |
+| Token 验证 | 自签 JWT 本地验证 | Google JWKS RS256 公钥验证 |
+| 首次设置 | `/setup` 页面设置密码 | 无需设置，第一次 Google 登录即可 |
+| Token 刷新 | 自定义 X-Token-Refresh-Needed | GSI auto_select 静默刷新 |
+
+### 7.8 移除的模块
+
+以下原项目模块在新架构中**不再需要**：
+
+| 原模块 | 原用途 | 替代方案 |
+|--------|--------|----------|
+| `src/utils/auth.js` 中的 `hashPassword/verifyPassword` | PBKDF2 密码哈希 | Google OAuth，无密码 |
+| `src/utils/auth.js` 中的 `generateJWT/verifyJWT` | 自签 JWT | Google id_token + API Key |
+| `src/utils/auth.js` 中的 `handleFirstTimeSetup` | 首次设置密码 | 无需，首次 Google 登录即可 |
+| `src/utils/auth.js` 中的 `handleLogin` | 密码登录 | Google OAuth callback |
+| `src/utils/auth.js` 中的 `handleRefreshToken` | JWT 续期 | GSI auto_select |
+| `POST /api/setup` | 设置密码端点 | 移除 |
+| `POST /api/login` | 密码登录端点 | 移除 |
+| `POST /api/refresh-token` | Token 刷新端点 | 移除 |
+| `GET /setup` | 首次设置页面 | 移除 |
+| Rate Limit `login` 预设 | 密码暴力破解防护 | 不再需要（Google 自带防护） |
+
+### 7.9 对测试的影响
+
+| 原测试文件 | 用例数 | 影响 |
+|------------|--------|------|
+| `auth.test.js` (密码哈希/JWT) | 54 | **部分移除**：`hashPassword/verifyPassword/generateJWT/verifyJWT` 用例移除；`requiresAuth` 路径判断用例保留并适配 |
+| `auth.integration.test.js` (登录全链路) | 31 | **重写**：从密码登录改为 Google token + API Key 验证流程 |
+| `handler.test.js` (路由) | 49 | **适配**：移除 `/api/setup`, `/api/login`, `/api/refresh-token` 路由测试；新增 API Key 认证测试 |
+| `rateLimit.test.js` | 54 | **保留**：`login` 预设测试移除，其他不变 |
+
+**新增测试**：
+
+| 测试 | 内容 |
+|------|------|
+| `test/models/google-auth.test.ts` | Google id_token 验证（JWKS 获取、RS256 验证、iss/aud/exp 检查、email 白名单） |
+| `test/api/auth.e2e.test.ts` | API Key 认证、Google token 认证、无认证 401、白名单拒绝 |
+| `test/e2e/login-flow.spec.ts` | Google 登录按钮 → 认证 → 跳转 dashboard（Playwright mock Google OAuth） |
+
+---
+
+## 八、版本管理
 
 - **版本号来源**：`package.json` (单一事实来源)
 - **显示位置**：Sidebar badge (`v0.1.0`), `/api/live` 返回
