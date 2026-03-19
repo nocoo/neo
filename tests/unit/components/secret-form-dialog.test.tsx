@@ -20,6 +20,7 @@ const sampleSecret: Secret = {
   period: 30,
   algorithm: "SHA-1",
   counter: 0,
+  color: null,
   createdAt: new Date(),
   updatedAt: new Date(),
 };
@@ -172,6 +173,69 @@ describe("SecretFormDialog", () => {
         })
       );
       expect(onClose).toHaveBeenCalled();
+    });
+
+    it("prefills color when editing a secret with color", () => {
+      const coloredSecret = { ...sampleSecret, color: "blue" };
+      render(
+        <SecretFormDialog
+          open={true}
+          secret={coloredSecret}
+          onClose={vi.fn()}
+          onUpdate={vi.fn()}
+        />
+      );
+
+      const blueRadio = screen.getByLabelText("Blue");
+      expect(blueRadio.getAttribute("aria-checked")).toBe("true");
+    });
+  });
+
+  describe("color picker", () => {
+    it("renders color picker with all options", () => {
+      render(
+        <SecretFormDialog open={true} onClose={vi.fn()} onCreate={vi.fn()} />
+      );
+      expect(screen.getByText("Color")).toBeDefined();
+      expect(screen.getByLabelText("Auto")).toBeDefined();
+      expect(screen.getByLabelText("Red")).toBeDefined();
+      expect(screen.getByLabelText("Blue")).toBeDefined();
+    });
+
+    it("selects a color when clicked", () => {
+      render(
+        <SecretFormDialog open={true} onClose={vi.fn()} onCreate={vi.fn()} />
+      );
+
+      fireEvent.click(screen.getByLabelText("Red"));
+      expect(screen.getByLabelText("Red").getAttribute("aria-checked")).toBe("true");
+      expect(screen.getByLabelText("Auto").getAttribute("aria-checked")).toBe("false");
+    });
+
+    it("includes color in create submission", async () => {
+      const onCreate = vi.fn().mockResolvedValue(true);
+
+      render(
+        <SecretFormDialog open={true} onClose={vi.fn()} onCreate={onCreate} />
+      );
+
+      fireEvent.change(screen.getByLabelText("Name *"), {
+        target: { value: "Test" },
+      });
+      fireEvent.change(screen.getByLabelText("Secret Key *"), {
+        target: { value: "JBSWY3DPEHPK3PXP" },
+      });
+      fireEvent.click(screen.getByLabelText("Purple"));
+
+      await act(async () => {
+        fireEvent.submit(screen.getByText("Create").closest("form")!);
+      });
+
+      expect(onCreate).toHaveBeenCalledWith(
+        expect.objectContaining({
+          color: "purple",
+        })
+      );
     });
   });
 

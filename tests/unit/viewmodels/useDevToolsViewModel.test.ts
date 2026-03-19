@@ -63,6 +63,7 @@ const sampleSecret: Secret = {
   period: 30,
   algorithm: "SHA-1",
   counter: 0,
+  color: null,
   createdAt: new Date(),
   updatedAt: new Date(),
 };

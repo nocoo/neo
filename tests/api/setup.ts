@@ -29,6 +29,7 @@ interface MockSecretRow {
   period: number;
   algorithm: string;
   counter: number;
+  color?: string | null;
   created_at: number;
   updated_at: number;
 }
@@ -232,6 +233,7 @@ export class MockScopedDB {
       period: row.period,
       algorithm: row.algorithm as "SHA1" | "SHA256" | "SHA512",
       counter: row.counter,
+      color: row.color ?? null,
       createdAt: row.created_at,
       updatedAt: row.updated_at,
     };

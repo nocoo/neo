@@ -20,6 +20,7 @@ const sampleSecret: Secret = {
   period: 30,
   algorithm: "SHA-1",
   counter: 0,
+  color: null,
   createdAt: new Date(),
   updatedAt: new Date(),
 };
@@ -94,13 +95,13 @@ describe("SecretCard", () => {
     expect(screen.queryByLabelText("Delete GitHub")).toBeNull();
   });
 
-  it("copies OTP to clipboard on copy button click", async () => {
+  it("copies OTP to clipboard when card is clicked", async () => {
     const writeText = vi.fn().mockResolvedValue(undefined);
     Object.assign(navigator, { clipboard: { writeText } });
 
     render(<SecretCard secret={sampleSecret} otp={sampleOtp} />);
 
-    fireEvent.click(screen.getByLabelText("Copy OTP"));
+    fireEvent.click(screen.getByTestId("secret-card-s_test_1"));
     expect(writeText).toHaveBeenCalledWith("123456");
   });
 
@@ -114,5 +115,28 @@ describe("SecretCard", () => {
     render(<SecretCard secret={noAccount} />);
     expect(screen.getByText("GitHub")).toBeDefined();
     expect(screen.queryByText("user@example.com")).toBeNull();
+  });
+
+  it("uses user-defined color when set", () => {
+    const coloredSecret = { ...sampleSecret, color: "red" };
+    const { container } = render(<SecretCard secret={coloredSecret} />);
+    const card = container.querySelector("[data-testid='secret-card-s_test_1']");
+    expect(card?.className).toContain("bg-red-500");
+  });
+
+  it("same first-word names get the same theme", () => {
+    const secret1 = { ...sampleSecret, id: "s_1", name: "Google Gmail", color: null };
+    const secret2 = { ...sampleSecret, id: "s_2", name: "Google Drive", color: null };
+
+    const { container: c1 } = render(<SecretCard secret={secret1} />);
+    const { container: c2 } = render(<SecretCard secret={secret2} />);
+
+    const card1 = c1.querySelector("[data-testid='secret-card-s_1']");
+    const card2 = c2.querySelector("[data-testid='secret-card-s_2']");
+
+    // Both should have the same background class since "Google" hashes identically
+    const bgClass1 = card1?.className.split(" ").find((c) => c.startsWith("bg-"));
+    const bgClass2 = card2?.className.split(" ").find((c) => c.startsWith("bg-"));
+    expect(bgClass1).toBe(bgClass2);
   });
 });
