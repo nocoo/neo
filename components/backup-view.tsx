@@ -1,0 +1,135 @@
+"use client";
+
+/**
+ * BackupView — client component for backup management.
+ */
+
+import { useEffect, useCallback } from "react";
+import { Archive, Download, Trash2, RefreshCw } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { useBackupViewModel } from "@/viewmodels/useBackupViewModel";
+import { useDashboardState } from "@/contexts/dashboard-context";
+
+// ── Component ────────────────────────────────────────────────────────────
+
+export function BackupView() {
+  const vm = useBackupViewModel();
+  const { secrets } = useDashboardState();
+
+  // Load backups on mount
+  useEffect(() => {
+    vm.loadBackups();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const handleCreateBackup = useCallback(async () => {
+    const secretsJson = JSON.stringify(
+      secrets.map((s) => ({
+        id: s.id,
+        name: s.name,
+        account: s.account,
+        secret: s.secret,
+        type: s.type,
+        digits: s.digits,
+        period: s.period,
+        algorithm: s.algorithm,
+        counter: s.counter,
+      }))
+    );
+    await vm.handleCreateBackup(secretsJson);
+  }, [secrets, vm]);
+
+  return (
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-semibold">Backups</h1>
+          <p className="text-sm text-muted-foreground">
+            {vm.backupCount} backup{vm.backupCount !== 1 ? "s" : ""} total
+            {vm.lastBackupAt && (
+              <> &middot; Last: {vm.lastBackupAt.toLocaleDateString()}</>
+            )}
+          </p>
+        </div>
+        <div className="flex items-center gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => vm.handleCleanup()}
+            disabled={vm.busy}
+          >
+            <Trash2 className="h-4 w-4 mr-1" />
+            Cleanup
+          </Button>
+          <Button size="sm" onClick={handleCreateBackup} disabled={vm.busy}>
+            <Archive className="h-4 w-4 mr-1" />
+            Create Backup
+          </Button>
+        </div>
+      </div>
+
+      {/* Error banner */}
+      {vm.error && (
+        <div className="rounded-lg bg-destructive/10 px-4 py-3 text-sm text-destructive" role="alert">
+          {vm.error}
+          <button
+            type="button"
+            onClick={vm.clearError}
+            className="ml-2 underline cursor-pointer"
+          >
+            Dismiss
+          </button>
+        </div>
+      )}
+
+      {/* Backup list */}
+      {vm.backups.length === 0 ? (
+        <div className="flex flex-col items-center justify-center py-12 text-center">
+          <Archive className="h-12 w-12 text-muted-foreground/40 mb-4" />
+          <p className="text-sm text-muted-foreground">
+            No backups yet. Create your first backup to protect your secrets.
+          </p>
+        </div>
+      ) : (
+        <div className="space-y-2" role="list" aria-label="Backups list">
+          {vm.backups.map((backup) => (
+            <div
+              key={backup.id}
+              role="listitem"
+              className="flex items-center justify-between rounded-lg border border-border bg-card p-4"
+            >
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-medium truncate">{backup.filename}</p>
+                <p className="text-xs text-muted-foreground">
+                  {backup.secretCount} secret{backup.secretCount !== 1 ? "s" : ""}
+                  {" · "}
+                  {backup.reason}
+                  {backup.encrypted && " · Encrypted"}
+                  {" · "}
+                  {backup.createdAt.toLocaleDateString()}
+                </p>
+              </div>
+              <Button variant="ghost" size="icon" className="h-8 w-8" aria-label={`Download ${backup.filename}`}>
+                <Download className="h-3.5 w-3.5" />
+              </Button>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Refresh */}
+      <div className="flex justify-center">
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => vm.loadBackups()}
+          disabled={vm.busy}
+        >
+          <RefreshCw className="h-3.5 w-3.5 mr-1" />
+          Refresh
+        </Button>
+      </div>
+    </div>
+  );
+}
