@@ -467,28 +467,28 @@ worker/test/
 
 ### Phase 5: ViewModel + View 层 (20 commits)
 
-| # | Commit | 内容 |
-|---|--------|------|
-| 55 | `feat: implement secret crud server actions` | actions/secrets.ts, ~25 tests |
-| 56 | `feat: implement backup server actions` | actions/backup.ts, ~20 tests |
-| 57 | `feat: implement settings server actions` | actions/settings.ts, ~15 tests |
-| 58 | `feat: implement split state/actions dashboard context` | contexts/, ~15 tests |
-| 59 | `feat: implement combined dashboard data fetch` | actions/dashboard.ts, ~5 tests |
-| 60 | `feat: implement secrets viewmodel with otp generation` | viewmodels/useSecretsViewModel.ts, ~25 tests |
-| 61 | `feat: implement backup viewmodel` | ~15 tests |
-| 62 | `feat: implement developer tools viewmodel` | ~20 tests |
-| 63 | `feat: implement settings viewmodel` | ~10 tests |
-| 64 | `feat: implement auth viewmodel` | ~5 tests |
-| 65 | `feat: implement secret list and card components` | ~20 tests |
-| 66 | `feat: implement secret create/edit/delete modals` | ~15 tests |
-| 67 | `feat: implement import and export dialogs` | ~15 tests |
-| 68 | `feat: implement secrets management dashboard page` | wire it all |
-| 69 | `feat: implement backup management page` | ~10 tests |
-| 70 | `feat: wire backup page with server data` |  |
-| 71 | `feat: implement developer tools page` | ~10 tests |
-| 72 | `feat: wire tools page` |  |
-| 73 | `feat: implement settings page` | ~8 tests |
-| 74 | `feat: wire settings page and consolidate view tests` | ~253 total tests |
+| # | Commit | 内容 | Status |
+|---|--------|------|--------|
+| 55 | `feat: implement secret crud server actions` | actions/secrets.ts, 31 tests | ✅ |
+| 56 | `feat: implement backup server actions` | actions/backup.ts, 18 tests | ✅ |
+| 57 | `feat: implement settings server actions` | actions/settings.ts, 12 tests | ✅ |
+| 58 | `feat: implement split state/actions dashboard context` | contexts/, 10 tests | ✅ |
+| 59 | `feat: implement combined dashboard data fetch` | actions/dashboard.ts, 5 tests | ✅ |
+| 60 | `feat: implement secrets viewmodel with otp generation` | viewmodels/useSecretsViewModel.ts, 31 tests | ✅ |
+| 61 | `feat: implement backup viewmodel` | viewmodels/useBackupViewModel.ts, 14 tests | ✅ |
+| 62 | `feat: implement developer tools viewmodel` | viewmodels/useDevToolsViewModel.ts, 19 tests | ✅ |
+| 63 | `feat: implement settings viewmodel` | viewmodels/useSettingsViewModel.ts, 11 tests | ✅ |
+| 64 | `feat: implement auth viewmodel` | viewmodels/useAuthViewModel.ts, 6 tests | ✅ |
+| 65 | `feat: implement secret list and card components` | components/, 21 tests | ✅ |
+| 66 | `feat: implement secret create/edit/delete modals` | components/, 16 tests | ✅ |
+| 67 | `feat: implement import and export dialogs` | components/, 17 tests | ✅ |
+| 68 | `feat: implement secrets management dashboard page` | wire it all, 9 tests | ✅ |
+| 69 | `feat: implement backup management page` | components/backup-view, 10 tests | ✅ |
+| 70 | `feat: wire backup page with server data` | page.tsx | ✅ |
+| 71 | `feat: implement developer tools page` | components/tools-view, 10 tests | ✅ |
+| 72 | `feat: wire tools page` | page.tsx | ✅ |
+| 73 | `feat: implement settings page` | components/settings-view, 11 tests | ✅ |
+| 74 | `feat: wire settings page and consolidate view tests` | 581 total tests | ✅ |
 
 ### Phase 6: PWA + 离线 (8 commits)
 

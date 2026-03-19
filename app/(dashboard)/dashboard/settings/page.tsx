@@ -1,10 +1,14 @@
-export default function SettingsPage() {
+import { getDashboardData } from "@/actions/dashboard";
+import { DashboardProvider } from "@/contexts/dashboard-context";
+import { SettingsView } from "@/components/settings-view";
+
+export default async function SettingsPage() {
+  const result = await getDashboardData();
+  const initialData = result.success ? result.data : undefined;
+
   return (
-    <div>
-      <h1 className="text-2xl font-semibold">Settings</h1>
-      <p className="mt-2 text-muted-foreground">
-        Configure encryption, theme, and language.
-      </p>
-    </div>
+    <DashboardProvider initialData={initialData}>
+      <SettingsView />
+    </DashboardProvider>
   );
 }
