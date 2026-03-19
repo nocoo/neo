@@ -105,6 +105,7 @@ export async function createSecret(
       period: input.period ?? OTP_DEFAULTS.period,
       algorithm: input.algorithm ?? OTP_DEFAULTS.algorithm,
       counter: input.counter ?? OTP_DEFAULTS.counter,
+      color: input.color ?? null,
     });
 
     return { success: true, data: secret };
@@ -162,6 +163,7 @@ export async function updateSecret(
     if (input.period !== undefined) updateData.period = input.period;
     if (input.algorithm !== undefined) updateData.algorithm = input.algorithm;
     if (input.counter !== undefined) updateData.counter = input.counter;
+    if (input.color !== undefined) updateData.color = input.color || null;
 
     const secret = await db.updateSecret(input.id, updateData);
     if (!secret) return { success: false, error: "Secret not found" };

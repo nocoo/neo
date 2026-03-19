@@ -39,11 +39,12 @@ export class ScopedDB {
     period: number;
     algorithm: string;
     counter: number;
+    color?: string | null;
   }): Promise<Secret> {
     const now = Math.floor(Date.now() / 1000);
     const rows = await executeD1Query<Record<string, unknown>>(
-      `INSERT INTO secrets (id, user_id, name, account, secret, type, digits, period, algorithm, counter, created_at, updated_at)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      `INSERT INTO secrets (id, user_id, name, account, secret, type, digits, period, algorithm, counter, color, created_at, updated_at)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
        RETURNING *`,
       [
         data.id,
@@ -56,6 +57,7 @@ export class ScopedDB {
         data.period,
         data.algorithm,
         data.counter,
+        data.color ?? null,
         now,
         now,
       ]
@@ -74,6 +76,7 @@ export class ScopedDB {
       period: number;
       algorithm: string;
       counter: number;
+      color: string | null;
     }>
   ): Promise<Secret | null> {
     const setClauses: string[] = [];

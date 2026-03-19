@@ -26,6 +26,7 @@ export interface Secret {
   period: number;
   algorithm: OtpAlgorithm;
   counter: number;
+  color: string | null;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -40,6 +41,7 @@ export interface CreateSecretInput {
   period?: number;
   algorithm?: OtpAlgorithm;
   counter?: number;
+  color?: string;
 }
 
 /** Input for updating an existing secret */
@@ -53,6 +55,7 @@ export interface UpdateSecretInput {
   period?: number;
   algorithm?: OtpAlgorithm;
   counter?: number;
+  color?: string;
 }
 
 // ── Backup ───────────────────────────────────────────────────────────────────

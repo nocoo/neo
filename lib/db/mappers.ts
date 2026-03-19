@@ -17,6 +17,7 @@ export function rowToSecret(row: Record<string, unknown>): Secret {
     period: (row.period as number) || 30,
     algorithm: (row.algorithm as Secret["algorithm"]) || "SHA-1",
     counter: (row.counter as number) || 0,
+    color: (row.color as string | null) ?? null,
     createdAt: new Date((row.created_at as number) * 1000),
     updatedAt: new Date((row.updated_at as number) * 1000),
   };
