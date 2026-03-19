@@ -50,7 +50,7 @@ export type BackupViewModel = BackupViewModelState & BackupViewModelActions;
 
 export function useBackupViewModel(): BackupViewModel {
   const { backupCount, lastBackupAt } = useDashboardState();
-  const { handleBackupCreated } = useDashboardActions();
+  const { handleBackupCreated, refresh } = useDashboardActions();
 
   const [backups, setBackups] = useState<Backup[]>([]);
   const [busy, setBusy] = useState(false);
@@ -112,6 +112,8 @@ export function useBackupViewModel(): BackupViewModel {
       try {
         const result = await restoreBackupAction(backupData);
         if (result.success) {
+          // Refresh dashboard so restored secrets appear in the UI
+          await refresh();
           return result.data;
         }
         setError(result.error);
@@ -123,7 +125,7 @@ export function useBackupViewModel(): BackupViewModel {
         setBusy(false);
       }
     },
-    []
+    [refresh]
   );
 
   // ── Cleanup old backups ───────────────────────────────────────────────

@@ -14,6 +14,7 @@ const {
   mockRestoreBackup,
   mockUseDashboardState,
   mockHandleBackupCreated,
+  mockRefresh,
 } = vi.hoisted(() => {
   const mockGetBackups = vi.fn();
   const mockCreateManualBackup = vi.fn();
@@ -21,6 +22,7 @@ const {
   const mockRestoreBackup = vi.fn();
   const mockUseDashboardState = vi.fn();
   const mockHandleBackupCreated = vi.fn();
+  const mockRefresh = vi.fn().mockResolvedValue(undefined);
 
   return {
     mockGetBackups,
@@ -29,6 +31,7 @@ const {
     mockRestoreBackup,
     mockUseDashboardState,
     mockHandleBackupCreated,
+    mockRefresh,
   };
 });
 
@@ -43,6 +46,7 @@ vi.mock("@/contexts/dashboard-context", () => ({
   useDashboardState: mockUseDashboardState,
   useDashboardActions: vi.fn().mockReturnValue({
     handleBackupCreated: mockHandleBackupCreated,
+    refresh: mockRefresh,
   }),
 }));
 
@@ -290,6 +294,7 @@ describe("useBackupViewModel", () => {
 
       expect(restoreResult!).toEqual({ imported: 3, skipped: 0, duplicates: 1 });
       expect(mockRestoreBackup).toHaveBeenCalledWith('[{"name":"A","secret":"JBSWY3DPEHPK3PXP"}]');
+      expect(mockRefresh).toHaveBeenCalled();
     });
 
     it("sets error on failure", async () => {
@@ -306,6 +311,7 @@ describe("useBackupViewModel", () => {
 
       expect(restoreResult).toBeNull();
       expect(result.current.error).toBe("Invalid JSON data");
+      expect(mockRefresh).not.toHaveBeenCalled();
     });
 
     it("sets generic error on exception", async () => {
