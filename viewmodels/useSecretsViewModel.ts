@@ -76,9 +76,10 @@ export function useSecretsViewModel(): SecretsViewModel {
   // ── Filtered secrets ──────────────────────────────────────────────────
 
   const filteredSecrets = useMemo(() => {
-    if (!searchQuery.trim()) return secrets;
+    const sorted = [...secrets].sort((a, b) => a.name.localeCompare(b.name));
+    if (!searchQuery.trim()) return sorted;
     const query = searchQuery.toLowerCase();
-    return secrets.filter(
+    return sorted.filter(
       (s) =>
         s.name.toLowerCase().includes(query) ||
         (s.account && s.account.toLowerCase().includes(query))
