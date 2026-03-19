@@ -10,6 +10,7 @@ const withSerwist = withSerwistInit({
 
 const nextConfig: NextConfig = {
   output: "standalone",
+  allowedDevOrigins: ["https://neo.dev.hexly.ai"],
 };
 
 export default withSerwist(nextConfig);
