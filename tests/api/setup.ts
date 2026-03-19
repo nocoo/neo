@@ -8,7 +8,6 @@
  * replacing the D1 HTTP layer.
  */
 
-import { vi } from "vitest";
 import {
   getMockSecrets,
   getMockBackups,
@@ -281,22 +280,9 @@ export class MockScopedDB {
 
 export const TEST_USER_ID = "e2e-test-user";
 
-/** Mock auth-context to return a MockScopedDB for the test user. */
-export function setupApiE2EMocks() {
-  vi.mock("@/lib/auth-context", () => ({
-    getScopedDB: vi.fn().mockImplementation(async () => {
-      return new MockScopedDB(TEST_USER_ID);
-    }),
-    getSession: vi.fn().mockResolvedValue({
-      user: { id: TEST_USER_ID, name: "E2E User", email: "e2e@test.local" },
-      expires: new Date(Date.now() + 86400000).toISOString(),
-    }),
-    getAuthContext: vi.fn().mockImplementation(async () => ({
-      db: new MockScopedDB(TEST_USER_ID),
-      userId: TEST_USER_ID,
-    })),
-    requireAuth: vi.fn().mockResolvedValue(TEST_USER_ID),
-  }));
+/** Create a MockScopedDB for the test user (call from vi.mock factory). */
+export function createMockScopedDB() {
+  return new MockScopedDB(TEST_USER_ID);
 }
 
 /** Reset in-memory storage between tests. */
