@@ -107,15 +107,18 @@ describe("SettingsView", () => {
     expect(mockSettingsVM.handleUpdateLanguage).toHaveBeenCalledWith("zh");
   });
 
-  it("shows encryption enabled", () => {
+  it("shows encryption enabled with accurate description", () => {
     mockSettingsVM.encryptionEnabled = true;
     render(<SettingsView />);
     expect(screen.getByTestId("encryption-status").textContent).toBe("Enabled");
+    expect(screen.getByText(/Scheduled backups are encrypted/)).toBeDefined();
+    expect(screen.getByText(/Manual backups are stored as plaintext/)).toBeDefined();
   });
 
-  it("shows encryption disabled", () => {
+  it("shows encryption disabled with accurate description", () => {
     render(<SettingsView />);
     expect(screen.getByTestId("encryption-status").textContent).toBe("Disabled");
+    expect(screen.getByText(/No encryption key configured/)).toBeDefined();
   });
 
   it("shows error banner", () => {

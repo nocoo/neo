@@ -109,11 +109,11 @@ export function SettingsView() {
         </div>
         <div className="flex items-center justify-between">
           <div>
-            <p className="text-sm font-medium">Backup Encryption</p>
+            <p className="text-sm font-medium">Automated Backup Encryption</p>
             <p className="text-xs text-muted-foreground">
               {vm.encryptionEnabled
-                ? "Your backups are encrypted"
-                : "Backups are stored unencrypted"}
+                ? "Scheduled backups are encrypted. Manual backups are stored as plaintext."
+                : "No encryption key configured. All backups are stored unencrypted."}
             </p>
           </div>
           <span
