@@ -1,22 +1,14 @@
 /**
- * Rate limiting with sliding window algorithm.
+ * D1-backed rate limiting with sliding window algorithm.
  *
- * ⚠️  LIMITATION: Uses an in-memory Map, which means:
- *   1. State is lost on every worker restart / redeploy.
- *   2. Each Cloudflare edge isolate has its own store — rate limits
- *      are NOT shared across instances. A client hitting different
- *      PoPs (or the same PoP with different isolates) gets separate
- *      counters, effectively multiplying the real limit.
- *   3. Under high concurrency within a single isolate the store grows
- *      linearly with unique keys; the trim heuristic caps per-key
- *      growth but not total key count.
+ * All rate-limit state is stored in Cloudflare D1, providing:
+ *   1. Persistence across worker restarts / redeploys.
+ *   2. Shared state across edge isolates — a client hitting different
+ *      PoPs or isolates shares the same counters.
+ *   3. Bounded storage via automatic cleanup of expired entries.
  *
- * This is acceptable for low-traffic personal use but does NOT provide
- * production-grade protection for public-facing endpoints.
- *
- * TODO: Migrate to Cloudflare Durable Objects for a single-writer,
- * globally consistent rate limiter (or use the Cloudflare Rate Limiting
- * product). See: https://developers.cloudflare.com/durable-objects/
+ * Table schema (see migrations/0001_rate_limits.sql):
+ *   rate_limits(key TEXT, ts INTEGER, PRIMARY KEY (key, ts))
  */
 
 // ── Types ───────────────────────────────────────────────────────────────────
@@ -43,77 +35,120 @@ export const RATE_LIMIT_PRESETS: Record<string, RateLimitOptions> = {
   otp: { maxRequests: 60, windowMs: 60_000 },
 };
 
-// ── Sliding Window Store ────────────────────────────────────────────────────
-
-const store = new Map<string, number[]>();
+// ── D1-backed sliding window ────────────────────────────────────────────────
 
 /**
- * Check rate limit using sliding window algorithm.
+ * Check rate limit using D1-backed sliding window.
+ *
+ * Atomically counts recent requests and inserts a new timestamp if allowed.
  */
-export function checkRateLimit(
+export async function checkRateLimit(
+  db: D1Database,
   key: string,
   options: RateLimitOptions = RATE_LIMIT_PRESETS.api
-): RateLimitResult {
+): Promise<RateLimitResult> {
   const now = Date.now();
   const windowStart = now - options.windowMs;
 
-  // Get or create timestamps array
-  let timestamps = store.get(key) || [];
+  // Count requests in the current window
+  const countResult = await db
+    .prepare("SELECT COUNT(*) as cnt FROM rate_limits WHERE key = ? AND ts > ?")
+    .bind(key, windowStart)
+    .first<{ cnt: number }>();
 
-  // Filter out timestamps outside the window
-  timestamps = timestamps.filter((t) => t > windowStart);
-
-  const allowed = timestamps.length < options.maxRequests;
+  const count = countResult?.cnt ?? 0;
+  const allowed = count < options.maxRequests;
 
   if (allowed) {
-    timestamps.push(now);
+    // Record this request
+    await db
+      .prepare("INSERT INTO rate_limits (key, ts) VALUES (?, ?)")
+      .bind(key, now)
+      .run();
   }
 
-  // Trim to prevent unbounded growth
-  if (timestamps.length > options.maxRequests * 2) {
-    timestamps = timestamps.slice(-options.maxRequests);
-  }
+  // Get earliest timestamp in window for resetAt calculation
+  const earliest = await db
+    .prepare("SELECT MIN(ts) as min_ts FROM rate_limits WHERE key = ? AND ts > ?")
+    .bind(key, windowStart)
+    .first<{ min_ts: number | null }>();
 
-  store.set(key, timestamps);
-
-  const resetAt = timestamps.length > 0
-    ? timestamps[0] + options.windowMs
+  const resetAt = earliest?.min_ts
+    ? earliest.min_ts + options.windowMs
     : now + options.windowMs;
+
+  const currentCount = allowed ? count + 1 : count;
 
   return {
     allowed,
-    remaining: Math.max(0, options.maxRequests - timestamps.length),
+    remaining: Math.max(0, options.maxRequests - currentCount),
     limit: options.maxRequests,
     resetAt,
   };
 }
 
 /**
- * Reset rate limit for a key.
+ * Reset rate limit for a key (delete all entries).
  */
-export function resetRateLimit(key: string): void {
-  store.delete(key);
+export async function resetRateLimit(
+  db: D1Database,
+  key: string
+): Promise<void> {
+  await db
+    .prepare("DELETE FROM rate_limits WHERE key = ?")
+    .bind(key)
+    .run();
 }
 
 /**
  * Get rate limit info without incrementing.
  */
-export function getRateLimitInfo(
+export async function getRateLimitInfo(
+  db: D1Database,
   key: string,
   options: RateLimitOptions = RATE_LIMIT_PRESETS.api
-): RateLimitResult {
+): Promise<RateLimitResult> {
   const now = Date.now();
   const windowStart = now - options.windowMs;
-  const timestamps = (store.get(key) || []).filter((t) => t > windowStart);
+
+  const countResult = await db
+    .prepare("SELECT COUNT(*) as cnt FROM rate_limits WHERE key = ? AND ts > ?")
+    .bind(key, windowStart)
+    .first<{ cnt: number }>();
+
+  const count = countResult?.cnt ?? 0;
+
+  const earliest = await db
+    .prepare("SELECT MIN(ts) as min_ts FROM rate_limits WHERE key = ? AND ts > ?")
+    .bind(key, windowStart)
+    .first<{ min_ts: number | null }>();
+
+  const resetAt = earliest?.min_ts
+    ? earliest.min_ts + options.windowMs
+    : now + options.windowMs;
 
   return {
-    allowed: timestamps.length < options.maxRequests,
-    remaining: Math.max(0, options.maxRequests - timestamps.length),
+    allowed: count < options.maxRequests,
+    remaining: Math.max(0, options.maxRequests - count),
     limit: options.maxRequests,
-    resetAt: timestamps.length > 0
-      ? timestamps[0] + options.windowMs
-      : now + options.windowMs,
+    resetAt,
   };
+}
+
+/**
+ * Purge expired entries from the rate_limits table.
+ * Call periodically to keep the table size bounded.
+ */
+export async function purgeExpiredEntries(
+  db: D1Database,
+  maxWindowMs: number = 60_000
+): Promise<number> {
+  const cutoff = Date.now() - maxWindowMs;
+  const result = await db
+    .prepare("DELETE FROM rate_limits WHERE ts <= ?")
+    .bind(cutoff)
+    .run();
+  return result.meta.changes ?? 0;
 }
 
 /**
@@ -153,8 +188,8 @@ export function createRateLimitResponse(info: RateLimitResult): Response {
 }
 
 /**
- * Clear all rate limit data (for testing).
+ * Clear all rate limit data (for testing / admin).
  */
-export function clearAllRateLimits(): void {
-  store.clear();
+export async function clearAllRateLimits(db: D1Database): Promise<void> {
+  await db.prepare("DELETE FROM rate_limits").run();
 }

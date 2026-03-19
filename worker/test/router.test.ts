@@ -7,7 +7,84 @@ import { handleRequest } from "../src/router";
 import { clearAllRateLimits } from "../src/rate-limit";
 import type { Env } from "../src/types";
 
-const mockEnv = {} as Env;
+// ── D1 mock ──────────────────────────────────────────────────────────────────
+
+function createMockD1(): D1Database {
+  let rows: { key: string; ts: number }[] = [];
+
+  const mockDB = {
+    prepare(sql: string) {
+      return {
+        bind(...params: unknown[]) {
+          return {
+            async first<T>(): Promise<T | null> {
+              if (sql.includes("COUNT(*)")) {
+                const [key, ts] = params as [string, number];
+                const count = rows.filter(
+                  (r) => r.key === key && r.ts > ts
+                ).length;
+                return { cnt: count } as T;
+              }
+              if (sql.includes("MIN(ts)")) {
+                const [key, ts] = params as [string, number];
+                const matching = rows
+                  .filter((r) => r.key === key && r.ts > ts)
+                  .sort((a, b) => a.ts - b.ts);
+                return {
+                  min_ts: matching.length > 0 ? matching[0].ts : null,
+                } as T;
+              }
+              return null;
+            },
+            async run() {
+              if (sql.includes("INSERT INTO rate_limits")) {
+                const [key, ts] = params as [string, number];
+                rows.push({ key, ts });
+                return { meta: { changes: 1 } };
+              }
+              if (
+                sql.includes("DELETE FROM rate_limits WHERE key = ?") &&
+                !sql.includes("ts")
+              ) {
+                const [key] = params as [string];
+                const before = rows.length;
+                rows = rows.filter((r) => r.key !== key);
+                return { meta: { changes: before - rows.length } };
+              }
+              if (sql.includes("DELETE FROM rate_limits WHERE ts <=")) {
+                const [cutoff] = params as [number];
+                const before = rows.length;
+                rows = rows.filter((r) => r.ts > cutoff);
+                return { meta: { changes: before - rows.length } };
+              }
+              if (sql.includes("DELETE FROM rate_limits")) {
+                const count = rows.length;
+                rows = [];
+                return { meta: { changes: count } };
+              }
+              return { meta: { changes: 0 } };
+            },
+          };
+        },
+        async run() {
+          if (sql.includes("DELETE FROM rate_limits")) {
+            const count = rows.length;
+            rows = [];
+            return { meta: { changes: count } };
+          }
+          return { meta: { changes: 0 } };
+        },
+      };
+    },
+  } as unknown as D1Database;
+
+  return mockDB;
+}
+
+// ── Setup ────────────────────────────────────────────────────────────────────
+
+let mockDB: D1Database;
+let mockEnv: Env;
 
 function makeRequest(path: string, method = "GET", host = "localhost:8787"): Request {
   return new Request(`http://${host}${path}`, {
@@ -16,9 +93,13 @@ function makeRequest(path: string, method = "GET", host = "localhost:8787"): Req
   });
 }
 
-beforeEach(() => {
-  clearAllRateLimits();
+beforeEach(async () => {
+  mockDB = createMockD1();
+  mockEnv = { DB: mockDB } as Env;
+  await clearAllRateLimits(mockDB);
 });
+
+// ── Tests ────────────────────────────────────────────────────────────────────
 
 describe("handleRequest", () => {
   it("routes /otp/:secret to OTP handler", async () => {

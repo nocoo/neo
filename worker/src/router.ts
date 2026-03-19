@@ -36,7 +36,7 @@ export async function handleRequest(
     const preset = path.startsWith("/otp/")
       ? RATE_LIMIT_PRESETS.otp
       : RATE_LIMIT_PRESETS.api;
-    const rateLimitResult = checkRateLimit(clientId, preset);
+    const rateLimitResult = await checkRateLimit(env.DB, clientId, preset);
     if (!rateLimitResult.allowed) {
       return withSecurityHeaders(
         request,
