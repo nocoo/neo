@@ -19,7 +19,7 @@ const EXPORT_FORMATS: { value: ExportFormat; label: string }[] = [
   { value: "bitwarden", label: "Bitwarden" },
   { value: "lastpass", label: "LastPass" },
   { value: "generic-json", label: "Generic JSON" },
-  { value: "csv", label: "CSV" },
+  { value: "generic-csv", label: "CSV" },
 ];
 
 export interface ExportDialogProps {
@@ -63,7 +63,8 @@ export function ExportDialog({
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = `secrets-export.${selectedFormat === "csv" ? "csv" : "json"}`;
+    const ext = selectedFormat === "generic-csv" ? "csv" : selectedFormat === "generic-txt" ? "txt" : "json";
+    a.download = `secrets-export.${ext}`;
     a.click();
     URL.revokeObjectURL(url);
   }, [exportOutput, selectedFormat]);

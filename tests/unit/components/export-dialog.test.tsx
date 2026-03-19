@@ -116,6 +116,26 @@ describe("ExportDialog", () => {
     expect(screen.getByText("Export failed")).toBeDefined();
   });
 
+  it("calls onExport with generic-csv for CSV option", () => {
+    const onExport = vi.fn();
+    render(
+      <ExportDialog
+        open={true}
+        onClose={vi.fn()}
+        onExport={onExport}
+        exportOutput=""
+        error={null}
+      />
+    );
+
+    fireEvent.change(screen.getByLabelText("Export Format"), {
+      target: { value: "generic-csv" },
+    });
+    fireEvent.click(screen.getByText("Generate Export"));
+
+    expect(onExport).toHaveBeenCalledWith("generic-csv");
+  });
+
   it("calls onClose when close button clicked", () => {
     const onClose = vi.fn();
     render(
