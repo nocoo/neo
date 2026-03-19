@@ -452,18 +452,18 @@ worker/test/
 
 ### Phase 4: Worker 后端 (10 commits)
 
-| # | Commit | 内容 |
-|---|--------|------|
-| 45 | `feat: scaffold cloudflare worker project` | worker/package.json, wrangler.toml, src/index.ts |
-| 46 | `feat: implement worker request router` | worker/src/router.ts |
-| 47 | `feat: implement quick otp generation endpoint` | worker/src/otp.ts, ~15 tests |
-| 48 | `feat: implement favicon proxy with waterfall sources` | worker/src/favicon.ts, ~15 tests |
-| 49 | `feat: implement rate limiting with sliding window` | worker/src/rate-limit.ts (fix P3), ~25 tests |
-| 50 | `feat: implement unified security headers module` | worker/src/security.ts (fix P3), ~10 tests |
-| 51 | `feat: implement cron daily backup via d1 binding` | worker/src/backup.ts — SHA-256 hash 比对，数据无变化则跳过；变化时加密备份 + 清理旧备份，~20 tests |
-| 52 | `feat: integrate all worker modules into entry point` | wire everything |
-| 53 | `refactor: extract shared worker utilities` | worker/src/utils/ (fix P4) |
-| 54 | `test: consolidate worker tests` | ~85 total tests |
+| # | Commit | 内容 | Status |
+|---|--------|------|--------|
+| 45 | `feat: scaffold cloudflare worker project` | worker/package.json, wrangler.toml.example, src/index.ts | ✅ |
+| 46 | `feat: implement worker request router` | worker/src/router.ts, utils/response.ts, 6 tests | ✅ |
+| 47 | `feat: implement quick otp generation endpoint` | worker/src/otp.ts, 13 tests | ✅ |
+| 48 | `feat: implement favicon proxy with waterfall sources` | worker/src/favicon.ts, 7 tests | ✅ |
+| 49 | `feat: implement rate limiting with sliding window` | worker/src/rate-limit.ts, 18 tests | ✅ |
+| 50 | `feat: implement unified security headers module` | worker/src/security.ts (fix P3), 16 tests | ✅ |
+| 51 | `feat: implement cron daily backup via d1 binding` | worker/src/backup.ts, 16 tests | ✅ |
+| 52 | `feat: integrate all worker modules into entry point` | rate limiting in router, 7 router tests | ✅ |
+| 53 | `refactor: extract shared worker utilities` | worker/src/utils/crypto.ts, id.ts (fix P4), 11 tests | ✅ |
+| 54 | `test: consolidate worker tests` | 88 total tests, 7 test files | ✅ |
 
 ### Phase 5: ViewModel + View 层 (20 commits)
 
