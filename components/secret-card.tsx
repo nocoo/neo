@@ -1,14 +1,41 @@
 "use client";
 
 /**
- * SecretCard — displays a single OTP secret with its current code.
+ * SecretCard — card-style OTP display inspired by macOS authenticator widgets.
+ * Shows name + account on top, large OTP code at bottom, copy icon top-right.
+ * Supports colored backgrounds via a deterministic hash of the secret name.
  */
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useMemo } from "react";
 import { Copy, Check, Pencil, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import type { Secret, OtpResult } from "@/models/types";
+
+// ── Color palette ─────────────────────────────────────────────────────────
+
+const CARD_THEMES = [
+  { bg: "bg-card",              text: "text-card-foreground",   accent: "text-muted-foreground", progressBg: "bg-muted",         progressFill: "bg-primary",      progressWarn: "bg-destructive" },
+  { bg: "bg-red-500",           text: "text-white",             accent: "text-red-100",          progressBg: "bg-red-400/40",    progressFill: "bg-white/70",     progressWarn: "bg-yellow-300"  },
+  { bg: "bg-emerald-600",       text: "text-white",             accent: "text-emerald-100",      progressBg: "bg-emerald-400/40",progressFill: "bg-white/70",     progressWarn: "bg-yellow-300"  },
+  { bg: "bg-zinc-800",          text: "text-white",             accent: "text-zinc-300",         progressBg: "bg-zinc-600/40",   progressFill: "bg-white/70",     progressWarn: "bg-yellow-300"  },
+  { bg: "bg-blue-500",          text: "text-white",             accent: "text-blue-100",         progressBg: "bg-blue-400/40",   progressFill: "bg-white/70",     progressWarn: "bg-yellow-300"  },
+  { bg: "bg-purple-500",        text: "text-white",             accent: "text-purple-100",       progressBg: "bg-purple-400/40", progressFill: "bg-white/70",     progressWarn: "bg-yellow-300"  },
+  { bg: "bg-amber-500",         text: "text-white",             accent: "text-amber-100",        progressBg: "bg-amber-400/40",  progressFill: "bg-white/70",     progressWarn: "bg-yellow-300"  },
+  { bg: "bg-cyan-600",          text: "text-white",             accent: "text-cyan-100",         progressBg: "bg-cyan-400/40",   progressFill: "bg-white/70",     progressWarn: "bg-yellow-300"  },
+  { bg: "bg-pink-500",          text: "text-white",             accent: "text-pink-100",         progressBg: "bg-pink-400/40",   progressFill: "bg-white/70",     progressWarn: "bg-yellow-300"  },
+  { bg: "bg-indigo-500",        text: "text-white",             accent: "text-indigo-100",       progressBg: "bg-indigo-400/40", progressFill: "bg-white/70",     progressWarn: "bg-yellow-300"  },
+  { bg: "bg-teal-600",          text: "text-white",             accent: "text-teal-100",         progressBg: "bg-teal-400/40",   progressFill: "bg-white/70",     progressWarn: "bg-yellow-300"  },
+  { bg: "bg-orange-500",        text: "text-white",             accent: "text-orange-100",       progressBg: "bg-orange-400/40", progressFill: "bg-white/70",     progressWarn: "bg-yellow-300"  },
+] as const;
+
+function hashCode(str: string): number {
+  let hash = 0;
+  for (let i = 0; i < str.length; i++) {
+    hash = ((hash << 5) - hash + str.charCodeAt(i)) | 0;
+  }
+  return Math.abs(hash);
+}
 
 // ── Types ────────────────────────────────────────────────────────────────
 
@@ -23,6 +50,11 @@ export interface SecretCardProps {
 
 export function SecretCard({ secret, otp, onEdit, onDelete }: SecretCardProps) {
   const [copied, setCopied] = useState(false);
+
+  const theme = useMemo(
+    () => CARD_THEMES[hashCode(secret.id) % CARD_THEMES.length],
+    [secret.id]
+  );
 
   const handleCopy = useCallback(async () => {
     if (!otp?.otp) return;
@@ -41,86 +73,114 @@ export function SecretCard({ secret, otp, onEdit, onDelete }: SecretCardProps) {
 
   return (
     <div
-      className="group relative flex items-center gap-4 rounded-lg border border-border bg-card p-4 transition-colors hover:bg-accent/50"
+      className={cn(
+        "group relative flex flex-col justify-between rounded-2xl p-4 transition-all hover:scale-[1.02] hover:shadow-lg cursor-pointer min-h-[130px]",
+        theme.bg,
+        theme.text,
+        // Default card variant gets a border
+        theme.bg === "bg-card" && "border border-border"
+      )}
       data-testid={`secret-card-${secret.id}`}
+      onClick={handleCopy}
     >
-      {/* Info */}
-      <div className="flex-1 min-w-0">
-        <div className="flex items-center gap-2">
-          <h3 className="text-sm font-medium truncate">{secret.name}</h3>
+      {/* Top row: info + copy icon */}
+      <div className="flex items-start justify-between gap-2">
+        <div className="min-w-0 flex-1">
+          <h3 className="text-sm font-semibold truncate leading-tight">
+            {secret.name}
+          </h3>
+          {secret.account && (
+            <p className={cn("text-xs truncate mt-0.5", theme.accent)}>
+              {secret.account}
+            </p>
+          )}
           {secret.type !== "totp" && (
-            <span className="text-[10px] uppercase px-1.5 py-0.5 rounded bg-muted text-muted-foreground">
+            <span className="text-[10px] uppercase px-1.5 py-0.5 rounded bg-white/20 mt-1 inline-block">
               {secret.type}
             </span>
           )}
         </div>
-        {secret.account && (
-          <p className="text-xs text-muted-foreground truncate">{secret.account}</p>
-        )}
+        <button
+          type="button"
+          onClick={(e) => {
+            e.stopPropagation();
+            handleCopy();
+          }}
+          className={cn(
+            "shrink-0 p-1 rounded-md transition-colors",
+            theme.bg === "bg-card"
+              ? "hover:bg-accent"
+              : "hover:bg-white/20"
+          )}
+          aria-label={copied ? "Copied" : "Copy OTP"}
+        >
+          {copied ? (
+            <Check className="h-4 w-4" />
+          ) : (
+            <Copy className="h-4 w-4" />
+          )}
+        </button>
       </div>
 
-      {/* OTP Display */}
+      {/* Bottom: large OTP code */}
       {otp && (
-        <div className="flex items-center gap-2">
-          <div className="text-right">
-            <button
-              type="button"
-              onClick={handleCopy}
-              className="font-mono text-lg font-bold tracking-widest tabular-nums cursor-pointer hover:text-primary transition-colors"
-              title="Click to copy"
-              aria-label={`Copy OTP ${otp.otp}`}
-            >
-              {otp.otp}
-            </button>
-            {/* Timer bar */}
-            <div className="mt-1 h-0.5 w-full rounded-full bg-muted overflow-hidden">
-              <div
-                className={cn(
-                  "h-full rounded-full transition-all duration-1000 ease-linear",
-                  otp.remainingSeconds <= 5 ? "bg-destructive" : "bg-primary"
-                )}
-                style={{ width: `${100 - progressPercent}%` }}
-              />
-            </div>
+        <div className="mt-auto pt-2">
+          <div className="font-mono text-2xl font-bold tracking-widest tabular-nums leading-tight">
+            {otp.otp}
           </div>
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={handleCopy}
-            className="h-8 w-8"
-            aria-label={copied ? "Copied" : "Copy OTP"}
-          >
-            {copied ? (
-              <Check className="h-3.5 w-3.5 text-green-500" />
-            ) : (
-              <Copy className="h-3.5 w-3.5" />
-            )}
-          </Button>
+          {/* Timer bar */}
+          <div className={cn("mt-2 h-1 w-full rounded-full overflow-hidden", theme.progressBg)}>
+            <div
+              className={cn(
+                "h-full rounded-full transition-all duration-1000 ease-linear",
+                otp.remainingSeconds <= 5 ? theme.progressWarn : theme.progressFill
+              )}
+              style={{ width: `${100 - progressPercent}%` }}
+            />
+          </div>
         </div>
       )}
 
-      {/* Actions */}
-      <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+      {/* Hover actions: edit & delete */}
+      <div className={cn(
+        "absolute top-2 right-10 flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity",
+      )}>
         {onEdit && (
           <Button
             variant="ghost"
             size="icon"
-            onClick={() => onEdit(secret)}
-            className="h-8 w-8"
+            onClick={(e) => {
+              e.stopPropagation();
+              onEdit(secret);
+            }}
+            className={cn(
+              "h-7 w-7",
+              theme.bg === "bg-card"
+                ? "hover:bg-accent"
+                : "hover:bg-white/20 text-white"
+            )}
             aria-label={`Edit ${secret.name}`}
           >
-            <Pencil className="h-3.5 w-3.5" />
+            <Pencil className="h-3 w-3" />
           </Button>
         )}
         {onDelete && (
           <Button
             variant="ghost"
             size="icon"
-            onClick={() => onDelete(secret.id)}
-            className="h-8 w-8 text-destructive hover:text-destructive"
+            onClick={(e) => {
+              e.stopPropagation();
+              onDelete(secret.id);
+            }}
+            className={cn(
+              "h-7 w-7",
+              theme.bg === "bg-card"
+                ? "hover:bg-destructive/10 text-destructive"
+                : "hover:bg-white/20 text-white"
+            )}
             aria-label={`Delete ${secret.name}`}
           >
-            <Trash2 className="h-3.5 w-3.5" />
+            <Trash2 className="h-3 w-3" />
           </Button>
         )}
       </div>

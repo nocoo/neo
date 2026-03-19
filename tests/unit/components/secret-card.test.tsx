@@ -94,13 +94,13 @@ describe("SecretCard", () => {
     expect(screen.queryByLabelText("Delete GitHub")).toBeNull();
   });
 
-  it("copies OTP to clipboard on code click", async () => {
+  it("copies OTP to clipboard on copy button click", async () => {
     const writeText = vi.fn().mockResolvedValue(undefined);
     Object.assign(navigator, { clipboard: { writeText } });
 
     render(<SecretCard secret={sampleSecret} otp={sampleOtp} />);
 
-    fireEvent.click(screen.getByLabelText("Copy OTP 123456"));
+    fireEvent.click(screen.getByLabelText("Copy OTP"));
     expect(writeText).toHaveBeenCalledWith("123456");
   });
 
