@@ -75,7 +75,6 @@ export function SecretCard({ secret, otp, onEdit, onDelete }: SecretCardProps) {
     try {
       await navigator.clipboard.writeText(otp.otp);
       setFlipped(true);
-      // Flip back after showing the back face
       setTimeout(() => setFlipped(false), 1200);
     } catch {
       // Clipboard API not available
@@ -88,25 +87,20 @@ export function SecretCard({ secret, otp, onEdit, onDelete }: SecretCardProps) {
 
   return (
     <div
-      className="min-h-[130px] cursor-pointer"
+      className="cursor-pointer"
       style={{ perspective: "800px" }}
       data-testid={`secret-card-${secret.id}`}
       onClick={handleCopy}
     >
+      {/* Flip container — relative so it sizes to the front face content */}
       <div
-        className={cn(
-          "relative w-full h-full transition-transform duration-500 ease-in-out",
-          "[transform-style:preserve-3d]",
-        )}
-        style={{
-          transform: flipped ? "rotateY(180deg)" : "rotateY(0deg)",
-        }}
+        className="relative transition-transform duration-500 ease-in-out [transform-style:preserve-3d]"
+        style={{ transform: flipped ? "rotateY(180deg)" : "rotateY(0deg)" }}
       >
-        {/* ── Front face ─────────────────────────────────────── */}
+        {/* ── Front face — in normal flow to define card height ── */}
         <div
           className={cn(
-            "group absolute inset-0 flex flex-col justify-between rounded-2xl p-4 cursor-pointer",
-            "transition-shadow duration-200 hover:shadow-lg",
+            "group flex flex-col justify-between rounded-2xl p-4 min-h-[130px]",
             "[backface-visibility:hidden]",
             theme.bg,
             theme.text,
@@ -183,7 +177,7 @@ export function SecretCard({ secret, otp, onEdit, onDelete }: SecretCardProps) {
           </div>
         </div>
 
-        {/* ── Back face (Copied!) ─────────────────────────────── */}
+        {/* ── Back face (Copied!) — absolute, sized to match front ── */}
         <div
           className={cn(
             "absolute inset-0 flex flex-col items-center justify-center rounded-2xl",
