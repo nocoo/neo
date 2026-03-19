@@ -79,7 +79,7 @@ ENCRYPTION_KEY=        # AES-GCM 256-bit key for secret encryption
 # Install dependencies
 bun install
 
-# Run development server (port 7021)
+# Run development server (port 7042)
 bun run dev
 
 # Run tests
@@ -104,7 +104,7 @@ The project includes a multi-stage Dockerfile optimized for Railway:
 docker build -t neo .
 
 # Run container
-docker run -p 7021:7021 --env-file .env neo
+docker run -p 7042:7042 --env-file .env neo
 ```
 
 **Railway setup:**
@@ -112,7 +112,7 @@ docker run -p 7021:7021 --env-file .env neo
 2. Set all environment variables in Railway dashboard
 3. Railway auto-detects the Dockerfile and deploys
 
-The app runs on port **7021** with `output: "standalone"` for minimal image size.
+The app runs on port **7042** with `output: "standalone"` for minimal image size.
 
 ### Cloudflare Worker
 

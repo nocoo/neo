@@ -72,7 +72,7 @@ export const RATE_LIMIT_PRESETS = {
 export const APP_NAME = "Neo";
 
 /** Dev server port */
-export const DEV_PORT = 7021;
+export const DEV_PORT = 7042;
 
 /** Worker dev port */
 export const WORKER_PORT = 8787;

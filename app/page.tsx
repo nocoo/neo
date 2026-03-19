@@ -87,7 +87,7 @@ export default async function Home({
                   const host =
                     h.get("x-forwarded-host") ||
                     h.get("host") ||
-                    "localhost:7021";
+                    "localhost:7042";
                   // Use callbackUrl if provided (from middleware redirect), fallback to /dashboard
                   const path = callbackUrl && callbackUrl.startsWith("/") ? callbackUrl : "/dashboard";
                   const redirectTo = `${proto}://${host}${path}`;

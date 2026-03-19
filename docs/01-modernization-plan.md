@@ -265,10 +265,10 @@ Worker 端点测试（独立）：
 
 | 用途 | 端口 | 说明 |
 |------|------|------|
-| Dev Server (Next.js) | 7021 | `next dev --turbopack` |
+| Dev Server (Next.js) | 7042 | `next dev --turbopack` |
 | Worker Dev Server | 8787 | `wrangler dev` 默认端口 |
-| API E2E Server | 17021 | 独立实例，`PLAYWRIGHT=1` |
-| BDD E2E Server | 27021 | Playwright 专用实例 |
+| API E2E Server | 17042 | 独立实例，`PLAYWRIGHT=1` |
+| BDD E2E Server | 27042 | Playwright 专用实例 |
 
 - Playwright E2E 使用 Credentials provider 登录，绕开 Google OAuth
 - `PLAYWRIGHT=1` 环境变量启用测试用 Credentials 认证

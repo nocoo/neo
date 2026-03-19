@@ -10,7 +10,7 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  metadataBase: new URL(process.env.AUTH_URL || "http://localhost:7021"),
+  metadataBase: new URL(process.env.AUTH_URL || "http://localhost:7042"),
   title: "Neo - 2FA Manager",
   description: "A modern two-factor authentication manager",
   openGraph: {
