@@ -1,10 +1,14 @@
-export default function ToolsPage() {
+import { getDashboardData } from "@/actions/dashboard";
+import { DashboardProvider } from "@/contexts/dashboard-context";
+import { ToolsView } from "@/components/tools-view";
+
+export default async function ToolsPage() {
+  const result = await getDashboardData();
+  const initialData = result.success ? result.data : undefined;
+
   return (
-    <div>
-      <h1 className="text-2xl font-semibold">Developer Tools</h1>
-      <p className="mt-2 text-muted-foreground">
-        QR codes, Base32, key strength, and more.
-      </p>
-    </div>
+    <DashboardProvider initialData={initialData}>
+      <ToolsView />
+    </DashboardProvider>
   );
 }
