@@ -436,23 +436,19 @@ worker/test/
 | 30 | `feat: integrate auth into dashboard layout` | dashboard layout update |
 | 31 | `test: add unit tests for infrastructure layer` | ~80 tests |
 
-### Phase 3: Model 层 — TDD (13 commits)
+### Phase 3: Model 层 — TDD (13 commits) ✅
 
-| # | Commit | 内容 |
-|---|--------|------|
-| 32 | `feat: implement base32 codec and hash algorithm mapping` | models/otp.ts (partial), ~25 tests |
-| 33 | `feat: implement totp/hotp generation with 64-bit counter` | models/otp.ts (fix P1), ~60 tests |
-| 34 | `feat: implement aes-gcm 256-bit encryption` | models/encryption.ts, ~35 tests |
-| 35 | `feat: implement validation with schema system` | models/validation.ts, ~50 tests |
-| 36 | `feat: implement import parser infrastructure and otpauth parser` | models/import-parsers.ts (partial), ~20 tests |
-| 37 | `feat: implement json-based import parsers` | 18+ format parsers, ~40 tests |
-| 38 | `feat: implement text-based import parsers` | CSV/URI/migration parsers, ~30 tests |
-| 39 | `feat: implement json-based export formatters` | models/export-formatters.ts (partial), ~35 tests |
-| 40 | `feat: implement text-based and encrypted export formatters` | ~25 tests |
-| 41 | `feat: implement backup creation and restoration logic` | models/backup.ts, ~30 tests |
-| 42 | `feat: implement structured logger with null guard` | lib/logger.ts (fix P5), ~15 tests |
-| 43 | `feat: define typed error classes` | models/errors.ts, ~10 tests |
-| 44 | `test: consolidate model layer tests to 90% coverage` | ~340 total tests |
+| # | Commit | 内容 | 状态 |
+|---|--------|------|------|
+| 32+33 | `feat: implement otp model with base32 codec and totp/hotp generation` | models/otp.ts (fix P1), 54 tests | ✅ |
+| 34 | `feat: implement aes-gcm 256-bit encryption` | models/encryption.ts, 22 tests | ✅ |
+| 35 | `feat: implement validation with schema system` | models/validation.ts, 69 tests | ✅ |
+| 36+37 | `feat: implement import parser infrastructure and all format parsers` | models/import-parsers.ts, 15 formats, 43→66 tests | ✅ |
+| 38+39 | `feat: implement export formatters for all supported formats` | models/export-formatters.ts, 12 formats, 23 tests | ✅ |
+| 41 | `feat: implement backup model with hash, debounce, and retention` | models/backup.ts, 28 tests | ✅ |
+| 42 | `feat: implement structured logger with null guard` | lib/logger.ts (fix P5), 24 tests | ✅ |
+| 43 | `feat: implement typed error classes with factory` | models/errors.ts, 24 tests | ✅ |
+| 44 | `test: consolidate model tests to 90%+ coverage` | 330 total tests, models 97% stmts | ✅ |
 
 ### Phase 4: Worker 后端 (10 commits)
 
