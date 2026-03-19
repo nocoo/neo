@@ -1,0 +1,2 @@
+# L3: API E2E tests (mock-level, port-free)
+bun run test:api
