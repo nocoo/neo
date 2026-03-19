@@ -126,7 +126,7 @@ export interface OTPParamsInput {
 }
 
 const VALID_PERIODS = [30, 60, 120];
-const VALID_ALGORITHMS = ["SHA1", "SHA256", "SHA512"];
+const VALID_ALGORITHMS = ["SHA1", "SHA256", "SHA512", "SHA-1", "SHA-256", "SHA-512"];
 
 /**
  * Validate OTP parameters (type, digits, period, algorithm, counter).

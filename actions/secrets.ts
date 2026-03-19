@@ -8,7 +8,7 @@
  */
 
 import { getScopedDB } from "@/lib/auth-context";
-import { validateSecretData, validateBase32 } from "@/models/validation";
+import { validateSecretData, validateBase32, validateOTPParams } from "@/models/validation";
 import { OTP_DEFAULTS } from "@/models/constants";
 import type { ActionResult, Secret, CreateSecretInput, UpdateSecretInput } from "@/models/types";
 
@@ -80,6 +80,19 @@ export async function createSecret(
       return { success: false, error: validation.error ?? "Invalid secret data" };
     }
 
+    // Validate OTP parameters
+    const otpValidation = validateOTPParams({
+      type: input.type,
+      digits: input.digits,
+      period: input.period,
+      algorithm: input.algorithm,
+      counter: input.counter,
+    });
+
+    if (!otpValidation.valid) {
+      return { success: false, error: otpValidation.error ?? "Invalid OTP parameters" };
+    }
+
     const id = `s_${Date.now().toString(36)}_${Math.random().toString(36).substring(2, 8)}`;
 
     const secret = await db.createSecret({
@@ -116,6 +129,27 @@ export async function updateSecret(
     // If secret value is being updated, validate it
     if (input.secret !== undefined && !validateBase32(input.secret).valid) {
       return { success: false, error: "Invalid secret: must be valid base32" };
+    }
+
+    // Validate OTP parameters if any are being updated
+    if (
+      input.type !== undefined ||
+      input.digits !== undefined ||
+      input.period !== undefined ||
+      input.algorithm !== undefined ||
+      input.counter !== undefined
+    ) {
+      const otpValidation = validateOTPParams({
+        type: input.type,
+        digits: input.digits,
+        period: input.period,
+        algorithm: input.algorithm,
+        counter: input.counter,
+      });
+
+      if (!otpValidation.valid) {
+        return { success: false, error: otpValidation.error ?? "Invalid OTP parameters" };
+      }
     }
 
     // Build update data

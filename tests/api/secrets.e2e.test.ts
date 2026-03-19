@@ -137,6 +137,60 @@ describe("Secret CRUD — API E2E", () => {
       expect(result.error).toContain("Invalid secret");
     });
 
+    it("rejects invalid OTP type", async () => {
+      const result = await createSecret({
+        name: "Test",
+        secret: "JBSWY3DPEHPK3PXP",
+        type: "steam" as never,
+      });
+
+      expect(result.success).toBe(false);
+      expect(result.error).toContain("Unsupported OTP type");
+    });
+
+    it("rejects invalid digit count", async () => {
+      const result = await createSecret({
+        name: "Test",
+        secret: "JBSWY3DPEHPK3PXP",
+        digits: 7,
+      });
+
+      expect(result.success).toBe(false);
+      expect(result.error).toContain("Invalid digit count");
+    });
+
+    it("rejects invalid period", async () => {
+      const result = await createSecret({
+        name: "Test",
+        secret: "JBSWY3DPEHPK3PXP",
+        period: 45,
+      });
+
+      expect(result.success).toBe(false);
+      expect(result.error).toContain("Invalid TOTP period");
+    });
+
+    it("rejects invalid algorithm", async () => {
+      const result = await createSecret({
+        name: "Test",
+        secret: "JBSWY3DPEHPK3PXP",
+        algorithm: "MD5" as never,
+      });
+
+      expect(result.success).toBe(false);
+      expect(result.error).toContain("Unsupported algorithm");
+    });
+
+    it("accepts valid SHA-1 hyphenated algorithm", async () => {
+      const result = await createSecret({
+        name: "Test",
+        secret: "JBSWY3DPEHPK3PXP",
+        algorithm: "SHA-1",
+      });
+
+      expect(result.success).toBe(true);
+    });
+
     it("generates unique IDs", async () => {
       const r1 = await createSecret({
         name: "First",
@@ -280,6 +334,21 @@ describe("Secret CRUD — API E2E", () => {
 
       expect(result.success).toBe(false);
       expect(result.error).toContain("Invalid secret");
+    });
+
+    it("rejects invalid OTP params on update", async () => {
+      const created = await createSecret({
+        name: "Test",
+        secret: "JBSWY3DPEHPK3PXP",
+      });
+
+      const result = await updateSecret({
+        id: created.data!.id,
+        digits: 7,
+      });
+
+      expect(result.success).toBe(false);
+      expect(result.error).toContain("Invalid digit count");
     });
   });
 
