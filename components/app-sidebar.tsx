@@ -5,8 +5,8 @@ import { usePathname } from "next/navigation";
 import { Shield, Key, Archive, Wrench, Settings, LogOut } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { VERSION } from "@/lib/version";
-import { ThemeToggle } from "@/components/theme-toggle";
 import { handleSignOut } from "@/actions/auth";
+import type { SidebarUser } from "@/components/dashboard-shell";
 
 const navItems = [
   { href: "/dashboard", label: "Secrets", icon: Key },
@@ -15,8 +15,17 @@ const navItems = [
   { href: "/dashboard/settings", label: "Settings", icon: Settings },
 ];
 
-export function AppSidebar() {
+export function AppSidebar({ user }: { user: SidebarUser }) {
   const pathname = usePathname();
+
+  const initials = user.name
+    ? user.name
+        .split(" ")
+        .map((n) => n[0])
+        .join("")
+        .toUpperCase()
+        .slice(0, 2)
+    : "U";
 
   return (
     <aside className="flex w-56 flex-col border-r border-sidebar-border bg-sidebar">
@@ -55,18 +64,44 @@ export function AppSidebar() {
         })}
       </nav>
 
-      {/* Footer */}
-      <div className="flex items-center justify-between border-t border-sidebar-border px-4 py-3">
-        <ThemeToggle />
-        <form action={handleSignOut}>
-          <button
-            type="submit"
-            className="flex items-center gap-1 text-xs text-sidebar-foreground/50 hover:text-sidebar-foreground transition-colors cursor-pointer"
-          >
-            <LogOut className="h-3 w-3" />
-            Sign out
-          </button>
-        </form>
+      {/* Footer — user info + sign-out */}
+      <div className="border-t border-sidebar-border px-4 py-3">
+        <div className="flex items-center gap-2">
+          {/* Avatar */}
+          {user.image ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              src={user.image}
+              alt={user.name ?? "User"}
+              className="h-9 w-9 shrink-0 rounded-full"
+            />
+          ) : (
+            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-sidebar-accent text-xs font-medium text-sidebar-accent-foreground">
+              {initials}
+            </div>
+          )}
+
+          {/* User info */}
+          <div className="flex-1 min-w-0">
+            <p className="text-sm font-medium text-foreground truncate">
+              {user.name ?? "User"}
+            </p>
+            <p className="text-xs text-muted-foreground truncate">
+              {user.email ?? ""}
+            </p>
+          </div>
+
+          {/* Sign out */}
+          <form action={handleSignOut}>
+            <button
+              type="submit"
+              className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-muted-foreground hover:text-foreground hover:bg-accent transition-colors cursor-pointer"
+              title="Sign out"
+            >
+              <LogOut className="h-4 w-4" strokeWidth={1.5} />
+            </button>
+          </form>
+        </div>
       </div>
     </aside>
   );

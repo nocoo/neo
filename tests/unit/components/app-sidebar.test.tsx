@@ -20,11 +20,13 @@ vi.mock("@/actions/auth", () => ({
   handleSignOut: mockHandleSignOut,
 }));
 
-vi.mock("@/components/theme-toggle", () => ({
-  ThemeToggle: () => <div data-testid="theme-toggle" />,
-}));
-
 import { AppSidebar } from "@/components/app-sidebar";
+
+const defaultUser = {
+  name: "Test User",
+  email: "test@example.com",
+  image: null,
+};
 
 beforeEach(() => {
   vi.clearAllMocks();
@@ -35,12 +37,12 @@ beforeEach(() => {
 
 describe("AppSidebar", () => {
   it("renders logo", () => {
-    render(<AppSidebar />);
+    render(<AppSidebar user={defaultUser} />);
     expect(screen.getByText("neo.")).toBeDefined();
   });
 
   it("renders all navigation links", () => {
-    render(<AppSidebar />);
+    render(<AppSidebar user={defaultUser} />);
     expect(screen.getByText("Secrets")).toBeDefined();
     expect(screen.getByText("Backup")).toBeDefined();
     expect(screen.getByText("Tools")).toBeDefined();
@@ -48,29 +50,45 @@ describe("AppSidebar", () => {
   });
 
   it("renders sign out button as form submit", () => {
-    render(<AppSidebar />);
-    const signOutBtn = screen.getByText("Sign out");
+    render(<AppSidebar user={defaultUser} />);
+    const signOutBtn = screen.getByTitle("Sign out");
     expect(signOutBtn).toBeDefined();
     expect(signOutBtn.closest("form")).toBeDefined();
     expect(signOutBtn.getAttribute("type")).toBe("submit");
   });
 
-  it("sign out form has correct action", () => {
-    render(<AppSidebar />);
-    const form = screen.getByText("Sign out").closest("form");
-    // Form action should be the handleSignOut server action
-    expect(form).toBeDefined();
-  });
-
   it("highlights active nav item", () => {
     mockPathname.mockReturnValue("/dashboard/backup");
-    render(<AppSidebar />);
+    render(<AppSidebar user={defaultUser} />);
     const backupLink = screen.getByText("Backup").closest("a");
     expect(backupLink?.className).toContain("bg-sidebar-accent");
   });
 
-  it("renders theme toggle", () => {
-    render(<AppSidebar />);
-    expect(screen.getByTestId("theme-toggle")).toBeDefined();
+  it("displays user name and email", () => {
+    render(<AppSidebar user={defaultUser} />);
+    expect(screen.getByText("Test User")).toBeDefined();
+    expect(screen.getByText("test@example.com")).toBeDefined();
+  });
+
+  it("shows initials when no avatar image", () => {
+    render(<AppSidebar user={defaultUser} />);
+    expect(screen.getByText("TU")).toBeDefined();
+  });
+
+  it("shows avatar image when provided", () => {
+    render(
+      <AppSidebar
+        user={{ ...defaultUser, image: "https://example.com/avatar.jpg" }}
+      />
+    );
+    const img = screen.getByAltText("Test User");
+    expect(img).toBeDefined();
+    expect(img.getAttribute("src")).toBe("https://example.com/avatar.jpg");
+  });
+
+  it("shows fallback for missing name", () => {
+    render(<AppSidebar user={{ name: null, email: "a@b.com", image: null }} />);
+    expect(screen.getByText("User")).toBeDefined();
+    expect(screen.getByText("U")).toBeDefined();
   });
 });
