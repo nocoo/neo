@@ -14,6 +14,7 @@ describe("rowToSecret", () => {
       period: 30,
       algorithm: "SHA-1",
       counter: 0,
+      color: "blue",
       created_at: 1700000000,
       updated_at: 1700000000,
     };
@@ -29,6 +30,7 @@ describe("rowToSecret", () => {
     expect(secret.period).toBe(30);
     expect(secret.algorithm).toBe("SHA-1");
     expect(secret.counter).toBe(0);
+    expect(secret.color).toBe("blue");
     expect(secret.createdAt).toBeInstanceOf(Date);
     expect(secret.updatedAt).toBeInstanceOf(Date);
   });
@@ -51,6 +53,7 @@ describe("rowToSecret", () => {
 
     const secret = rowToSecret(row);
     expect(secret.account).toBeNull();
+    expect(secret.color).toBeNull();
   });
 
   it("applies defaults for missing OTP fields", () => {

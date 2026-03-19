@@ -99,7 +99,7 @@ describe("BackupView", () => {
 
   it("creates backup when button clicked", async () => {
     mockUseDashboardState.mockReturnValue({
-      secrets: [{ id: "s1", name: "GitHub", account: "", secret: "KEY", type: "totp", digits: 6, period: 30, algorithm: "SHA-1", counter: 0 }],
+      secrets: [{ id: "s1", name: "GitHub", account: "", secret: "KEY", type: "totp", digits: 6, period: 30, algorithm: "SHA-1", counter: 0, color: null }],
     });
     mockBackupVM.handleCreateBackup.mockResolvedValue(true);
 
