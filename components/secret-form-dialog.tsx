@@ -2,13 +2,33 @@
 
 /**
  * SecretFormDialog — shared form for creating and editing secrets.
+ * Includes a color picker for assigning card colors.
  */
 
 import { useState, useCallback, useEffect } from "react";
 import { createPortal } from "react-dom";
 import { Button } from "@/components/ui/button";
-import { X } from "lucide-react";
+import { X, Check } from "lucide-react";
+import { cn } from "@/lib/utils";
+import type { CardThemeKey } from "@/components/secret-card";
 import type { Secret, CreateSecretInput, UpdateSecretInput } from "@/models/types";
+
+// ── Color options (skip "default" — it means auto) ───────────────────────
+
+const COLOR_OPTIONS: { key: CardThemeKey | ""; label: string; swatch: string }[] = [
+  { key: "",         label: "Auto",    swatch: "bg-gradient-to-br from-gray-300 to-gray-500" },
+  { key: "red",      label: "Red",     swatch: "bg-red-500" },
+  { key: "emerald",  label: "Emerald", swatch: "bg-emerald-600" },
+  { key: "zinc",     label: "Zinc",    swatch: "bg-zinc-800" },
+  { key: "blue",     label: "Blue",    swatch: "bg-blue-500" },
+  { key: "purple",   label: "Purple",  swatch: "bg-purple-500" },
+  { key: "amber",    label: "Amber",   swatch: "bg-amber-500" },
+  { key: "cyan",     label: "Cyan",    swatch: "bg-cyan-600" },
+  { key: "pink",     label: "Pink",    swatch: "bg-pink-500" },
+  { key: "indigo",   label: "Indigo",  swatch: "bg-indigo-500" },
+  { key: "teal",     label: "Teal",    swatch: "bg-teal-600" },
+  { key: "orange",   label: "Orange",  swatch: "bg-orange-500" },
+];
 
 // ── Types ────────────────────────────────────────────────────────────────
 
@@ -42,6 +62,7 @@ export function SecretFormDialog({
   const [name, setName] = useState("");
   const [account, setAccount] = useState("");
   const [secretValue, setSecretValue] = useState("");
+  const [color, setColor] = useState<string>("");
   const [formError, setFormError] = useState<string | null>(null);
 
   // Sync form when opening in edit mode
@@ -50,11 +71,13 @@ export function SecretFormDialog({
       setName(secret.name);
       setAccount(secret.account || "");
       setSecretValue(secret.secret);
+      setColor(secret.color || "");
       setFormError(null);
     } else if (open) {
       setName("");
       setAccount("");
       setSecretValue("");
+      setColor("");
       setFormError(null);
     }
   }, [open, secret]);
@@ -77,6 +100,7 @@ export function SecretFormDialog({
       if (isEdit && secret && onUpdate) {
         const input: UpdateSecretInput = { id: secret.id, name: name.trim() };
         if (account.trim()) input.account = account.trim();
+        if (color !== undefined) input.color = color || undefined;
         const success = await onUpdate(input);
         if (success) onClose();
       } else if (onCreate) {
@@ -85,11 +109,12 @@ export function SecretFormDialog({
           secret: secretValue.trim(),
         };
         if (account.trim()) input.account = account.trim();
+        if (color) input.color = color;
         const success = await onCreate(input);
         if (success) onClose();
       }
     },
-    [name, account, secretValue, isEdit, secret, onCreate, onUpdate, onClose]
+    [name, account, secretValue, color, isEdit, secret, onCreate, onUpdate, onClose]
   );
 
   if (!open) return null;
@@ -160,6 +185,34 @@ export function SecretFormDialog({
               />
             </div>
           )}
+
+          {/* Color picker */}
+          <div>
+            <label className="block text-sm font-medium mb-2">Color</label>
+            <div className="flex flex-wrap gap-2" role="radiogroup" aria-label="Card color">
+              {COLOR_OPTIONS.map((opt) => (
+                <button
+                  key={opt.key}
+                  type="button"
+                  role="radio"
+                  aria-checked={color === opt.key}
+                  aria-label={opt.label}
+                  onClick={() => setColor(opt.key)}
+                  className={cn(
+                    "h-7 w-7 rounded-full border-2 transition-all flex items-center justify-center",
+                    opt.swatch,
+                    color === opt.key
+                      ? "border-foreground scale-110"
+                      : "border-transparent hover:border-muted-foreground/50"
+                  )}
+                >
+                  {color === opt.key && (
+                    <Check className="h-3.5 w-3.5 text-white drop-shadow" />
+                  )}
+                </button>
+              ))}
+            </div>
+          </div>
 
           {formError && (
             <p className="text-sm text-destructive" role="alert">

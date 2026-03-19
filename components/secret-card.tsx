@@ -2,32 +2,35 @@
 
 /**
  * SecretCard — card-style OTP display inspired by macOS authenticator widgets.
- * Shows name + account on top, large OTP code at bottom, copy icon top-right.
- * Supports colored backgrounds via a deterministic hash of the secret name.
+ * Shows name + account on top, large OTP code at bottom.
+ * Click the entire card to copy OTP. Supports colored backgrounds via
+ * user-defined color or a deterministic hash of the secret name's first word.
  */
 
 import { useState, useCallback, useMemo } from "react";
-import { Copy, Check, Pencil, Trash2 } from "lucide-react";
+import { Pencil, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import type { Secret, OtpResult } from "@/models/types";
 
 // ── Color palette ─────────────────────────────────────────────────────────
 
-const CARD_THEMES = [
-  { bg: "bg-card",              text: "text-card-foreground",   accent: "text-muted-foreground", progressBg: "bg-muted",         progressFill: "bg-primary",      progressWarn: "bg-destructive" },
-  { bg: "bg-red-500",           text: "text-white",             accent: "text-red-100",          progressBg: "bg-red-400/40",    progressFill: "bg-white/70",     progressWarn: "bg-yellow-300"  },
-  { bg: "bg-emerald-600",       text: "text-white",             accent: "text-emerald-100",      progressBg: "bg-emerald-400/40",progressFill: "bg-white/70",     progressWarn: "bg-yellow-300"  },
-  { bg: "bg-zinc-800",          text: "text-white",             accent: "text-zinc-300",         progressBg: "bg-zinc-600/40",   progressFill: "bg-white/70",     progressWarn: "bg-yellow-300"  },
-  { bg: "bg-blue-500",          text: "text-white",             accent: "text-blue-100",         progressBg: "bg-blue-400/40",   progressFill: "bg-white/70",     progressWarn: "bg-yellow-300"  },
-  { bg: "bg-purple-500",        text: "text-white",             accent: "text-purple-100",       progressBg: "bg-purple-400/40", progressFill: "bg-white/70",     progressWarn: "bg-yellow-300"  },
-  { bg: "bg-amber-500",         text: "text-white",             accent: "text-amber-100",        progressBg: "bg-amber-400/40",  progressFill: "bg-white/70",     progressWarn: "bg-yellow-300"  },
-  { bg: "bg-cyan-600",          text: "text-white",             accent: "text-cyan-100",         progressBg: "bg-cyan-400/40",   progressFill: "bg-white/70",     progressWarn: "bg-yellow-300"  },
-  { bg: "bg-pink-500",          text: "text-white",             accent: "text-pink-100",         progressBg: "bg-pink-400/40",   progressFill: "bg-white/70",     progressWarn: "bg-yellow-300"  },
-  { bg: "bg-indigo-500",        text: "text-white",             accent: "text-indigo-100",       progressBg: "bg-indigo-400/40", progressFill: "bg-white/70",     progressWarn: "bg-yellow-300"  },
-  { bg: "bg-teal-600",          text: "text-white",             accent: "text-teal-100",         progressBg: "bg-teal-400/40",   progressFill: "bg-white/70",     progressWarn: "bg-yellow-300"  },
-  { bg: "bg-orange-500",        text: "text-white",             accent: "text-orange-100",       progressBg: "bg-orange-400/40", progressFill: "bg-white/70",     progressWarn: "bg-yellow-300"  },
+export const CARD_THEMES = [
+  { key: "default",  bg: "bg-card",              text: "text-card-foreground",   accent: "text-muted-foreground", progressBg: "bg-muted",         progressFill: "bg-primary",      progressWarn: "bg-destructive" },
+  { key: "red",      bg: "bg-red-500",           text: "text-white",             accent: "text-red-100",          progressBg: "bg-red-400/40",    progressFill: "bg-white/70",     progressWarn: "bg-yellow-300"  },
+  { key: "emerald",  bg: "bg-emerald-600",       text: "text-white",             accent: "text-emerald-100",      progressBg: "bg-emerald-400/40",progressFill: "bg-white/70",     progressWarn: "bg-yellow-300"  },
+  { key: "zinc",     bg: "bg-zinc-800",          text: "text-white",             accent: "text-zinc-300",         progressBg: "bg-zinc-600/40",   progressFill: "bg-white/70",     progressWarn: "bg-yellow-300"  },
+  { key: "blue",     bg: "bg-blue-500",          text: "text-white",             accent: "text-blue-100",         progressBg: "bg-blue-400/40",   progressFill: "bg-white/70",     progressWarn: "bg-yellow-300"  },
+  { key: "purple",   bg: "bg-purple-500",        text: "text-white",             accent: "text-purple-100",       progressBg: "bg-purple-400/40", progressFill: "bg-white/70",     progressWarn: "bg-yellow-300"  },
+  { key: "amber",    bg: "bg-amber-500",         text: "text-white",             accent: "text-amber-100",        progressBg: "bg-amber-400/40",  progressFill: "bg-white/70",     progressWarn: "bg-yellow-300"  },
+  { key: "cyan",     bg: "bg-cyan-600",          text: "text-white",             accent: "text-cyan-100",         progressBg: "bg-cyan-400/40",   progressFill: "bg-white/70",     progressWarn: "bg-yellow-300"  },
+  { key: "pink",     bg: "bg-pink-500",          text: "text-white",             accent: "text-pink-100",         progressBg: "bg-pink-400/40",   progressFill: "bg-white/70",     progressWarn: "bg-yellow-300"  },
+  { key: "indigo",   bg: "bg-indigo-500",        text: "text-white",             accent: "text-indigo-100",       progressBg: "bg-indigo-400/40", progressFill: "bg-white/70",     progressWarn: "bg-yellow-300"  },
+  { key: "teal",     bg: "bg-teal-600",          text: "text-white",             accent: "text-teal-100",         progressBg: "bg-teal-400/40",   progressFill: "bg-white/70",     progressWarn: "bg-yellow-300"  },
+  { key: "orange",   bg: "bg-orange-500",        text: "text-white",             accent: "text-orange-100",       progressBg: "bg-orange-400/40", progressFill: "bg-white/70",     progressWarn: "bg-yellow-300"  },
 ] as const;
+
+export type CardThemeKey = (typeof CARD_THEMES)[number]["key"];
 
 function hashCode(str: string): number {
   let hash = 0;
@@ -35,6 +38,16 @@ function hashCode(str: string): number {
     hash = ((hash << 5) - hash + str.charCodeAt(i)) | 0;
   }
   return Math.abs(hash);
+}
+
+/** Extract the first word (letters/numbers) from a name for hashing. */
+function firstWord(name: string): string {
+  const match = name.match(/^[\p{L}\p{N}]+/u);
+  return match ? match[0] : name;
+}
+
+function getThemeByKey(key: string) {
+  return CARD_THEMES.find((t) => t.key === key);
 }
 
 // ── Types ────────────────────────────────────────────────────────────────
@@ -51,10 +64,15 @@ export interface SecretCardProps {
 export function SecretCard({ secret, otp, onEdit, onDelete }: SecretCardProps) {
   const [copied, setCopied] = useState(false);
 
-  const theme = useMemo(
-    () => CARD_THEMES[hashCode(secret.id) % CARD_THEMES.length],
-    [secret.id]
-  );
+  const theme = useMemo(() => {
+    // User-defined color takes priority
+    if (secret.color) {
+      const userTheme = getThemeByKey(secret.color);
+      if (userTheme) return userTheme;
+    }
+    // Fallback: hash the first word of the name
+    return CARD_THEMES[hashCode(firstWord(secret.name)) % CARD_THEMES.length];
+  }, [secret.color, secret.name]);
 
   const handleCopy = useCallback(async () => {
     if (!otp?.otp) return;
@@ -78,12 +96,14 @@ export function SecretCard({ secret, otp, onEdit, onDelete }: SecretCardProps) {
         theme.bg,
         theme.text,
         // Default card variant gets a border
-        theme.bg === "bg-card" && "border border-border"
+        theme.bg === "bg-card" && "border border-border",
+        // Visual feedback when copied
+        copied && "ring-2 ring-white/50"
       )}
       data-testid={`secret-card-${secret.id}`}
       onClick={handleCopy}
     >
-      {/* Top row: info + copy icon */}
+      {/* Top row: info */}
       <div className="flex items-start justify-between gap-2">
         <div className="min-w-0 flex-1">
           <h3 className="text-sm font-semibold truncate leading-tight">
@@ -100,26 +120,6 @@ export function SecretCard({ secret, otp, onEdit, onDelete }: SecretCardProps) {
             </span>
           )}
         </div>
-        <button
-          type="button"
-          onClick={(e) => {
-            e.stopPropagation();
-            handleCopy();
-          }}
-          className={cn(
-            "shrink-0 p-1 rounded-md transition-colors",
-            theme.bg === "bg-card"
-              ? "hover:bg-accent"
-              : "hover:bg-white/20"
-          )}
-          aria-label={copied ? "Copied" : "Copy OTP"}
-        >
-          {copied ? (
-            <Check className="h-4 w-4" />
-          ) : (
-            <Copy className="h-4 w-4" />
-          )}
-        </button>
       </div>
 
       {/* Bottom: large OTP code */}
@@ -143,7 +143,7 @@ export function SecretCard({ secret, otp, onEdit, onDelete }: SecretCardProps) {
 
       {/* Hover actions: edit & delete */}
       <div className={cn(
-        "absolute top-2 right-10 flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity",
+        "absolute top-2 right-2 flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity",
       )}>
         {onEdit && (
           <Button
