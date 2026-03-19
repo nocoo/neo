@@ -505,18 +505,18 @@ worker/test/
 
 ### Phase 7: E2E 测试 + 部署 (10 commits)
 
-| # | Commit | 内容 |
-|---|--------|------|
-| 83 | `test: configure api e2e test infrastructure` | tests/api/setup.ts |
-| 84 | `test: add api e2e tests for secret crud` | ~30 tests |
-| 85 | `test: add api e2e tests for backup operations` | ~15 tests |
-| 86 | `test: add api e2e tests for auth and settings` | ~15 tests (fix P6) |
-| 87 | `test: configure playwright e2e with auth setup` | playwright.config.ts, fixtures/ |
-| 88 | `test: add playwright tests for auth flows` | ~8 tests |
-| 89 | `test: add playwright tests for secrets management` | ~15 tests |
-| 90 | `test: add playwright tests for backup, tools, settings` | ~12 tests |
-| 91 | `chore: add dockerfile for railway deployment` | Dockerfile, .dockerignore |
-| 92 | `docs: add deployment config, readme, and changelog` |  |
+| # | Commit | 内容 | Status |
+|---|--------|------|--------|
+| 83 | `test: configure api e2e test infrastructure` | tests/api/setup.ts (MockScopedDB) | ✅ |
+| 84 | `test: add api e2e tests for secret crud` | 28 tests | ✅ |
+| 85 | `test: add api e2e tests for backup operations` | 14 tests | ✅ |
+| 86 | `test: add api e2e tests for auth and settings` | 16 tests | ✅ |
+| 87 | `test: configure playwright e2e with auth setup` | playwright.config.ts, auth.setup.ts | ✅ |
+| 88 | `test: add playwright tests for auth flows` | 8 tests | ✅ |
+| 89 | `test: add playwright tests for secrets management` | 15 tests | ✅ |
+| 90 | `test: add playwright tests for backup, tools, settings` | 12 tests | ✅ |
+| 91 | `chore: add dockerfile for railway deployment` | Dockerfile, .dockerignore | ✅ |
+| 92 | `docs: add deployment config, readme, and changelog` | 697 total vitest, 35 playwright | ✅ |
 
 ---
 
