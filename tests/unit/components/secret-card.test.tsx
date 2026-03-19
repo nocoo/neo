@@ -105,7 +105,7 @@ describe("SecretCard", () => {
     expect(writeText).toHaveBeenCalledWith("123456");
   });
 
-  it("shows copied feedback overlay after clicking", async () => {
+  it("shows 3D flip with Copied! back face after clicking", async () => {
     const writeText = vi.fn().mockResolvedValue(undefined);
     Object.assign(navigator, { clipboard: { writeText } });
 
@@ -113,7 +113,7 @@ describe("SecretCard", () => {
 
     fireEvent.click(screen.getByTestId("secret-card-s_test_1"));
 
-    // "Copied!" overlay should be visible
+    // "Copied!" back face is always in DOM; after flip it becomes visible
     expect(screen.getByText("Copied!")).toBeDefined();
   });
 
@@ -132,8 +132,9 @@ describe("SecretCard", () => {
   it("uses user-defined color when set", () => {
     const coloredSecret = { ...sampleSecret, color: "red" };
     const { container } = render(<SecretCard secret={coloredSecret} />);
-    const card = container.querySelector("[data-testid='secret-card-s_test_1']");
-    expect(card?.className).toContain("bg-red-500");
+    // The front face div (first child of the flip container) carries bg classes
+    const frontFace = container.querySelector("[data-testid='secret-card-s_test_1'] > div > div");
+    expect(frontFace?.className).toContain("bg-red-500");
   });
 
   it("same first-word names get the same theme", () => {
@@ -143,12 +144,12 @@ describe("SecretCard", () => {
     const { container: c1 } = render(<SecretCard secret={secret1} />);
     const { container: c2 } = render(<SecretCard secret={secret2} />);
 
-    const card1 = c1.querySelector("[data-testid='secret-card-s_1']");
-    const card2 = c2.querySelector("[data-testid='secret-card-s_2']");
+    // Front face is first child of flip container
+    const front1 = c1.querySelector("[data-testid='secret-card-s_1'] > div > div");
+    const front2 = c2.querySelector("[data-testid='secret-card-s_2'] > div > div");
 
-    // Both should have the same background class since "Google" hashes identically
-    const bgClass1 = card1?.className.split(" ").find((c) => c.startsWith("bg-"));
-    const bgClass2 = card2?.className.split(" ").find((c) => c.startsWith("bg-"));
+    const bgClass1 = front1?.className.split(" ").find((c) => c.startsWith("bg-"));
+    const bgClass2 = front2?.className.split(" ").find((c) => c.startsWith("bg-"));
     expect(bgClass1).toBe(bgClass2);
   });
 });

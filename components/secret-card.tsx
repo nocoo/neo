@@ -3,12 +3,12 @@
 /**
  * SecretCard — card-style OTP display inspired by macOS authenticator widgets.
  * Shows name + account on top, large OTP code at bottom.
- * Click the entire card to copy OTP. Supports colored backgrounds via
- * user-defined color or a deterministic hash of the secret name's first word.
+ * Click the entire card to copy OTP with a 3D flip animation.
+ * Supports colored backgrounds via user-defined color or deterministic hash.
  */
 
 import { useState, useCallback, useMemo } from "react";
-import { Pencil, Trash2 } from "lucide-react";
+import { Pencil, Trash2, ClipboardCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import type { Secret, OtpResult } from "@/models/types";
@@ -60,28 +60,27 @@ export interface SecretCardProps {
 // ── Component ────────────────────────────────────────────────────────────
 
 export function SecretCard({ secret, otp, onEdit, onDelete }: SecretCardProps) {
-  const [copied, setCopied] = useState(false);
+  const [flipped, setFlipped] = useState(false);
 
   const theme = useMemo(() => {
-    // User-defined color takes priority
     if (secret.color) {
       const userTheme = getThemeByKey(secret.color);
       if (userTheme) return userTheme;
     }
-    // Fallback: hash the first word of the name
     return CARD_THEMES[hashCode(firstWord(secret.name)) % CARD_THEMES.length];
   }, [secret.color, secret.name]);
 
   const handleCopy = useCallback(async () => {
-    if (!otp?.otp) return;
+    if (!otp?.otp || flipped) return;
     try {
       await navigator.clipboard.writeText(otp.otp);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
+      setFlipped(true);
+      // Flip back after showing the back face
+      setTimeout(() => setFlipped(false), 1200);
     } catch {
       // Clipboard API not available
     }
-  }, [otp?.otp]);
+  }, [otp?.otp, flipped]);
 
   const progressPercent = otp
     ? ((otp.period - otp.remainingSeconds) / otp.period) * 100
@@ -89,99 +88,114 @@ export function SecretCard({ secret, otp, onEdit, onDelete }: SecretCardProps) {
 
   return (
     <div
-      className={cn(
-        "group relative flex flex-col justify-between rounded-2xl p-4 cursor-pointer min-h-[130px]",
-        "transition-all duration-200 hover:scale-[1.02] hover:shadow-lg",
-        theme.bg,
-        theme.text,
-        // Copy feedback: brief scale-down + bright ring
-        copied
-          ? "scale-95 ring-2 ring-white shadow-lg"
-          : ""
-      )}
+      className="min-h-[130px] cursor-pointer"
+      style={{ perspective: "800px" }}
       data-testid={`secret-card-${secret.id}`}
       onClick={handleCopy}
     >
-      {/* Copied toast overlay */}
       <div
         className={cn(
-          "absolute inset-0 flex items-center justify-center rounded-2xl bg-black/20 transition-opacity duration-200 pointer-events-none z-10",
-          copied ? "opacity-100" : "opacity-0"
+          "relative w-full h-full transition-transform duration-500 ease-in-out",
+          "[transform-style:preserve-3d]",
         )}
+        style={{
+          transform: flipped ? "rotateY(180deg)" : "rotateY(0deg)",
+        }}
       >
-        <span className="text-white text-sm font-semibold drop-shadow">Copied!</span>
-      </div>
-
-      {/* Top row: info */}
-      <div className="flex items-start justify-between gap-2">
-        <div className="min-w-0 flex-1">
-          <h3 className="text-sm font-semibold truncate leading-tight">
-            {secret.name}
-          </h3>
-          {secret.account && (
-            <p className={cn("text-xs truncate mt-0.5", theme.accent)}>
-              {secret.account}
-            </p>
+        {/* ── Front face ─────────────────────────────────────── */}
+        <div
+          className={cn(
+            "group absolute inset-0 flex flex-col justify-between rounded-2xl p-4 cursor-pointer",
+            "transition-shadow duration-200 hover:shadow-lg",
+            "[backface-visibility:hidden]",
+            theme.bg,
+            theme.text,
           )}
-          {secret.type !== "totp" && (
-            <span className="text-[10px] uppercase px-1.5 py-0.5 rounded bg-white/20 mt-1 inline-block">
-              {secret.type}
-            </span>
-          )}
-        </div>
-      </div>
-
-      {/* Bottom: large OTP code */}
-      {otp && (
-        <div className="mt-auto pt-2">
-          <div className="font-mono text-2xl font-bold tracking-widest tabular-nums leading-tight">
-            {otp.otp}
-          </div>
-          {/* Timer bar */}
-          <div className={cn("mt-2 h-1 w-full rounded-full overflow-hidden", theme.progressBg)}>
-            <div
-              className={cn(
-                "h-full rounded-full transition-all duration-1000 ease-linear",
-                otp.remainingSeconds <= 5 ? theme.progressWarn : theme.progressFill
+        >
+          {/* Top row: info */}
+          <div className="flex items-start justify-between gap-2">
+            <div className="min-w-0 flex-1">
+              <h3 className="text-sm font-semibold truncate leading-tight">
+                {secret.name}
+              </h3>
+              {secret.account && (
+                <p className={cn("text-xs truncate mt-0.5", theme.accent)}>
+                  {secret.account}
+                </p>
               )}
-              style={{ width: `${100 - progressPercent}%` }}
-            />
+              {secret.type !== "totp" && (
+                <span className="text-[10px] uppercase px-1.5 py-0.5 rounded bg-white/20 mt-1 inline-block">
+                  {secret.type}
+                </span>
+              )}
+            </div>
+          </div>
+
+          {/* Bottom: large OTP code */}
+          {otp && (
+            <div className="mt-auto pt-2">
+              <div className="font-mono text-2xl font-bold tracking-widest tabular-nums leading-tight">
+                {otp.otp}
+              </div>
+              {/* Timer bar */}
+              <div className={cn("mt-2 h-1 w-full rounded-full overflow-hidden", theme.progressBg)}>
+                <div
+                  className={cn(
+                    "h-full rounded-full transition-all duration-1000 ease-linear",
+                    otp.remainingSeconds <= 5 ? theme.progressWarn : theme.progressFill
+                  )}
+                  style={{ width: `${100 - progressPercent}%` }}
+                />
+              </div>
+            </div>
+          )}
+
+          {/* Hover actions: edit & delete */}
+          <div className="absolute top-2 right-2 flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
+            {onEdit && (
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onEdit(secret);
+                }}
+                className="h-7 w-7 hover:bg-white/20 text-white"
+                aria-label={`Edit ${secret.name}`}
+              >
+                <Pencil className="h-3 w-3" />
+              </Button>
+            )}
+            {onDelete && (
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onDelete(secret.id);
+                }}
+                className="h-7 w-7 hover:bg-white/20 text-white"
+                aria-label={`Delete ${secret.name}`}
+              >
+                <Trash2 className="h-3 w-3" />
+              </Button>
+            )}
           </div>
         </div>
-      )}
 
-      {/* Hover actions: edit & delete */}
-      <div className={cn(
-        "absolute top-2 right-2 flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity",
-      )}>
-        {onEdit && (
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={(e) => {
-              e.stopPropagation();
-              onEdit(secret);
-            }}
-            className="h-7 w-7 hover:bg-white/20 text-white"
-            aria-label={`Edit ${secret.name}`}
-          >
-            <Pencil className="h-3 w-3" />
-          </Button>
-        )}
-        {onDelete && (
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={(e) => {
-              e.stopPropagation();
-              onDelete(secret.id);
-            }}
-            className="h-7 w-7 hover:bg-white/20 text-white"
-            aria-label={`Delete ${secret.name}`}
-          >
-            <Trash2 className="h-3 w-3" />
-          </Button>
-        )}
+        {/* ── Back face (Copied!) ─────────────────────────────── */}
+        <div
+          className={cn(
+            "absolute inset-0 flex flex-col items-center justify-center rounded-2xl",
+            "[backface-visibility:hidden] [transform:rotateY(180deg)]",
+            theme.bg,
+            theme.text,
+          )}
+          aria-hidden={!flipped}
+        >
+          <ClipboardCheck className="h-8 w-8 mb-2 drop-shadow" />
+          <span className="text-lg font-bold drop-shadow">Copied!</span>
+        </div>
       </div>
     </div>
   );
