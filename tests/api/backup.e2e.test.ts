@@ -1,0 +1,159 @@
+/**
+ * API E2E tests — Backup operations.
+ */
+
+import { describe, it, expect, vi, beforeEach } from "vitest";
+import { createMockScopedDB, resetStorage, TEST_USER_ID } from "./setup";
+
+// ── Top-level mock ───────────────────────────────────────────────────────
+
+vi.mock("@/lib/auth-context", () => ({
+  getScopedDB: vi.fn().mockImplementation(async () => createMockScopedDB()),
+  getSession: vi.fn().mockResolvedValue({
+    user: { id: TEST_USER_ID, name: "E2E User", email: "e2e@test.local" },
+    expires: new Date(Date.now() + 86400000).toISOString(),
+  }),
+  getAuthContext: vi.fn().mockImplementation(async () => ({
+    db: createMockScopedDB(),
+    userId: TEST_USER_ID,
+  })),
+  requireAuth: vi.fn().mockResolvedValue(TEST_USER_ID),
+}));
+
+import {
+  getBackups,
+  getLatestBackup,
+  getBackupCount,
+  createManualBackup,
+  cleanupBackups,
+} from "@/actions/backup";
+
+// ── Reset ────────────────────────────────────────────────────────────────
+
+beforeEach(() => {
+  resetStorage();
+});
+
+// ── Tests ────────────────────────────────────────────────────────────────
+
+describe("Backup operations — API E2E", () => {
+  const sampleSecrets = JSON.stringify([
+    { name: "GitHub", secret: "JBSWY3DPEHPK3PXP" },
+    { name: "AWS", secret: "GEZDGNBVGY3TQOJQ" },
+  ]);
+
+  // ── Create ───────────────────────────────────────────────────────────
+
+  describe("createManualBackup", () => {
+    it("creates a backup from secrets JSON", async () => {
+      const result = await createManualBackup(sampleSecrets);
+
+      expect(result.success).toBe(true);
+      expect(result.data!.secretCount).toBe(2);
+      expect(result.data!.reason).toBe("manual");
+      expect(result.data!.encrypted).toBe(false);
+      expect(result.data!.filename).toBeTruthy();
+    });
+
+    it("stores backup data", async () => {
+      const result = await createManualBackup(sampleSecrets);
+      expect(result.success).toBe(true);
+      expect(result.data!.data).toBe(sampleSecrets);
+    });
+
+    it("generates hash", async () => {
+      const result = await createManualBackup(sampleSecrets);
+      expect(result.success).toBe(true);
+      expect(result.data!.hash).toBeTruthy();
+      expect(result.data!.hash.length).toBe(8);
+    });
+
+    it("rejects empty data", async () => {
+      const result = await createManualBackup("");
+      expect(result.success).toBe(false);
+      expect(result.error).toContain("required");
+    });
+
+    it("rejects invalid JSON", async () => {
+      const result = await createManualBackup("not json");
+      expect(result.success).toBe(false);
+      expect(result.error).toContain("Invalid JSON");
+    });
+
+    it("rejects non-array JSON", async () => {
+      const result = await createManualBackup('{"key": "value"}');
+      expect(result.success).toBe(false);
+      expect(result.error).toContain("Invalid backup data");
+    });
+  });
+
+  // ── Read ─────────────────────────────────────────────────────────────
+
+  describe("getBackups", () => {
+    it("returns empty list initially", async () => {
+      const result = await getBackups();
+      expect(result.success).toBe(true);
+      expect(result.data).toEqual([]);
+    });
+
+    it("returns created backups", async () => {
+      await createManualBackup(sampleSecrets);
+      await createManualBackup(JSON.stringify([{ name: "Test" }]));
+
+      const result = await getBackups();
+      expect(result.success).toBe(true);
+      expect(result.data).toHaveLength(2);
+    });
+  });
+
+  describe("getLatestBackup", () => {
+    it("returns null when no backups", async () => {
+      const result = await getLatestBackup();
+      expect(result.success).toBe(true);
+      expect(result.data).toBeNull();
+    });
+
+    it("returns the most recent backup", async () => {
+      await createManualBackup(sampleSecrets);
+
+      const result = await getLatestBackup();
+      expect(result.success).toBe(true);
+      expect(result.data).not.toBeNull();
+      expect(result.data!.secretCount).toBe(2);
+    });
+  });
+
+  describe("getBackupCount", () => {
+    it("returns 0 initially", async () => {
+      const result = await getBackupCount();
+      expect(result.success).toBe(true);
+      expect(result.data).toBe(0);
+    });
+
+    it("returns correct count", async () => {
+      await createManualBackup(sampleSecrets);
+      await createManualBackup(sampleSecrets);
+      await createManualBackup(sampleSecrets);
+
+      const result = await getBackupCount();
+      expect(result.success).toBe(true);
+      expect(result.data).toBe(3);
+    });
+  });
+
+  // ── Cleanup ──────────────────────────────────────────────────────────
+
+  describe("cleanupBackups", () => {
+    it("succeeds with no backups", async () => {
+      const result = await cleanupBackups();
+      expect(result.success).toBe(true);
+      expect(result.data!.deleted).toBe(0);
+    });
+
+    it("succeeds when under retention limit", async () => {
+      await createManualBackup(sampleSecrets);
+      const result = await cleanupBackups();
+      expect(result.success).toBe(true);
+    });
+  });
+});
