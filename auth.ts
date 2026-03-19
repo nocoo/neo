@@ -4,6 +4,7 @@ import Google from "next-auth/providers/google";
 import Credentials from "next-auth/providers/credentials";
 import { D1Adapter } from "@/lib/auth-adapter";
 import { isD1Configured } from "@/lib/db/d1-client";
+import { isEmailAllowed } from "@/lib/auth-whitelist";
 
 // Build the providers list. In Playwright E2E mode, add a Credentials
 // provider so tests can authenticate without Google OAuth.
@@ -52,13 +53,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
   },
   callbacks: {
     async signIn({ user }) {
-      // neo: ALLOWED_EMAILS whitelist access control
-      const allowed = (process.env.ALLOWED_EMAILS || "")
-        .split(",")
-        .map((e) => e.trim().toLowerCase());
-      // If no whitelist configured, allow all (dev mode)
-      if (allowed.length === 1 && allowed[0] === "") return true;
-      return allowed.includes(user.email?.toLowerCase() ?? "");
+      return isEmailAllowed(user.email);
     },
     authorized({ auth, request: { nextUrl } }) {
       const isLoggedIn = !!auth?.user;
