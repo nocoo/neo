@@ -1,7 +1,22 @@
 /**
- * Rate limiting with sliding window algorithm (fix P3).
- * Uses in-memory Map for simplicity (resets on worker restart).
- * For production, could be backed by D1 or Durable Objects.
+ * Rate limiting with sliding window algorithm.
+ *
+ * ⚠️  LIMITATION: Uses an in-memory Map, which means:
+ *   1. State is lost on every worker restart / redeploy.
+ *   2. Each Cloudflare edge isolate has its own store — rate limits
+ *      are NOT shared across instances. A client hitting different
+ *      PoPs (or the same PoP with different isolates) gets separate
+ *      counters, effectively multiplying the real limit.
+ *   3. Under high concurrency within a single isolate the store grows
+ *      linearly with unique keys; the trim heuristic caps per-key
+ *      growth but not total key count.
+ *
+ * This is acceptable for low-traffic personal use but does NOT provide
+ * production-grade protection for public-facing endpoints.
+ *
+ * TODO: Migrate to Cloudflare Durable Objects for a single-writer,
+ * globally consistent rate limiter (or use the Cloudflare Rate Limiting
+ * product). See: https://developers.cloudflare.com/durable-objects/
  */
 
 // ── Types ───────────────────────────────────────────────────────────────────
