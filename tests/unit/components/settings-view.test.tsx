@@ -148,4 +148,34 @@ describe("SettingsView", () => {
 
     expect(mockSettingsVM.reload).toHaveBeenCalled();
   });
+
+  it("syncs DB theme to next-themes on load when different", () => {
+    mockSettingsVM.settings = {
+      ...mockSettingsVM.settings,
+      theme: "dark",
+    };
+    render(<SettingsView />);
+    // DB has "dark", next-themes has "system" — should sync
+    expect(mockSetTheme).toHaveBeenCalledWith("dark");
+  });
+
+  it("does not sync theme when DB matches next-themes", () => {
+    mockSettingsVM.settings = {
+      ...mockSettingsVM.settings,
+      theme: "system",
+    };
+    render(<SettingsView />);
+    // DB has "system", next-themes has "system" — no sync needed
+    expect(mockSetTheme).not.toHaveBeenCalled();
+  });
+
+  it("uses DB theme for select value", () => {
+    mockSettingsVM.settings = {
+      ...mockSettingsVM.settings,
+      theme: "dark",
+    };
+    render(<SettingsView />);
+    const select = screen.getByLabelText("Theme") as HTMLSelectElement;
+    expect(select.value).toBe("dark");
+  });
 });

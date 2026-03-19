@@ -4,6 +4,7 @@
  * SettingsView — user preferences management.
  */
 
+import { useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { useSettingsViewModel } from "@/viewmodels/useSettingsViewModel";
 import { Shield, Palette, Globe } from "lucide-react";
@@ -14,6 +15,17 @@ import { useTheme } from "next-themes";
 export function SettingsView() {
   const vm = useSettingsViewModel();
   const { setTheme, theme: activeTheme } = useTheme();
+
+  // Sync DB-saved theme to next-themes on load / reload.
+  // This ensures the theme persists across devices and cleared localStorage.
+  const dbTheme = vm.settings?.theme;
+  useEffect(() => {
+    if (dbTheme && dbTheme !== activeTheme) {
+      setTheme(dbTheme);
+    }
+    // Only run when dbTheme changes (not activeTheme) to avoid infinite loop
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [dbTheme, setTheme]);
 
   if (vm.loading) {
     return (
@@ -59,7 +71,7 @@ export function SettingsView() {
           </label>
           <select
             id="theme-select"
-            value={activeTheme ?? "system"}
+            value={dbTheme ?? activeTheme ?? "system"}
             onChange={(e) => {
               const newTheme = e.target.value;
               setTheme(newTheme);
