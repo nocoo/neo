@@ -1,20 +1,48 @@
 "use client";
 
-import { Moon, Sun } from "lucide-react";
+import { useState, useEffect } from "react";
+import { Monitor, Moon, Sun } from "lucide-react";
 import { useTheme } from "next-themes";
 
+/**
+ * 3-state theme toggle: system → light → dark → system.
+ * Matches the basalt/zhe design system pattern.
+ */
 export function ThemeToggle() {
-  const { setTheme, theme } = useTheme();
+  const { theme, setTheme, resolvedTheme } = useTheme();
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => setMounted(true), []);
+
+  const cycle = () => {
+    if (theme === "system") setTheme("light");
+    else if (theme === "light") setTheme("dark");
+    else setTheme("system");
+  };
+
+  // SSR fallback — render a static Sun icon to avoid hydration mismatch
+  if (!mounted) {
+    return (
+      <button
+        className="flex h-8 w-8 items-center justify-center rounded-lg text-muted-foreground transition-colors"
+        aria-label="Toggle theme"
+      >
+        <Sun className="h-4 w-4" strokeWidth={1.5} />
+      </button>
+    );
+  }
+
+  const Icon =
+    theme === "system" ? Monitor : resolvedTheme === "dark" ? Moon : Sun;
 
   return (
     <button
-      onClick={() => setTheme(theme === "light" ? "dark" : "light")}
+      onClick={cycle}
       className="flex h-8 w-8 items-center justify-center rounded-lg text-muted-foreground hover:text-foreground hover:bg-accent transition-colors cursor-pointer"
-      title="Toggle theme"
+      aria-label="Toggle theme"
+      title={`Theme: ${theme}`}
     >
-      <Sun className="h-[18px] w-[18px] rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" strokeWidth={1.5} />
-      <Moon className="absolute h-[18px] w-[18px] rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" strokeWidth={1.5} />
-      <span className="sr-only">Toggle theme</span>
+      <Icon className="h-4 w-4" strokeWidth={1.5} />
     </button>
   );
 }
