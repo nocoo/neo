@@ -52,4 +52,3 @@ vitest.config.ts
 playwright.config.ts
 eslint.config.mjs
 drizzle.config.ts
-tsconfig.json
