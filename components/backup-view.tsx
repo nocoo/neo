@@ -100,7 +100,7 @@ export function BackupView() {
             <Database className="h-5 w-5 text-blue-600 dark:text-blue-400 mt-0.5 shrink-0" />
             <div>
               <p className="text-sm font-medium text-blue-800 dark:text-blue-200">
-                {vm.legacyBackupCount} legacy backup{vm.legacyBackupCount > 1 ? "s" : ""} found
+                {vm.legacyBackupCount} exportable legacy backup{vm.legacyBackupCount > 1 ? "s" : ""} found
               </p>
               <p className="text-xs text-blue-700 dark:text-blue-300">
                 Export your old backups as encrypted archives before they are removed.

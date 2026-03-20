@@ -181,7 +181,7 @@ describe("BackupView", () => {
     mockBackupVM.legacyBackupCount = 3;
     render(<BackupView />);
     expect(screen.getByTestId("legacy-migration-banner")).toBeDefined();
-    expect(screen.getByText(/3 legacy backups found/)).toBeDefined();
+    expect(screen.getByText(/3 exportable legacy backups found/)).toBeDefined();
   });
 
   it("hides migration banner when no legacy backups", () => {

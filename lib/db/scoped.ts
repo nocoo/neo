@@ -254,11 +254,14 @@ export class ScopedDB {
 
   // ── Legacy Backups (read-only, for migration) ─────────────────────────────
 
-  /** Count old D1 backups for this user. Returns 0 after table is dropped. */
+  /**
+   * Count old D1 backups for this user that are exportable (non-encrypted).
+   * Returns 0 after table is dropped.
+   */
   async getLegacyBackupCount(): Promise<number> {
     try {
       const rows = await executeD1Query<{ count: number }>(
-        "SELECT COUNT(*) as count FROM backups WHERE user_id = ?",
+        "SELECT COUNT(*) as count FROM backups WHERE user_id = ? AND encrypted = 0",
         [this.userId],
       );
       return rows[0]?.count ?? 0;
