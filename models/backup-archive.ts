@@ -46,6 +46,24 @@ export interface BackupDataV2 {
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
 /**
+ * Convert a string to a plain Uint8Array.
+ *
+ * fflate uses `instanceof Uint8Array` internally, which fails in jsdom
+ * where TextEncoder produces a different Uint8Array realm. Using
+ * `Uint8Array.from()` ensures cross-realm compatibility.
+ */
+function toBytes(str: string): Uint8Array {
+  return Uint8Array.from(new TextEncoder().encode(str));
+}
+
+/**
+ * Decode a Uint8Array to a string.
+ */
+function fromBytes(bytes: Uint8Array): string {
+  return new TextDecoder().decode(bytes);
+}
+
+/**
  * Compute SHA-256 hex hash for backup integrity.
  * Deterministic: sorts secrets by name+account before hashing.
  */
@@ -97,7 +115,7 @@ export async function createEncryptedZip(
 
   // Encrypt the payload
   const encrypted = await encryptData(payload, keyBase64);
-  const encryptedBytes = new TextEncoder().encode(encrypted);
+  const encryptedBytes = toBytes(encrypted);
 
   // Build manifest (plaintext metadata — no secrets)
   const manifest: BackupManifest = {
@@ -111,9 +129,7 @@ export async function createEncryptedZip(
       tagLength: 128,
     },
   };
-  const manifestBytes = new TextEncoder().encode(
-    JSON.stringify(manifest, null, 2),
-  );
+  const manifestBytes = toBytes(JSON.stringify(manifest, null, 2));
 
   // Create ZIP
   return zipSync({
@@ -134,8 +150,8 @@ export async function openEncryptedZip(
   zipBytes: Uint8Array,
   keyBase64: string,
 ): Promise<ParsedSecret[]> {
-  // Extract ZIP contents
-  const files = unzipSync(zipBytes);
+  // Extract ZIP contents — Uint8Array.from() for cross-realm compat
+  const files = unzipSync(Uint8Array.from(zipBytes));
 
   // Validate manifest exists
   const manifestBytes = files[MANIFEST_FILENAME];
@@ -147,7 +163,7 @@ export async function openEncryptedZip(
 
   // Parse and validate manifest
   const manifest = JSON.parse(
-    new TextDecoder().decode(manifestBytes),
+    fromBytes(manifestBytes),
   ) as BackupManifest;
   validateManifest(manifest);
 
@@ -160,7 +176,7 @@ export async function openEncryptedZip(
   }
 
   // Decrypt payload
-  const encryptedStr = new TextDecoder().decode(payloadBytes);
+  const encryptedStr = fromBytes(payloadBytes);
   const payload = await decryptData<BackupDataV2>(encryptedStr, keyBase64);
 
   // Validate payload structure
