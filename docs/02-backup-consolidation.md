@@ -59,13 +59,10 @@ Remove: D1 `backups` table storage (with migration path), Worker cron backup, Se
                              │
                              ▼
                   ┌──────────────────────┐
-                  │  serializeBackup()   │  models/backup.ts
-                  │  → BackupData JSON   │  { version: 2, secrets, meta }
-                  └──────────┬───────────┘
-                             │
-                             ▼
-                  ┌──────────────────────┐
                   │  createEncryptedZip()│  models/backup-archive.ts (NEW)
+                  │  input: secrets[]    │  accepts ParsedSecret[]
+                  │  internally builds   │  assembles BackupData JSON
+                  │  BackupData v2 JSON  │  { version: 2, secrets, meta }
                   │  AES-GCM encrypt     │
                   │  → ZIP containing:   │
                   │    backup.json.enc   │
@@ -186,8 +183,10 @@ Reference implementation: `../zhe/actions/backy.ts` (pushBackup pattern)
 | Area | Files | Disposition |
 |------|-------|-------------|
 | Backup model | `models/backup.ts` | **Rewrite** — keep `deserializeBackup` (add v2 support), remove dead code |
-| Backup archive (NEW) | `models/backup-archive.ts` | **New** — `createEncryptedZip()`, `openEncryptedZip()`, `validateManifest()` |
-| Backup actions | `actions/backup.ts` | **Rewrite** — replace D1 CRUD with `pushBackupToBacky()` (server action, JSON return) |
+| Backup archive (NEW) | `models/backup-archive.ts` | **New** — `createEncryptedZip(secrets: ParsedSecret[], key) → Uint8Array` (internally assembles BackupData v2 JSON — does **not** call `serializeBackup()`), `openEncryptedZip(zipBytes, key) → ParsedSecret[]`, `validateManifest()` |
+| Backy model (NEW) | `models/backy.ts` | **New** — types, validation, helpers. All Backy integration logic. |
+| Backy actions (NEW) | `actions/backy.ts` | **New** — `pushBackupToBacky()`, config CRUD, pull webhook key CRUD. This is the **sole** action file for Backy; `actions/backup.ts` is **deleted** (not rewritten). |
+| Backup actions | `actions/backup.ts` | **Delete** — all D1 CRUD actions removed. No thin wrapper retained; route handlers and `actions/backy.ts` absorb all responsibilities. |
 | Backup route: download | `app/api/backup/archive/route.ts` | **New** — `GET` returns encrypted ZIP as binary `Response` |
 | Backup route: restore | `app/api/backup/restore/route.ts` | **New** — `POST` accepts multipart (zip + key), returns JSON result |
 | Backup view | `components/backup-view.tsx` | **Rewrite** — new UI: create/download/push/restore |
@@ -231,70 +230,96 @@ Reference implementation: `../zhe/actions/backy.ts` (pushBackup pattern)
 
 ## 4. Atomic Commits Plan
 
-### Phase 1: Foundation (no behavioral change)
+### Dependency Graph (determines phase order)
+
+```
+Phase 1: Pure models (no DB, no side effects)
+  │
+  ▼
+Phase 2: DB schema (adds columns that Phase 3 reads)
+  │
+  ▼
+Phase 3: Route handlers + server actions (depend on Phase 1 models + Phase 2 DB methods)
+  │
+  ▼
+Phase 4: Settings UI — encryption key management (must exist BEFORE Phase 5 migration)
+  │
+  ▼
+Phase 5: Migration — export old D1 backups (requires encryption key from Phase 4 to already exist)
+  │
+  ▼
+Phase 6: Backup page rewrite + delete actions/backup.ts
+  │
+  ▼
+Phase 7: Cleanup — worker, dead code, drop table
+```
+
+### Phase 1: Pure Models (no behavioral change, no DB dependency) ✅
 
 | # | Commit | Description | Files Changed |
 |---|--------|-------------|---------------|
-| 1.1 | `feat: add backup archive model with encrypt/decrypt zip` | New `models/backup-archive.ts`: `createEncryptedZip(secrets, key) → Uint8Array`, `openEncryptedZip(zipBytes, key) → ParsedSecret[]`, `validateManifest()`. Operates on `Uint8Array` (not Blob) for universal compatibility. Uses existing `models/encryption.ts`. Pure functions, no side effects. | `models/backup-archive.ts` (new) |
-| 1.2 | `test: add backup archive round-trip tests` | Comprehensive tests: create → open round-trip, wrong password rejection, tampered manifest detection, v2 format validation, empty secrets edge case. | `tests/unit/models/backup-archive.test.ts` (new) |
-| 1.3 | `feat: add backy integration model` | New `models/backy.ts`: types (`BackyConfig`, `BackyPushDetail`, `BackyHistoryResponse`), validation (`validateBackyConfig`, `isValidWebhookUrl`), helpers (`maskApiKey`, `buildBackyTag`, `formatFileSize`, `formatTimeAgo`, `getBackyEnvironment`). Ported from `../zhe/models/backy.ts`. | `models/backy.ts` (new) |
-| 1.4 | `test: add backy model tests` | Unit tests for all pure functions in backy model. | `tests/unit/models/backy.test.ts` (new) |
+| 1.1 ✅ | `feat: add backup archive model with encrypt/decrypt zip` | New `models/backup-archive.ts`: `createEncryptedZip(secrets, key) → Uint8Array`, `openEncryptedZip(zipBytes, key) → ParsedSecret[]`, `validateManifest()`. Operates on `Uint8Array` (not Blob) for universal compatibility. Uses existing `models/encryption.ts`. Pure functions, no side effects, no DB access. | `models/backup-archive.ts` (new) |
+| 1.2 ✅ | `test: add backup archive round-trip tests` | Comprehensive tests: create → open round-trip, wrong password rejection, tampered manifest detection, v2 format validation, empty secrets edge case. | `tests/unit/models/backup-archive.test.ts` (new) |
+| 1.3 ✅ | `feat: add backy integration model` | New `models/backy.ts`: types (`BackyConfig`, `BackyPushDetail`, `BackyHistoryResponse`), validation (`validateBackyConfig`, `isValidWebhookUrl`), helpers (`maskApiKey`, `buildBackyTag`, `formatFileSize`, `formatTimeAgo`, `getBackyEnvironment`). Ported from `../zhe/models/backy.ts`. Pure functions only. | `models/backy.ts` (new) |
+| 1.4 ✅ | `test: add backy model tests` | Unit tests for all pure functions in backy model. | `tests/unit/models/backy.test.ts` (new) |
 
-### Phase 2: Route Handlers + Server Actions
+### Phase 2: Database Schema + Dashboard Chain ✅
 
-| # | Commit | Description | Files Changed |
-|---|--------|-------------|---------------|
-| 2.1 | `feat: add backup archive download route handler` | New `app/api/backup/archive/route.ts`: authenticated `GET` → queries secrets from ScopedDB, reads encryption key from `user_settings`, calls `createEncryptedZip()`, returns `new Response(zipBytes, { headers: { 'Content-Type': 'application/zip', 'Content-Disposition': 'attachment; filename=...' } })`. **This is a Route Handler, not a Server Action**, because binary `Response` cannot cross the RSC serialization boundary. | `app/api/backup/archive/route.ts` (new) |
-| 2.2 | `feat: add backup restore route handler` | New `app/api/backup/restore/route.ts`: authenticated `POST` accepting `multipart/form-data` with fields `file` (ZIP) and `encryptionKey` (string). Calls `openEncryptedZip()` → `batchImportSecrets()`. Returns JSON `{ success, importedCount }`. | `app/api/backup/restore/route.ts` (new) |
-| 2.3 | `feat: add backy push server action` | New `actions/backy.ts`: `pushBackupToBacky()` — server-side only. Creates ZIP in memory (`createEncryptedZip()`), constructs `FormData` with the ZIP as `Blob`, POSTs to configured Backy webhook URL. Returns `{ success, tag, durationMs }` (JSON only, no binary). Also: `saveBackyConfig()`, `getBackyConfig()`, `testBackyConnection()`, `fetchBackyHistory()`, pull webhook key CRUD. References: `../zhe/actions/backy.ts`. | `actions/backy.ts` (new) |
-| 2.4 | `feat: add backy pull webhook API route` | New `app/api/backy/pull/route.ts`: POST (Backy calls us → triggers `pushBackupToBacky()`) + HEAD (connection test). Authenticated via `X-Webhook-Key` header. References: `../zhe/app/api/backy/pull/route.ts`. | `app/api/backy/pull/route.ts` (new) |
-| 2.5 | `test: add backy action and route tests` | Tests for push action (mocked fetch → assert FormData fields), route handler tests. | `tests/unit/actions/backy.test.ts` (new) |
-
-### Phase 3: Database Schema + Dashboard Chain
-
-This phase must be done **atomically** — the column changes, ScopedDB methods, dashboard action, dashboard context, and types must all land in the same deploy to avoid runtime breakage.
+**Must land before Phase 3** — route handlers and actions in Phase 3 call `getEncryptionKey()`, `getBackySettings()`, etc. which are added here.
 
 | # | Commit | Description | Files Changed |
 |---|--------|-------------|---------------|
-| 3.1 | `feat: add backy config columns and encryption_key to user_settings` | D1 migration: `ALTER TABLE user_settings ADD COLUMN backy_webhook_url TEXT`, `...backy_api_key TEXT`, `...backy_pull_key TEXT`, `...encryption_key TEXT`. Add ScopedDB methods: `getBackySettings()`, `upsertBackySettings()`, `getBackyPullWebhook()`, `upsertBackyPullWebhook()`, `deleteBackyPullWebhook()`, `getEncryptionKey()`, `setEncryptionKey()`. | `lib/db/scoped.ts`, `migrations/` (new) |
-| 3.2 | `refactor: update dashboard data chain for backup removal` | **Critical: this commit updates the full data chain atomically.** (1) `actions/dashboard.ts`: remove `db.getBackupCount()` and `db.getLatestBackup()` from `getDashboardData()`, change `encryptionEnabled` to read from `db.getEncryptionKey() !== null` instead of `settings.encryptionKeyHash`. (2) `models/types.ts`: remove `backupCount` and `lastBackupAt` from `DashboardData`. (3) `contexts/dashboard-context.tsx`: remove `backupCount`, `lastBackupAt`, `handleBackupCreated` from `DashboardState` and `DashboardActions`. (4) Update all consumers that reference these removed fields. | `actions/dashboard.ts`, `models/types.ts`, `contexts/dashboard-context.tsx`, `viewmodels/useBackupViewModel.ts`, `components/backup-view.tsx` |
-| 3.3 | `test: update dashboard and context tests for removed backup fields` | Update `tests/unit/actions/dashboard.test.ts`, `tests/unit/contexts/dashboard-context.test.tsx` (if exists), and any component tests that mock `useDashboardState` with `backupCount`/`lastBackupAt`. | `tests/unit/actions/dashboard.test.ts`, etc. |
+| 2.1-2.3 ✅ | `feat: add backy/encryption columns and update dashboard data chain` | Combined into single commit (pre-commit hook requires passing tests). D1 migration for new columns, ScopedDB methods, dashboard chain update removing backupCount/lastBackupAt/handleBackupCreated, and all test updates. | `lib/db/scoped.ts`, `lib/db/schema.ts`, `lib/db/mappers.ts`, `models/types.ts`, `actions/dashboard.ts`, `contexts/dashboard-context.tsx`, `viewmodels/useBackupViewModel.ts`, `components/backup-view.tsx`, `migrations/`, tests |
 
-### Phase 4: Migration — Export Existing D1 Backups
+### Phase 3: Route Handlers + Server Actions
 
-**This phase provides the migration path before any data deletion.**
+These depend on Phase 1 models (`createEncryptedZip`, `openEncryptedZip`, `BackyConfig`) and Phase 2 DB methods (`getEncryptionKey`, `getBackySettings`).
 
 | # | Commit | Description | Files Changed |
 |---|--------|-------------|---------------|
-| 4.1 | `feat: add one-time D1 backup export route` | New `app/api/backup/migrate/route.ts`: authenticated `GET` → reads all rows from `backups` table for current user, converts each to the new encrypted ZIP format (using the user's encryption key), bundles them into a single TAR or returns them as individual downloads. If no encryption key is configured yet, auto-generates one and stores it. This is a **temporary** route, removed in Phase 7. | `app/api/backup/migrate/route.ts` (new) |
-| 4.2 | `feat: add migration notice to backup page` | Show a banner on the backup page: "You have N existing backups in the old format. [Export All] to download them as encrypted archives before migration." Links to the migration route. | `components/backup-view.tsx` |
+| 3.1 | `feat: add backup archive download route handler` | New `app/api/backup/archive/route.ts`: authenticated `GET` → queries secrets from ScopedDB, reads encryption key via `db.getEncryptionKey()` (Phase 2.1), calls `createEncryptedZip()` (Phase 1.1), returns `new Response(zipBytes, { headers: { 'Content-Type': 'application/zip', ... } })`. **Route Handler, not Server Action** — binary `Response` cannot cross RSC boundary. | `app/api/backup/archive/route.ts` (new) |
+| 3.2 | `feat: add backup restore route handler` | New `app/api/backup/restore/route.ts`: authenticated `POST` accepting `multipart/form-data` with fields `file` (ZIP) and `encryptionKey` (string). Calls `openEncryptedZip()` → `batchImportSecrets()`. Returns JSON `{ success, importedCount }`. | `app/api/backup/restore/route.ts` (new) |
+| 3.3 | `feat: add backy server actions` | New `actions/backy.ts`: `pushBackupToBacky()` — reads Backy config via `db.getBackySettings()` (Phase 2.1), creates ZIP in memory, POSTs to Backy webhook. Returns `{ success, tag, durationMs }`. Also: `saveBackyConfig()`, `getBackyConfig()`, `testBackyConnection()`, `fetchBackyHistory()`, pull webhook key CRUD. This is the **only** action file for Backy — `actions/backup.ts` is not involved. References: `../zhe/actions/backy.ts`. | `actions/backy.ts` (new) |
+| 3.4 | `feat: add backy pull webhook API route` | New `app/api/backy/pull/route.ts`: POST (Backy calls us → triggers `pushBackupToBacky()`) + HEAD (connection test). Authenticated via `X-Webhook-Key` header matched against `db.getBackyPullWebhook()`. References: `../zhe/app/api/backy/pull/route.ts`. | `app/api/backy/pull/route.ts` (new) |
+| 3.5 | `test: add backy action and route tests` | Tests for push action (mocked fetch → assert FormData fields), route handler tests. | `tests/unit/actions/backy.test.ts` (new) |
 
-### Phase 5: UI — Settings Page
+### Phase 4: UI — Settings Page (encryption key management)
 
-| # | Commit | Description | Files Changed |
-|---|--------|-------------|---------------|
-| 5.1 | `feat: add encryption key management to settings` | Replace the read-only "Automated Backup Encryption" indicator with a key management section: generate key, reveal/copy key, save key. Uses `generateEncryptionKey()` from `models/encryption.ts`. The key value is read via `getEncryptionKey()` from ScopedDB and displayed masked (click to reveal + copy button). **Warning text**: "Save this key externally. If lost, encrypted backups cannot be restored." | `components/settings-view.tsx`, `viewmodels/useSettingsViewModel.ts`, `actions/settings.ts` |
-| 5.2 | `feat: add backy config section to settings` | New section in Settings page: webhook URL input, API key input (masked), test connection button, pull webhook key generation/revocation. References: `../zhe` Backy settings UI pattern. | `components/settings-view.tsx`, `viewmodels/useSettingsViewModel.ts` |
-| 5.3 | `test: update settings view tests` | Update tests for new encryption key management and Backy config sections. | `tests/unit/components/settings-view.test.tsx`, `tests/unit/viewmodels/useSettingsViewModel.test.ts` |
-
-### Phase 6: UI — Backup Page
+**Must land before Phase 5 (migration)** — users need to be able to generate, view, and copy their encryption key before any backup is encrypted with it.
 
 | # | Commit | Description | Files Changed |
 |---|--------|-------------|---------------|
-| 6.1 | `refactor: rewrite backup page for archive flow` | Replace the backup list UI with: (1) "Create & Download" → `GET /api/backup/archive` triggers browser download of encrypted ZIP, (2) "Push to Backy" → calls `pushBackupToBacky()` server action, shows result, (3) "Restore" → upload ZIP file + enter encryption key → `POST /api/backup/restore`. Remove: backup list, cleanup button, `backupCount`/`lastBackupAt` display. | `components/backup-view.tsx`, `viewmodels/useBackupViewModel.ts` |
-| 6.2 | `refactor: rewrite backup actions (remove D1 CRUD)` | Remove old backup server actions: `createManualBackup`, `getBackups`, `getLatestBackup`, `getBackupCount`, `cleanupBackups`, `restoreBackup`. Keep `actions/backup.ts` as a thin re-export or merge remaining logic into route handlers. | `actions/backup.ts` |
-| 6.3 | `test: update backup view and action tests` | Rewrite `tests/unit/components/backup-view.test.tsx` and `tests/unit/actions/backup.test.ts` for the new flow. | `tests/unit/components/backup-view.test.tsx`, `tests/unit/actions/backup.test.ts` |
+| 4.1 | `feat: add encryption key management to settings` | Replace the read-only "Automated Backup Encryption" indicator with a key management section: generate key, reveal/copy key. Uses `generateEncryptionKey()` from `models/encryption.ts`. The key is read via `db.getEncryptionKey()` (Phase 2.1) and displayed masked (click to reveal + copy button). **Warning text**: "Save this key externally. If lost, encrypted backups cannot be restored." User must explicitly click "Generate Key" — keys are never created silently. | `components/settings-view.tsx`, `viewmodels/useSettingsViewModel.ts`, `actions/settings.ts` |
+| 4.2 | `feat: add backy config section to settings` | New section in Settings page: webhook URL input, API key input (masked), test connection button, pull webhook key generation/revocation. References: `../zhe` Backy settings UI pattern. | `components/settings-view.tsx`, `viewmodels/useSettingsViewModel.ts` |
+| 4.3 | `test: update settings view tests` | Update tests for new encryption key management and Backy config sections. | `tests/unit/components/settings-view.test.tsx`, `tests/unit/viewmodels/useSettingsViewModel.test.ts` |
+
+### Phase 5: Migration — Export Existing D1 Backups
+
+**Precondition**: Phase 4 is deployed. User must have generated an encryption key via Settings before migration works.
+
+| # | Commit | Description | Files Changed |
+|---|--------|-------------|---------------|
+| 5.1 | `feat: add one-time D1 backup export route` | New `app/api/backup/migrate/route.ts`: authenticated `GET` → reads encryption key via `db.getEncryptionKey()`. **If no key exists, returns 400 with message "Set up your encryption key in Settings before exporting backups."** — never auto-generates. Reads all rows from `backups` table, converts each to the new encrypted ZIP format, returns as a combined download. This is a **temporary** route, removed in Phase 7. | `app/api/backup/migrate/route.ts` (new) |
+| 5.2 | `feat: add migration notice to backup page` | Show a banner on the backup page: "You have N existing backups in the old format. First, set up your encryption key in Settings, then [Export All] to download them as encrypted archives." The [Export All] link is **disabled** until encryption key is configured. Links to Settings page for key setup. | `components/backup-view.tsx` |
+
+### Phase 6: UI — Backup Page Rewrite + Delete Old Actions
+
+| # | Commit | Description | Files Changed |
+|---|--------|-------------|---------------|
+| 6.1 | `refactor: rewrite backup page for archive flow` | Replace the backup list UI with: (1) "Create & Download" → `GET /api/backup/archive` triggers browser download of encrypted ZIP, (2) "Push to Backy" → calls `pushBackupToBacky()` from `actions/backy.ts`, shows result, (3) "Restore" → upload ZIP file + enter encryption key → `POST /api/backup/restore`. Remove: backup list, cleanup button. | `components/backup-view.tsx`, `viewmodels/useBackupViewModel.ts` |
+| 6.2 | `refactor: delete actions/backup.ts` | **Delete** the entire file. All 5 old server actions (`createManualBackup`, `getBackups`, `getLatestBackup`, `getBackupCount`, `cleanupBackups`, `restoreBackup`) are removed. Their consumers (old backup-view, old backup-viewmodel) were already rewritten in 6.1. Backy push lives in `actions/backy.ts` (Phase 3.3). Archive download/restore live in route handlers (Phase 3.1/3.2). Nothing remains for `actions/backup.ts` to export. | `actions/backup.ts` (delete) |
+| 6.3 | `test: update backup view and action tests` | Rewrite `tests/unit/components/backup-view.test.tsx` for the new UI. Delete `tests/unit/actions/backup.test.ts` (the file it tested no longer exists). | `tests/unit/components/backup-view.test.tsx`, `tests/unit/actions/backup.test.ts` (delete) |
 
 ### Phase 7: Cleanup
 
 | # | Commit | Description | Files Changed |
 |---|--------|-------------|---------------|
 | 7.1 | `refactor: remove worker cron backup` | Delete `worker/src/backup.ts`, `worker/src/utils/crypto.ts`. Remove `scheduled()` handler from `worker/src/index.ts`. Remove backup-related constants from `worker/src/constants.ts`. | `worker/src/backup.ts` (delete), `worker/src/utils/crypto.ts` (delete), `worker/src/index.ts`, `worker/src/constants.ts` |
-| 7.2 | `refactor: clean up dead code in backup model` | Remove unused functions from `models/backup.ts`: `shouldDebounceBackup`, `getBackupsToDelete`, `hasDataChanged`, `computeBackupHash` (replaced by SHA-256). Remove unused constants: `BACKUP_MAX_COUNT`, `BACKUP_DEBOUNCE_MS`, `BACKUP_CRON_SCHEDULE`. | `models/backup.ts`, `models/constants.ts` |
-| 7.3 | `refactor: remove ScopedDB backup methods` | Remove `getBackups()`, `getLatestBackup()`, `getBackupCount()`, `createBackup()`, `deleteOldBackups()` from `lib/db/scoped.ts`. These are now dead code since all callers were removed in Phase 6. | `lib/db/scoped.ts` |
-| 7.4 | `test: remove stale backup e2e tests` | Update or remove `tests/api/backup.e2e.test.ts` that tested the old D1 backup CRUD API. | `tests/api/backup.e2e.test.ts` |
-| 7.5 | `chore: remove migration route` | Delete `app/api/backup/migrate/route.ts` and migration banner from backup page. This was a one-time path, no longer needed after users have migrated. | `app/api/backup/migrate/route.ts` (delete), `components/backup-view.tsx` |
-| 7.6 | `chore: D1 migration to drop backups table` | Migration SQL: `DROP TABLE IF EXISTS backups`. **Deploy gate**: only run after confirming all users have migrated their D1 backups (Phase 4 migration route was available for at least one release cycle). | `migrations/` (new) |
+| 7.2 | `chore: remove migration route and banner` | Delete `app/api/backup/migrate/route.ts` and migration banner from backup page. One-time path, no longer needed after migration window. **Must happen before 7.3** — the migration route reads from `backups` table via ScopedDB methods that 7.3 removes. | `app/api/backup/migrate/route.ts` (delete), `components/backup-view.tsx` |
+| 7.3 | `refactor: clean up dead code in backup model` | Remove unused functions from `models/backup.ts`: `serializeBackup`, `shouldDebounceBackup`, `getBackupsToDelete`, `hasDataChanged`, `computeBackupHash`. Remove unused constants: `BACKUP_MAX_COUNT`, `BACKUP_DEBOUNCE_MS`, `BACKUP_CRON_SCHEDULE`. Keep only `generateBackupFilename`, `isValidBackupFilename`, `deserializeBackup` (used by restore route). | `models/backup.ts`, `models/constants.ts` |
+| 7.4 | `refactor: remove ScopedDB backup methods` | Remove `getBackups()`, `getLatestBackup()`, `getBackupCount()`, `createBackup()`, `deleteOldBackups()` from `lib/db/scoped.ts`. Dead code — migration route (last consumer) deleted in 7.2, action callers deleted in Phase 6.2. | `lib/db/scoped.ts` |
+| 7.5 | `test: remove stale backup e2e tests` | Delete or rewrite `tests/api/backup.e2e.test.ts` that tested old D1 backup CRUD API. | `tests/api/backup.e2e.test.ts` |
+| 7.6 | `chore: D1 migration to drop backups table` | Migration SQL: `DROP TABLE IF EXISTS backups`. Also remove `backups` from `lib/db/schema.ts` and the `BackupRow`/`NewBackup` type exports. **Deploy gate**: only run after confirming all users have migrated (Phase 5 migration route was available for at least one release cycle). | `migrations/` (new), `lib/db/schema.ts` |
 
 ---
 
@@ -310,8 +335,8 @@ This phase must be done **atomically** — the column changes, ScopedDB methods,
 | | | Missing `backup.json.enc` → format error |
 | | | Empty secrets array → valid archive with 0 entries |
 | | | Large payload (1000 secrets) → completes within timeout |
-| `tests/unit/models/backup.test.ts` (update) | `serializeBackup` (v2), `deserializeBackup` (v1 + v2 compat) | v1 format still parseable (backward compat) |
-| | | v2 format round-trip |
+| `tests/unit/models/backup.test.ts` (update) | `deserializeBackup` (v1 + v2 compat) | v1 format still parseable (backward compat) |
+| | | v2 format round-trip (deserialize output matches original secrets) |
 | `tests/unit/models/backy.test.ts` (**new**) | All pure functions | `validateBackyConfig` edge cases, `maskApiKey` lengths, `buildBackyTag` format, `formatFileSize` units, `formatTimeAgo` ranges |
 | `tests/unit/models/encryption.test.ts` (existing, keep) | `encryptData`, `decryptData`, `isEncrypted`, `generateEncryptionKey` | Already 100% pass — no changes needed |
 | `tests/unit/models/import-parsers.test.ts` (existing, keep) | 16 format parsers | Already passing — no changes |
@@ -324,7 +349,7 @@ This phase must be done **atomically** — the column changes, ScopedDB methods,
 | `tests/unit/actions/backy.test.ts` (**new**) | `pushBackupToBacky`, `testBackyConnection`, `fetchBackyHistory` | Mocked fetch → assert FormData fields (file as Blob, environment, tag) |
 | | | Auth header `Bearer {token}` present |
 | | | Error handling for network failure, 401, 403, 413 |
-| `tests/unit/actions/backup.test.ts` (rewrite) | Remaining backup logic (if any thin wrappers kept) | Validate delegation to archive model |
+| `tests/unit/actions/backup.test.ts` (**delete**) | N/A — `actions/backup.ts` is deleted in Phase 6.2 | N/A |
 | `tests/api/backup-archive.e2e.test.ts` (**new**, or adapt existing) | `GET /api/backup/archive`, `POST /api/backup/restore` | Route handler: GET returns `Content-Type: application/zip` with valid ZIP body |
 | | | Route handler: POST with valid ZIP + correct key → `{ success: true, importedCount: N }` |
 | | | Route handler: POST with wrong key → `{ success: false, error: "..." }` |
@@ -397,37 +422,46 @@ describe("round-trip: create → restore", () => {
 ### 6.2 Deployment Sequence
 
 ```
-Phase 1-2  ──►  Deploy 1  ──►  Phase 3  ──►  Deploy 2
-(new models,    (safe,          (DB schema +   (dashboard
- routes,         additive,      dashboard       updated,
- actions)        no UI change)  chain update)   additive)
+Phase 1    ──►  Deploy 1  ──►  Phase 2-3  ──►  Deploy 2
+(pure             (safe,          (DB schema +     (new columns,
+ models,           additive,       dashboard chain   routes, actions
+ no DB)            no UI change)   + routes/actions)  all additive)
 
-──►  Phase 4  ──►  Deploy 3  ──►  Phase 5-6  ──►  Deploy 4
-     (migration     (users can      (settings +     (new backup
-      route +        export old      backup UI       experience
-      banner)        D1 backups)     rewrite)        live)
+──►  Phase 4    ──►  Deploy 3  ──►  Phase 5  ──►  Deploy 4
+     (settings        (users can      (migration    (users can
+      key mgmt +       generate &      route +       export old
+      backy config)    copy key)       banner)       D1 backups)
 
-──►  Phase 7.1-7.4  ──►  Deploy 5  ──►  Phase 7.5-7.6  ──►  Deploy 6
-     (worker + dead      (cleanup)       (remove migration   (final,
-      code removal)                       route, drop table)  irreversible)
+──►  Phase 6    ──►  Deploy 5  ──►  Phase 7.1-7.2  ──►  Deploy 6
+     (backup UI        (new backup     (worker removal     (migration
+      rewrite +         experience      + close migration    window
+      delete old        live)           window)              closed)
+      actions)
+
+──►  Phase 7.3-7.6  ──►  Deploy 7
+     (dead code,          (final,
+      ScopedDB cleanup,    irreversible)
+      drop table)
 ```
 
 | Step | What | Phases | Risk | Rollback |
 |------|------|--------|------|----------|
-| Deploy 1 | New models + route handlers + actions | 1-2 | None — all additive, no existing code changed | Revert commits |
-| Deploy 2 | DB columns + dashboard chain update | 3 | Low — additive columns, dashboard shows less info (no backupCount) | Revert; columns are unused if reverted |
-| Deploy 3 | Migration route + banner | 4 | None — old backup list still works, banner is informational | Revert commits |
-| Deploy 4 | New Settings + Backup UI | 5-6 | Medium — users see completely new backup experience | Revert to pre-Phase 5 commits |
-| Deploy 5 | Worker cleanup + dead code removal | 7.1-7.4 | Low — old code removed but new flow already active | Re-add from git |
-| Deploy 6 | Remove migration route + drop `backups` table | 7.5-7.6 | **Irreversible** — D1 backup data deleted | Must confirm all users have migrated first |
+| Deploy 1 | Pure models (archive + backy) | 1 | None — new files only, no existing code changed | Revert commits |
+| Deploy 2 | DB columns + dashboard chain + route handlers + server actions | 2-3 | Low — additive columns, new routes, dashboard shows less info (no backupCount) | Revert; new columns/routes unused if reverted |
+| Deploy 3 | Settings: encryption key management + Backy config UI | 4 | Low — replaces read-only indicator with key management; no data loss if reverted | Revert commits |
+| Deploy 4 | Migration route + banner | 5 | None — old backup list still works, banner is informational, **requires key from Deploy 3** | Revert commits |
+| Deploy 5 | Backup page rewrite + delete `actions/backup.ts` | 6 | Medium — users see completely new backup experience | Revert to pre-Phase 6 commits |
+| Deploy 6 | Worker removal + close migration window | 7.1-7.2 | Low — migration route removed, worker deleted; new flow already active | Re-add from git |
+| Deploy 7 | Dead code + ScopedDB cleanup + drop `backups` table | 7.3-7.6 | **Irreversible** (7.6) — D1 backup data deleted | Must confirm all users have migrated first |
 
-### 6.3 Migration Gate for Deploy 6
+### 6.3 Migration Gate for Deploy 7
 
 **Do NOT run Phase 7.6 (DROP TABLE) until:**
 
-1. Phase 4 migration route has been live for at least **one release cycle** (recommend 2 weeks minimum)
-2. Server logs confirm the migration route was called (or no backups exist in D1)
-3. Optionally: run a one-time query `SELECT user_id, COUNT(*) FROM backups GROUP BY user_id` to verify who still has data
+1. Phase 5 migration route has been live for at least **one release cycle** (recommend 2 weeks minimum)
+2. Phase 4 (encryption key UI) has been live even longer — users need time to generate and save their key
+3. Server logs confirm the migration route was called (or no backups exist in D1)
+4. Optionally: run a one-time query `SELECT user_id, COUNT(*) FROM backups GROUP BY user_id` to verify who still has data
 
 ### 6.4 Post-deployment Verification
 
