@@ -35,13 +35,6 @@ export function ToolsView() {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div>
-        <h1 className="text-2xl font-semibold">Developer Tools</h1>
-        <p className="text-sm text-muted-foreground">
-          Import, export, and test OTP secrets
-        </p>
-      </div>
 
       {/* Error banner */}
       {devTools.error && (

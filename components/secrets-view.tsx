@@ -6,7 +6,7 @@
  */
 
 import { useState, useCallback } from "react";
-import { Plus, Upload, Download } from "lucide-react";
+import { Plus, Upload, Download, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { SecretList } from "@/components/secret-list";
 import { SecretFormDialog } from "@/components/secret-form-dialog";
@@ -52,28 +52,28 @@ export function SecretsView() {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-semibold">Secrets</h1>
-          <p className="text-sm text-muted-foreground">
-            Manage your 2FA secrets
-          </p>
+      {/* Search + actions */}
+      <div className="flex items-center gap-2">
+        <div className="relative flex-1">
+          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+          <input
+            type="text"
+            placeholder="Search secrets..."
+            value={vm.searchQuery}
+            onChange={(e) => vm.setSearchQuery(e.target.value)}
+            className="w-full rounded-lg border border-input bg-background py-2 pl-10 pr-4 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+            aria-label="Search secrets"
+          />
         </div>
-        <div className="flex items-center gap-2">
-          <Button variant="outline" size="sm" onClick={() => setShowImport(true)}>
-            <Upload className="h-4 w-4 mr-1" />
-            Import
-          </Button>
-          <Button variant="outline" size="sm" onClick={() => setShowExport(true)}>
-            <Download className="h-4 w-4 mr-1" />
-            Export
-          </Button>
-          <Button size="sm" onClick={() => setShowCreate(true)}>
-            <Plus className="h-4 w-4 mr-1" />
-            Add Secret
-          </Button>
-        </div>
+        <Button variant="outline" size="icon" onClick={() => setShowImport(true)} title="Import">
+          <Upload className="h-4 w-4" />
+        </Button>
+        <Button variant="outline" size="icon" onClick={() => setShowExport(true)} title="Export">
+          <Download className="h-4 w-4" />
+        </Button>
+        <Button size="icon" onClick={() => setShowCreate(true)} title="Add secret">
+          <Plus className="h-4 w-4" />
+        </Button>
       </div>
 
       {/* Error banner */}
@@ -94,8 +94,6 @@ export function SecretsView() {
       <SecretList
         secrets={vm.filteredSecrets}
         otpMap={vm.otpMap}
-        searchQuery={vm.searchQuery}
-        onSearchChange={vm.setSearchQuery}
         onEdit={handleEdit}
         onDelete={handleDeleteRequest}
       />

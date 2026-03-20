@@ -44,25 +44,11 @@ beforeEach(() => {
 // ── Tests ────────────────────────────────────────────────────────────────
 
 describe("SecretList", () => {
-  it("renders search input", () => {
-    render(
-      <SecretList
-        secrets={[]}
-        otpMap={new Map()}
-        searchQuery=""
-        onSearchChange={vi.fn()}
-      />
-    );
-    expect(screen.getByLabelText("Search secrets")).toBeDefined();
-  });
-
   it("renders all secrets", () => {
     render(
       <SecretList
         secrets={[sampleSecret, sampleSecret2]}
         otpMap={otpMap}
-        searchQuery=""
-        onSearchChange={vi.fn()}
       />
     );
     expect(screen.getByText("GitHub")).toBeDefined();
@@ -74,8 +60,6 @@ describe("SecretList", () => {
       <SecretList
         secrets={[]}
         otpMap={new Map()}
-        searchQuery=""
-        onSearchChange={vi.fn()}
       />
     );
     expect(
@@ -89,27 +73,9 @@ describe("SecretList", () => {
         secrets={[]}
         otpMap={new Map()}
         searchQuery="nonexistent"
-        onSearchChange={vi.fn()}
       />
     );
     expect(screen.getByText("No secrets match your search.")).toBeDefined();
-  });
-
-  it("calls onSearchChange when typing", () => {
-    const onSearchChange = vi.fn();
-    render(
-      <SecretList
-        secrets={[sampleSecret]}
-        otpMap={otpMap}
-        searchQuery=""
-        onSearchChange={onSearchChange}
-      />
-    );
-
-    fireEvent.change(screen.getByLabelText("Search secrets"), {
-      target: { value: "git" },
-    });
-    expect(onSearchChange).toHaveBeenCalledWith("git");
   });
 
   it("passes OTP to cards", () => {
@@ -117,8 +83,6 @@ describe("SecretList", () => {
       <SecretList
         secrets={[sampleSecret]}
         otpMap={otpMap}
-        searchQuery=""
-        onSearchChange={vi.fn()}
       />
     );
     expect(screen.getByText("123456")).toBeDefined();
@@ -132,8 +96,6 @@ describe("SecretList", () => {
       <SecretList
         secrets={[sampleSecret]}
         otpMap={otpMap}
-        searchQuery=""
-        onSearchChange={vi.fn()}
         onEdit={onEdit}
         onDelete={onDelete}
       />
@@ -151,8 +113,6 @@ describe("SecretList", () => {
       <SecretList
         secrets={[sampleSecret]}
         otpMap={otpMap}
-        searchQuery=""
-        onSearchChange={vi.fn()}
       />
     );
     expect(screen.getByRole("list")).toBeDefined();

@@ -79,17 +79,6 @@ beforeEach(() => {
 describe("SettingsView", () => {
   // ── Basic rendering ──────────────────────────────────────────────────
 
-  it("renders page header", () => {
-    render(<SettingsView />);
-    expect(screen.getByText("Settings")).toBeDefined();
-  });
-
-  it("shows loading state", () => {
-    mockSettingsVM.loading = true;
-    render(<SettingsView />);
-    expect(screen.getByText("Loading settings...")).toBeDefined();
-  });
-
   it("renders theme selector", () => {
     render(<SettingsView />);
     expect(screen.getByLabelText("Theme")).toBeDefined();

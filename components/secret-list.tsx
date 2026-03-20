@@ -1,11 +1,8 @@
-"use client";
-
 /**
- * SecretList — renders a filterable grid of SecretCards with a search bar.
+ * SecretList — renders a grid of SecretCards.
  * Grid layout: 8 cards per row on large screens, responsive down to 1 column.
  */
 
-import { Search } from "lucide-react";
 import { SecretCard } from "@/components/secret-card";
 import type { Secret, OtpResult } from "@/models/types";
 
@@ -14,8 +11,7 @@ import type { Secret, OtpResult } from "@/models/types";
 export interface SecretListProps {
   secrets: Secret[];
   otpMap: Map<string, OtpResult>;
-  searchQuery: string;
-  onSearchChange: (query: string) => void;
+  searchQuery?: string;
   onEdit?: (secret: Secret) => void;
   onDelete?: (id: string) => void;
 }
@@ -26,25 +22,11 @@ export function SecretList({
   secrets,
   otpMap,
   searchQuery,
-  onSearchChange,
   onEdit,
   onDelete,
 }: SecretListProps) {
   return (
-    <div className="space-y-4">
-      {/* Search bar */}
-      <div className="relative">
-        <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-        <input
-          type="text"
-          placeholder="Search secrets..."
-          value={searchQuery}
-          onChange={(e) => onSearchChange(e.target.value)}
-          className="w-full rounded-lg border border-input bg-background py-2 pl-10 pr-4 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
-          aria-label="Search secrets"
-        />
-      </div>
-
+    <div>
       {/* Grid */}
       {secrets.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-12 text-center">

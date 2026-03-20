@@ -56,9 +56,9 @@ beforeEach(() => {
 describe("BackupView", () => {
   // ── Basic rendering ──────────────────────────────────────────────────
 
-  it("renders page header", () => {
+  it("renders page sections", () => {
     render(<BackupView />);
-    expect(screen.getByText("Backups")).toBeDefined();
+    expect(screen.getByText("Create & Download")).toBeDefined();
   });
 
   it("renders all three sections", () => {

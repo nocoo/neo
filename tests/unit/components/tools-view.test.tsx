@@ -64,11 +64,6 @@ beforeEach(() => {
 // ── Tests ────────────────────────────────────────────────────────────────
 
 describe("ToolsView", () => {
-  it("renders page header", () => {
-    render(<ToolsView />);
-    expect(screen.getByText("Developer Tools")).toBeDefined();
-  });
-
   it("renders tool cards", () => {
     render(<ToolsView />);
     expect(screen.getByText("Import")).toBeDefined();

@@ -82,17 +82,20 @@ beforeEach(() => {
 // ── Tests ────────────────────────────────────────────────────────────────
 
 describe("SecretsView", () => {
-  it("renders page header", () => {
+  it("renders search bar and icon-only action buttons", () => {
     render(<SecretsView />);
-    expect(screen.getByText("Secrets")).toBeDefined();
-    expect(screen.getByText("Manage your 2FA secrets")).toBeDefined();
+    expect(screen.getByLabelText("Search secrets")).toBeDefined();
+    expect(screen.getByTitle("Import")).toBeDefined();
+    expect(screen.getByTitle("Export")).toBeDefined();
+    expect(screen.getByTitle("Add secret")).toBeDefined();
   });
 
-  it("renders action buttons", () => {
+  it("renders action buttons as icon-only", () => {
     render(<SecretsView />);
-    expect(screen.getByText("Import")).toBeDefined();
-    expect(screen.getByText("Export")).toBeDefined();
-    expect(screen.getByText("Add Secret")).toBeDefined();
+    // Buttons should NOT have text labels
+    expect(screen.queryByText("Import")).toBeNull();
+    expect(screen.queryByText("Export")).toBeNull();
+    expect(screen.queryByText("Add Secret")).toBeNull();
   });
 
   it("renders empty state when no secrets", () => {
@@ -127,10 +130,10 @@ describe("SecretsView", () => {
     expect(mockSecretsVM.clearError).toHaveBeenCalled();
   });
 
-  it("opens create dialog when Add Secret clicked", () => {
+  it("opens create dialog when Add secret clicked", () => {
     render(<SecretsView />);
 
-    fireEvent.click(screen.getByText("Add Secret"));
+    fireEvent.click(screen.getByTitle("Add secret"));
     // Dialog opens — check for form field that only exists in the dialog
     expect(screen.getByLabelText("Name *")).toBeDefined();
   });
@@ -138,14 +141,14 @@ describe("SecretsView", () => {
   it("opens import dialog when Import clicked", () => {
     render(<SecretsView />);
 
-    fireEvent.click(screen.getByText("Import"));
+    fireEvent.click(screen.getByTitle("Import"));
     expect(screen.getByText("Import Secrets")).toBeDefined();
   });
 
   it("opens export dialog when Export clicked", () => {
     render(<SecretsView />);
 
-    fireEvent.click(screen.getByText("Export"));
+    fireEvent.click(screen.getByTitle("Export"));
     expect(screen.getByText("Export Secrets")).toBeDefined();
   });
 });

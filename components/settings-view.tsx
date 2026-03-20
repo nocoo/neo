@@ -84,13 +84,6 @@ export function SettingsView() {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div>
-        <h1 className="text-2xl font-semibold">Settings</h1>
-        <p className="text-sm text-muted-foreground">
-          Manage your preferences and security settings
-        </p>
-      </div>
 
       {/* Error banner */}
       {vm.error && (

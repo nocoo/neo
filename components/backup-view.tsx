@@ -48,13 +48,6 @@ export function BackupView() {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div>
-        <h1 className="text-2xl font-semibold">Backups</h1>
-        <p className="text-sm text-muted-foreground">
-          Create encrypted archives, push to Backy, or restore from backup
-        </p>
-      </div>
 
       {/* Error banner */}
       {vm.error && (
