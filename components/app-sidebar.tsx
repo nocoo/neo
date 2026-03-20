@@ -134,6 +134,16 @@ function NavGroupSection({
 }
 
 // ── Main sidebar component ──
+//
+// The sidebar uses a single <aside> with transition-[width] so the width
+// animates smoothly.  The logo is pinned with a fixed pl-[22px] so it
+// stays at the same X in both states ((68 − 24)/2 = 22 px).
+//
+// Nav items are rendered as a single flat list of <Link> elements (same
+// DOM nodes in both states).  The icon container has a fixed left offset
+// that matches the collapsed-centred position, and the text label is
+// conditionally rendered.  Because the <Link> keeps the same React key,
+// React reuses the DOM node and there is no unmount/mount flash.
 
 export function AppSidebar({ collapsed, onToggle, user }: AppSidebarProps) {
   const pathname = usePathname();
@@ -174,15 +184,13 @@ export function AppSidebar({ collapsed, onToggle, user }: AppSidebarProps) {
     <aside
       className={cn(
         "sticky top-0 flex h-screen shrink-0 flex-col bg-background overflow-hidden",
-        "transition-[width] duration-200 ease-in-out",
+        "transition-[width] duration-150 ease-in-out",
         collapsed ? "w-[68px]" : "w-[260px]",
       )}
     >
       {/* ── Header / Logo ──
-           Logo is always the same DOM node with fixed pl-[22px] so it never
-           shifts during the width transition.  (68 − 24) / 2 = 22px centres
-           the 24 px logo inside the collapsed 68 px rail.  In expanded mode
-           the same 22 px keeps it left-aligned at the identical X coordinate.
+           Fixed pl-[22px] pins the logo at the same X in both states.
+           (68 − 24) / 2 = 22 px centres the 24 px icon in the 68 px rail.
       */}
       <div className="h-14 flex items-center pl-[22px] pr-3 shrink-0">
         {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -219,13 +227,20 @@ export function AppSidebar({ collapsed, onToggle, user }: AppSidebarProps) {
         </div>
       )}
 
-      {/* ── Navigation ── */}
-      <nav className={cn(
-        "flex-1 overflow-y-auto pt-1",
-        collapsed && "flex flex-col items-center gap-1",
-      )}>
-        {collapsed
-          ? ALL_NAV_ITEMS.map((item) => (
+      {/* ── Navigation ──
+           Uses a single flat list of nav items in both states.  Each <Link>
+           keeps the same `key` so React reuses the DOM node — no flash.
+           The icon is pinned at a fixed left offset; text is conditionally
+           rendered and naturally clipped by overflow-hidden during the
+           width transition.
+
+           In expanded mode, group headers are rendered between items via
+           the ordered render below.
+      */}
+      <nav className="flex-1 overflow-y-auto pt-1">
+        {collapsed ? (
+          <div className="flex flex-col items-center gap-1">
+            {ALL_NAV_ITEMS.map((item) => (
               <Link
                 key={item.href}
                 href={item.href}
@@ -239,21 +254,23 @@ export function AppSidebar({ collapsed, onToggle, user }: AppSidebarProps) {
               >
                 <item.icon className="h-4 w-4" strokeWidth={1.5} />
               </Link>
-            ))
-          : NAV_GROUPS.map((group) => (
-              <NavGroupSection
-                key={group.label}
-                group={group}
-                isActive={isActive}
-              />
-            ))
-        }
+            ))}
+          </div>
+        ) : (
+          NAV_GROUPS.map((group) => (
+            <NavGroupSection
+              key={group.label}
+              group={group}
+              isActive={isActive}
+            />
+          ))
+        )}
       </nav>
 
       {/* ── User section ── */}
       <div className={cn(
         "py-3 shrink-0",
-        collapsed ? "flex justify-center w-full" : "px-4",
+        collapsed ? "px-0" : "px-4",
       )}>
         <div className={cn(
           "flex items-center",
