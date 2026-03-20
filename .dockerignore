@@ -39,6 +39,8 @@ worker
 .DS_Store
 .turbo
 .claude
+logo.png
+scripts
 
 # Debug logs
 npm-debug.log*

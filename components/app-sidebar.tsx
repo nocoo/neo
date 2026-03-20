@@ -3,7 +3,6 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
-  Shield,
   Key,
   Archive,
   Wrench,
@@ -58,7 +57,8 @@ export function AppSidebar({ collapsed, onToggle, user }: AppSidebarProps) {
       <aside className="sticky top-0 flex h-screen w-[68px] shrink-0 flex-col items-center bg-background transition-all duration-150 ease-in-out overflow-hidden">
         {/* Logo */}
         <div className="flex h-14 items-center justify-center">
-          <Shield className="h-5 w-5 text-primary" strokeWidth={1.5} />
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/logo-24.png" alt="Neo" className="h-6 w-6" />
         </div>
 
         {/* Toggle */}
@@ -118,7 +118,8 @@ export function AppSidebar({ collapsed, onToggle, user }: AppSidebarProps) {
       <div className="px-3 h-14 flex items-center">
         <div className="flex w-full items-center justify-between px-3">
           <div className="flex items-center gap-3">
-            <Shield className="h-5 w-5 text-primary" strokeWidth={1.5} />
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src="/logo-24.png" alt="Neo" className="h-6 w-6" />
             <span className="text-lg font-semibold text-foreground">neo.</span>
             <span className="rounded-md bg-secondary px-1.5 py-0.5 text-[10px] font-normal text-muted-foreground leading-none">
               v{VERSION}

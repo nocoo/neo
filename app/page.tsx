@@ -1,4 +1,4 @@
-import { Shield, Github } from "lucide-react";
+import { Github } from "lucide-react";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { signIn, auth } from "@/auth";
 import { redirect } from "next/navigation";
@@ -96,10 +96,8 @@ export default async function Home({
                 }}
               />
               <div className="flex items-center gap-2">
-                <Shield
-                  className="h-4 w-4 text-primary-foreground"
-                  strokeWidth={1.5}
-                />
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src="/logo-24.png" alt="Neo" className="h-4 w-4" />
                 <span className="text-sm font-semibold text-primary-foreground">
                   neo.
                 </span>
@@ -122,11 +120,9 @@ export default async function Home({
           {/* Badge content */}
           <div className="flex flex-1 flex-col items-center px-6 pt-6 pb-14">
             {/* Logo avatar */}
-            <div className="flex h-24 w-24 items-center justify-center rounded-full bg-secondary dark:bg-background ring-1 ring-border overflow-hidden p-2.5">
-              <Shield
-                className="h-10 w-10 text-muted-foreground"
-                strokeWidth={1.5}
-              />
+            <div className="flex h-24 w-24 items-center justify-center rounded-full bg-secondary dark:bg-background ring-1 ring-border overflow-hidden">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src="/logo-80.png" alt="Neo" className="h-16 w-16" />
             </div>
 
             <p className="mt-5 text-lg font-semibold text-foreground">
