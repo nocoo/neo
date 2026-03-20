@@ -178,34 +178,32 @@ export function AppSidebar({ collapsed, onToggle, user }: AppSidebarProps) {
         collapsed ? "w-[68px]" : "w-[260px]",
       )}
     >
-      {/* ── Header / Logo ── */}
-      <div className="h-14 flex items-center px-3 shrink-0">
-        <div className={cn(
-          "flex items-center w-full",
-          collapsed ? "justify-center" : "justify-between px-3",
-        )}>
-          <div className="flex items-center gap-3">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src="/logo-24.png" alt="Neo" className="h-6 w-6 shrink-0" />
-            {!collapsed && (
-              <>
-                <span className="text-lg font-semibold text-foreground whitespace-nowrap">neo.</span>
-                <span className="rounded-md bg-secondary px-1.5 py-0.5 text-[10px] font-normal text-muted-foreground leading-none whitespace-nowrap">
-                  v{VERSION}
-                </span>
-              </>
-            )}
-          </div>
-          {!collapsed && (
+      {/* ── Header / Logo ──
+           Logo is always the same DOM node with fixed pl-[22px] so it never
+           shifts during the width transition.  (68 − 24) / 2 = 22px centres
+           the 24 px logo inside the collapsed 68 px rail.  In expanded mode
+           the same 22 px keeps it left-aligned at the identical X coordinate.
+      */}
+      <div className="h-14 flex items-center pl-[22px] pr-3 shrink-0">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src="/logo-24.png" alt="Neo" className="h-6 w-6 shrink-0" />
+        {!collapsed && (
+          <div className="flex items-center justify-between flex-1 min-w-0 ml-3">
+            <div className="flex items-center gap-3">
+              <span className="text-lg font-semibold text-foreground whitespace-nowrap">neo.</span>
+              <span className="rounded-md bg-secondary px-1.5 py-0.5 text-[10px] font-normal text-muted-foreground leading-none whitespace-nowrap">
+                v{VERSION}
+              </span>
+            </div>
             <button
               onClick={onToggle}
               aria-label="Collapse sidebar"
-              className="flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground hover:text-foreground transition-colors"
+              className="flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground hover:text-foreground transition-colors shrink-0"
             >
               <PanelLeft className="h-4 w-4" strokeWidth={1.5} />
             </button>
-          )}
-        </div>
+          </div>
+        )}
       </div>
 
       {/* ── Expand toggle (collapsed only) ── */}
