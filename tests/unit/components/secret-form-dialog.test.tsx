@@ -197,9 +197,10 @@ describe("SecretFormDialog", () => {
         <SecretFormDialog open={true} onClose={vi.fn()} onCreate={vi.fn()} />
       );
       expect(screen.getByText("Color")).toBeDefined();
-      expect(screen.getByLabelText("Auto")).toBeDefined();
       expect(screen.getByLabelText("Red")).toBeDefined();
       expect(screen.getByLabelText("Blue")).toBeDefined();
+      expect(screen.getByLabelText("White")).toBeDefined();
+      expect(screen.getByLabelText("Black")).toBeDefined();
     });
 
     it("selects a color when clicked", () => {
@@ -209,7 +210,7 @@ describe("SecretFormDialog", () => {
 
       fireEvent.click(screen.getByLabelText("Red"));
       expect(screen.getByLabelText("Red").getAttribute("aria-checked")).toBe("true");
-      expect(screen.getByLabelText("Auto").getAttribute("aria-checked")).toBe("false");
+      expect(screen.getByLabelText("Blue").getAttribute("aria-checked")).toBe("false");
     });
 
     it("includes color in create submission", async () => {
@@ -265,32 +266,23 @@ describe("SecretFormDialog", () => {
       );
     });
 
-    it("clears color when switching to Auto in edit mode", async () => {
-      const onUpdate = vi.fn().mockResolvedValue(true);
-      const coloredSecret = { ...sampleSecret, color: "red" };
-
+    it("resolves hash color when secret has no explicit color", () => {
+      // sampleSecret has color: null, so resolveThemeKey computes from name
       render(
         <SecretFormDialog
           open={true}
-          secret={coloredSecret}
+          secret={sampleSecret}
           onClose={vi.fn()}
-          onUpdate={onUpdate}
+          onUpdate={vi.fn()}
         />
       );
 
-      // Switch from red to Auto
-      fireEvent.click(screen.getByLabelText("Auto"));
-
-      await act(async () => {
-        fireEvent.submit(screen.getByText("Update").closest("form")!);
-      });
-
-      // color should be "" (empty string) which the server converts to null
-      expect(onUpdate).toHaveBeenCalledWith(
-        expect.objectContaining({
-          color: "",
-        })
+      // At least one color radio should be checked (the hash-derived color)
+      const allRadios = screen.getAllByRole("radio");
+      const checkedRadio = allRadios.find(
+        (r) => r.getAttribute("aria-checked") === "true"
       );
+      expect(checkedRadio).toBeDefined();
     });
   });
 

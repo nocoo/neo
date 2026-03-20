@@ -11,12 +11,12 @@ import { Button } from "@/components/ui/button";
 import { X, Check } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { CardThemeKey } from "@/components/secret-card";
+import { resolveThemeKey } from "@/components/secret-card";
 import type { Secret, CreateSecretInput, UpdateSecretInput } from "@/models/types";
 
-// ── Color options (skip "default" — it means auto) ───────────────────────
+// ── Color options ────────────────────────────────────────────────────────
 
-const COLOR_OPTIONS: { key: CardThemeKey | ""; label: string; swatch: string }[] = [
-  { key: "",         label: "Auto",    swatch: "bg-gradient-to-br from-gray-300 to-gray-500" },
+const COLOR_OPTIONS: { key: CardThemeKey; label: string; swatch: string }[] = [
   { key: "red",      label: "Red",     swatch: "bg-red-500" },
   { key: "emerald",  label: "Emerald", swatch: "bg-emerald-600" },
   { key: "blue",     label: "Blue",    swatch: "bg-blue-500" },
@@ -27,6 +27,8 @@ const COLOR_OPTIONS: { key: CardThemeKey | ""; label: string; swatch: string }[]
   { key: "indigo",   label: "Indigo",  swatch: "bg-indigo-500" },
   { key: "teal",     label: "Teal",    swatch: "bg-teal-600" },
   { key: "orange",   label: "Orange",  swatch: "bg-orange-500" },
+  { key: "white",    label: "White",   swatch: "bg-white border border-gray-300" },
+  { key: "black",    label: "Black",   swatch: "bg-gray-900" },
 ];
 
 // ── Types ────────────────────────────────────────────────────────────────
@@ -70,7 +72,8 @@ export function SecretFormDialog({
       setName(secret.name);
       setAccount(secret.account || "");
       setSecretValue(secret.secret);
-      setColor(secret.color || "");
+      // Resolve the effective displayed color (user-set or hash-derived)
+      setColor(resolveThemeKey(secret));
       setFormError(null);
     } else if (open) {
       setName("");
@@ -99,8 +102,7 @@ export function SecretFormDialog({
       if (isEdit && secret && onUpdate) {
         const input: UpdateSecretInput = { id: secret.id, name: name.trim() };
         if (account.trim()) input.account = account.trim();
-        // Always send color so switching to Auto clears any saved value
-        input.color = color || "";
+        input.color = color;
         const success = await onUpdate(input);
         if (success) onClose();
       } else if (onCreate) {

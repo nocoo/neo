@@ -137,6 +137,34 @@ describe("SecretCard", () => {
     expect(frontFace?.className).toContain("bg-red-500");
   });
 
+  it("supports white theme for manual selection", () => {
+    const whiteSecret = { ...sampleSecret, color: "white" };
+    const { container } = render(<SecretCard secret={whiteSecret} />);
+    const frontFace = container.querySelector("[data-testid='secret-card-s_test_1'] > div > div");
+    expect(frontFace?.className).toContain("bg-white");
+  });
+
+  it("supports black theme for manual selection", () => {
+    const blackSecret = { ...sampleSecret, color: "black" };
+    const { container } = render(<SecretCard secret={blackSecret} />);
+    const frontFace = container.querySelector("[data-testid='secret-card-s_test_1'] > div > div");
+    expect(frontFace?.className).toContain("bg-gray-900");
+  });
+
+  it("auto-hash never assigns white or black", () => {
+    // Test many names to ensure hash only picks from HASH_THEMES (10 saturated colors)
+    const names = ["Alpha", "Beta", "Gamma", "Delta", "Epsilon", "Zeta", "Eta", "Theta", "Iota", "Kappa",
+      "Lambda", "Mu", "Nu", "Xi", "Omicron", "Pi", "Rho", "Sigma", "Tau", "Upsilon"];
+    for (const name of names) {
+      const s = { ...sampleSecret, id: `s_${name}`, name, color: null };
+      const { container } = render(<SecretCard secret={s} />);
+      const frontFace = container.querySelector(`[data-testid='secret-card-s_${name}'] > div > div`);
+      const className = frontFace?.className ?? "";
+      expect(className).not.toContain("bg-white");
+      expect(className).not.toContain("bg-gray-900");
+    }
+  });
+
   it("same first-word names get the same theme", () => {
     const secret1 = { ...sampleSecret, id: "s_1", name: "Google Gmail", color: null };
     const secret2 = { ...sampleSecret, id: "s_2", name: "Google Drive", color: null };

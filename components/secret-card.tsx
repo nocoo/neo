@@ -13,9 +13,10 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import type { Secret, OtpResult } from "@/models/types";
 
-// ── Color palette (no white/black — all saturated colors) ─────────────────
+// ── Color palette ────────────────────────────────────────────────────────
 
-export const CARD_THEMES = [
+/** Saturated themes used for auto-hash assignment. */
+export const HASH_THEMES = [
   { key: "red",      bg: "bg-red-500",           text: "text-white",             accent: "text-red-100",          progressBg: "bg-red-400/40",    progressFill: "bg-white/70",     progressWarn: "bg-yellow-300"  },
   { key: "emerald",  bg: "bg-emerald-600",       text: "text-white",             accent: "text-emerald-100",      progressBg: "bg-emerald-400/40",progressFill: "bg-white/70",     progressWarn: "bg-yellow-300"  },
   { key: "blue",     bg: "bg-blue-500",          text: "text-white",             accent: "text-blue-100",         progressBg: "bg-blue-400/40",   progressFill: "bg-white/70",     progressWarn: "bg-yellow-300"  },
@@ -27,6 +28,15 @@ export const CARD_THEMES = [
   { key: "teal",     bg: "bg-teal-600",          text: "text-white",             accent: "text-teal-100",         progressBg: "bg-teal-400/40",   progressFill: "bg-white/70",     progressWarn: "bg-yellow-300"  },
   { key: "orange",   bg: "bg-orange-500",        text: "text-white",             accent: "text-orange-100",       progressBg: "bg-orange-400/40", progressFill: "bg-white/70",     progressWarn: "bg-yellow-300"  },
 ] as const;
+
+/** Extra themes only available for manual selection (not auto-hash). */
+const MANUAL_ONLY_THEMES = [
+  { key: "white",    bg: "bg-white",             text: "text-gray-800",          accent: "text-gray-500",         progressBg: "bg-gray-200",      progressFill: "bg-gray-500/70",  progressWarn: "bg-yellow-500"  },
+  { key: "black",    bg: "bg-gray-900",          text: "text-white",             accent: "text-gray-400",         progressBg: "bg-gray-700",      progressFill: "bg-white/70",     progressWarn: "bg-yellow-300"  },
+] as const;
+
+/** All themes — hash themes + manual-only themes. */
+export const CARD_THEMES = [...HASH_THEMES, ...MANUAL_ONLY_THEMES] as const;
 
 export type CardThemeKey = (typeof CARD_THEMES)[number]["key"];
 
@@ -48,6 +58,15 @@ function getThemeByKey(key: string) {
   return CARD_THEMES.find((t) => t.key === key);
 }
 
+/** Resolve the effective theme key for a secret (user color or hash). */
+export function resolveThemeKey(secret: { name: string; color?: string | null }): string {
+  if (secret.color) {
+    const found = getThemeByKey(secret.color);
+    if (found) return found.key;
+  }
+  return HASH_THEMES[hashCode(firstWord(secret.name)) % HASH_THEMES.length].key;
+}
+
 // ── Types ────────────────────────────────────────────────────────────────
 
 export interface SecretCardProps {
@@ -67,7 +86,7 @@ export function SecretCard({ secret, otp, onEdit, onDelete }: SecretCardProps) {
       const userTheme = getThemeByKey(secret.color);
       if (userTheme) return userTheme;
     }
-    return CARD_THEMES[hashCode(firstWord(secret.name)) % CARD_THEMES.length];
+    return HASH_THEMES[hashCode(firstWord(secret.name)) % HASH_THEMES.length];
   }, [secret.color, secret.name]);
 
   const handleCopy = useCallback(async () => {
