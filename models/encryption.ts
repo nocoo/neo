@@ -52,7 +52,7 @@ async function importKey(keyBase64: string): Promise<CryptoKey> {
 
   return crypto.subtle.importKey(
     "raw",
-    keyData,
+    keyData.buffer as ArrayBuffer,
     { name: "AES-GCM", length: AES_KEY_LENGTH },
     false,
     ["encrypt", "decrypt"]
@@ -114,9 +114,9 @@ export async function decryptData<T>(encrypted: string, keyBase64: string): Prom
   const ciphertext = base64ToArrayBuffer(ciphertextBase64);
 
   const plaintext = await crypto.subtle.decrypt(
-    { name: "AES-GCM", iv, tagLength: 128 },
+    { name: "AES-GCM", iv: iv.buffer as ArrayBuffer, tagLength: 128 },
     key,
-    ciphertext
+    ciphertext.buffer as ArrayBuffer
   );
 
   const decoder = new TextDecoder();

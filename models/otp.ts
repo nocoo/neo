@@ -138,7 +138,7 @@ export async function generateOTP(
 
   const key = await crypto.subtle.importKey(
     "raw",
-    secretBytes,
+    secretBytes.buffer as ArrayBuffer,
     { name: "HMAC", hash: { name: hashAlgorithm } },
     false,
     ["sign"]
@@ -186,7 +186,7 @@ export async function generateTOTP(
 
     const cryptoKey = await crypto.subtle.importKey(
       "raw",
-      key,
+      key.buffer as ArrayBuffer,
       { name: "HMAC", hash: hashAlgorithm },
       false,
       ["sign"]
