@@ -10,6 +10,8 @@ import {
   openEncryptedZip,
   validateManifest,
   generateArchiveFilename,
+  MAX_ARCHIVE_UPLOAD_BYTES,
+  MAX_ARCHIVE_SECRETS,
 } from "@/models/backup-archive";
 import type { BackupManifest } from "@/models/backup-archive";
 import { generateEncryptionKey } from "@/models/encryption";
@@ -235,5 +237,26 @@ describe("generateArchiveFilename", () => {
   it("uses current date when no argument", () => {
     const filename = generateArchiveFilename();
     expect(filename).toMatch(/^neo-backup-\d{4}-\d{2}-\d{2}\.zip$/);
+  });
+});
+
+// ── Safety Limits ─────────────────────────────────────────────────────────────
+
+describe("safety limits", () => {
+  it("rejects ZIP exceeding upload size limit", async () => {
+    const key = await generateEncryptionKey();
+    // Create a fake oversized Uint8Array (just needs to exceed the limit)
+    const oversized = new Uint8Array(MAX_ARCHIVE_UPLOAD_BYTES + 1);
+    await expect(openEncryptedZip(oversized, key)).rejects.toThrow(
+      /Archive too large/,
+    );
+  });
+
+  it("exports MAX_ARCHIVE_UPLOAD_BYTES constant", () => {
+    expect(MAX_ARCHIVE_UPLOAD_BYTES).toBe(10 * 1024 * 1024);
+  });
+
+  it("exports MAX_ARCHIVE_SECRETS constant", () => {
+    expect(MAX_ARCHIVE_SECRETS).toBe(10_000);
   });
 });

@@ -21,6 +21,18 @@ const PAYLOAD_FILENAME = "backup.json.enc";
 const ARCHIVE_FORMAT = "neo-encrypted-backup";
 const BACKUP_DATA_VERSION = 2;
 
+/** Maximum uploaded ZIP size: 10 MB */
+export const MAX_ARCHIVE_UPLOAD_BYTES = 10 * 1024 * 1024;
+
+/** Maximum number of entries inside the ZIP (manifest + payload = 2) */
+const MAX_ZIP_ENTRIES = 10;
+
+/** Maximum decrypted payload size: 50 MB (catches zip bomb after decrypt) */
+const MAX_PAYLOAD_BYTES = 50 * 1024 * 1024;
+
+/** Maximum number of secrets in a single archive */
+export const MAX_ARCHIVE_SECRETS = 10_000;
+
 // ── Types ────────────────────────────────────────────────────────────────────
 
 export interface BackupManifest {
@@ -150,8 +162,34 @@ export async function openEncryptedZip(
   zipBytes: Uint8Array,
   keyBase64: string,
 ): Promise<ParsedSecret[]> {
+  // Guard: reject oversized uploads before decompression
+  if (zipBytes.byteLength > MAX_ARCHIVE_UPLOAD_BYTES) {
+    throw new Error(
+      `Archive too large: ${zipBytes.byteLength} bytes exceeds ${MAX_ARCHIVE_UPLOAD_BYTES} byte limit`,
+    );
+  }
+
   // Extract ZIP contents — Uint8Array.from() for cross-realm compat
   const files = unzipSync(Uint8Array.from(zipBytes));
+
+  // Guard: limit number of entries to catch crafted ZIPs
+  const entryNames = Object.keys(files);
+  if (entryNames.length > MAX_ZIP_ENTRIES) {
+    throw new Error(
+      `Archive has too many entries: ${entryNames.length} exceeds ${MAX_ZIP_ENTRIES} limit`,
+    );
+  }
+
+  // Guard: limit total decompressed size
+  let totalBytes = 0;
+  for (const name of entryNames) {
+    totalBytes += files[name].byteLength;
+    if (totalBytes > MAX_PAYLOAD_BYTES) {
+      throw new Error(
+        `Decompressed archive too large: exceeds ${MAX_PAYLOAD_BYTES} byte limit`,
+      );
+    }
+  }
 
   // Validate manifest exists
   const manifestBytes = files[MANIFEST_FILENAME];
@@ -182,6 +220,13 @@ export async function openEncryptedZip(
   // Validate payload structure
   if (!payload || !Array.isArray(payload.secrets)) {
     throw new Error("Invalid archive: decrypted payload has no secrets array");
+  }
+
+  // Guard: limit number of secrets
+  if (payload.secrets.length > MAX_ARCHIVE_SECRETS) {
+    throw new Error(
+      `Archive contains too many secrets: ${payload.secrets.length} exceeds ${MAX_ARCHIVE_SECRETS} limit`,
+    );
   }
 
   return payload.secrets;
