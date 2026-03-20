@@ -133,9 +133,9 @@ export function formatFileSize(bytes: number): string {
 
 // ── Time Formatting ──────────────────────────────────────────────────────────
 
-/** Format a date string as a relative time (e.g. "3 days ago") */
-export function formatTimeAgo(dateStr: string): string {
-  const diff = Date.now() - new Date(dateStr).getTime();
+/** Format a date string or Date as a relative time (e.g. "3 days ago") */
+export function formatTimeAgo(date: string | Date): string {
+  const diff = Date.now() - new Date(date).getTime();
   const mins = Math.floor(diff / 60000);
   if (mins < 1) return "just now";
   if (mins < 60) return `${mins}m ago`;

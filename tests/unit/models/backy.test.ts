@@ -231,4 +231,9 @@ describe("formatTimeAgo", () => {
     ).toISOString();
     expect(formatTimeAgo(sixtyDaysAgo)).toBe("2mo ago");
   });
+
+  it("accepts Date object", () => {
+    const fiveMinAgo = new Date(Date.now() - 5 * 60 * 1000);
+    expect(formatTimeAgo(fiveMinAgo)).toBe("5m ago");
+  });
 });
