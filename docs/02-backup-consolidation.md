@@ -271,27 +271,22 @@ Phase 7: Cleanup — worker, dead code, drop table
 |---|--------|-------------|---------------|
 | 2.1-2.3 ✅ | `feat: add backy/encryption columns and update dashboard data chain` | Combined into single commit (pre-commit hook requires passing tests). D1 migration for new columns, ScopedDB methods, dashboard chain update removing backupCount/lastBackupAt/handleBackupCreated, and all test updates. | `lib/db/scoped.ts`, `lib/db/schema.ts`, `lib/db/mappers.ts`, `models/types.ts`, `actions/dashboard.ts`, `contexts/dashboard-context.tsx`, `viewmodels/useBackupViewModel.ts`, `components/backup-view.tsx`, `migrations/`, tests |
 
-### Phase 3: Route Handlers + Server Actions
+### Phase 3: Route Handlers + Server Actions ✅
 
 These depend on Phase 1 models (`createEncryptedZip`, `openEncryptedZip`, `BackyConfig`) and Phase 2 DB methods (`getEncryptionKey`, `getBackySettings`).
 
 | # | Commit | Description | Files Changed |
 |---|--------|-------------|---------------|
-| 3.1 | `feat: add backup archive download route handler` | New `app/api/backup/archive/route.ts`: authenticated `GET` → queries secrets from ScopedDB, reads encryption key via `db.getEncryptionKey()` (Phase 2.1), calls `createEncryptedZip()` (Phase 1.1), returns `new Response(zipBytes, { headers: { 'Content-Type': 'application/zip', ... } })`. **Route Handler, not Server Action** — binary `Response` cannot cross RSC boundary. | `app/api/backup/archive/route.ts` (new) |
-| 3.2 | `feat: add backup restore route handler` | New `app/api/backup/restore/route.ts`: authenticated `POST` accepting `multipart/form-data` with fields `file` (ZIP) and `encryptionKey` (string). Calls `openEncryptedZip()` → `batchImportSecrets()`. Returns JSON `{ success, importedCount }`. | `app/api/backup/restore/route.ts` (new) |
-| 3.3 | `feat: add backy server actions` | New `actions/backy.ts`: `pushBackupToBacky()` — reads Backy config via `db.getBackySettings()` (Phase 2.1), creates ZIP in memory, POSTs to Backy webhook. Returns `{ success, tag, durationMs }`. Also: `saveBackyConfig()`, `getBackyConfig()`, `testBackyConnection()`, `fetchBackyHistory()`, pull webhook key CRUD. This is the **only** action file for Backy — `actions/backup.ts` is not involved. References: `../zhe/actions/backy.ts`. | `actions/backy.ts` (new) |
-| 3.4 | `feat: add backy pull webhook API route` | New `app/api/backy/pull/route.ts`: POST (Backy calls us → triggers `pushBackupToBacky()`) + HEAD (connection test). Authenticated via `X-Webhook-Key` header matched against `db.getBackyPullWebhook()`. References: `../zhe/app/api/backy/pull/route.ts`. | `app/api/backy/pull/route.ts` (new) |
-| 3.5 | `test: add backy action and route tests` | Tests for push action (mocked fetch → assert FormData fields), route handler tests. | `tests/unit/actions/backy.test.ts` (new) |
+| 3.1-3.4 ✅ | `feat: add backup route handlers and backy server actions` | Combined into single commit. Archive download route (GET), restore route (POST multipart), backy actions (push, config CRUD, pull webhook key CRUD), pull webhook route (POST/HEAD), verifyBackyPullWebhook standalone query. | `app/api/backup/archive/route.ts`, `app/api/backup/restore/route.ts`, `actions/backy.ts`, `app/api/backy/pull/route.ts`, `lib/db/scoped.ts` |
+| 3.5 ✅ | `test: add backy server action tests` | 17 tests covering push, config CRUD, connection test, history fetch, pull webhook key CRUD. | `tests/unit/actions/backy.test.ts` (new) |
 
-### Phase 4: UI — Settings Page (encryption key management)
+### Phase 4: UI — Settings Page (encryption key management) ✅
 
 **Must land before Phase 5 (migration)** — users need to be able to generate, view, and copy their encryption key before any backup is encrypted with it.
 
 | # | Commit | Description | Files Changed |
 |---|--------|-------------|---------------|
-| 4.1 | `feat: add encryption key management to settings` | Replace the read-only "Automated Backup Encryption" indicator with a key management section: generate key, reveal/copy key. Uses `generateEncryptionKey()` from `models/encryption.ts`. The key is read via `db.getEncryptionKey()` (Phase 2.1) and displayed masked (click to reveal + copy button). **Warning text**: "Save this key externally. If lost, encrypted backups cannot be restored." User must explicitly click "Generate Key" — keys are never created silently. | `components/settings-view.tsx`, `viewmodels/useSettingsViewModel.ts`, `actions/settings.ts` |
-| 4.2 | `feat: add backy config section to settings` | New section in Settings page: webhook URL input, API key input (masked), test connection button, pull webhook key generation/revocation. References: `../zhe` Backy settings UI pattern. | `components/settings-view.tsx`, `viewmodels/useSettingsViewModel.ts` |
-| 4.3 | `test: update settings view tests` | Update tests for new encryption key management and Backy config sections. | `tests/unit/components/settings-view.test.tsx`, `tests/unit/viewmodels/useSettingsViewModel.test.ts` |
+| 4.1-4.3 ✅ | `feat: add encryption key and backy config to settings UI` | Combined into single commit (pre-commit hook requires passing tests). Encryption key management (generate, reveal/copy, regenerate, warning text), Backy config section (webhook URL, API key, test connection, pull webhook key CRUD), updated viewmodel with all new actions, new settings server actions (getEncryptionKey, generateAndSaveEncryptionKey), comprehensive test updates. | `components/settings-view.tsx`, `viewmodels/useSettingsViewModel.ts`, `actions/settings.ts`, `tests/unit/components/settings-view.test.tsx`, `tests/unit/viewmodels/useSettingsViewModel.test.ts`, `tests/unit/actions/settings.test.ts` |
 
 ### Phase 5: Migration — Export Existing D1 Backups
 

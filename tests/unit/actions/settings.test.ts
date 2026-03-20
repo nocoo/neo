@@ -7,17 +7,25 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 const {
   mockGetUserSettings,
   mockUpsertUserSettings,
+  mockGetEncryptionKey,
+  mockSetEncryptionKey,
   mockScopedDB,
 } = vi.hoisted(() => {
   const mockGetUserSettings = vi.fn();
   const mockUpsertUserSettings = vi.fn();
+  const mockGetEncryptionKey = vi.fn();
+  const mockSetEncryptionKey = vi.fn();
 
   return {
     mockGetUserSettings,
     mockUpsertUserSettings,
+    mockGetEncryptionKey,
+    mockSetEncryptionKey,
     mockScopedDB: {
       getUserSettings: mockGetUserSettings,
       upsertUserSettings: mockUpsertUserSettings,
+      getEncryptionKey: mockGetEncryptionKey,
+      setEncryptionKey: mockSetEncryptionKey,
     },
   };
 });
@@ -29,7 +37,16 @@ vi.mock("@/lib/auth-context", () => ({
   requireAuth: vi.fn(),
 }));
 
-import { getUserSettings, updateUserSettings } from "@/actions/settings";
+vi.mock("@/models/encryption", () => ({
+  generateEncryptionKey: vi.fn().mockResolvedValue("generatedBase64Key=="),
+}));
+
+import {
+  getUserSettings,
+  updateUserSettings,
+  getEncryptionKey,
+  generateAndSaveEncryptionKey,
+} from "@/actions/settings";
 import { getScopedDB } from "@/lib/auth-context";
 
 const sampleSettings = {
@@ -122,6 +139,58 @@ describe("updateUserSettings", () => {
   it("handles errors gracefully", async () => {
     mockUpsertUserSettings.mockRejectedValue(new Error("DB error"));
     const result = await updateUserSettings({ theme: "dark" });
+    expect(result.success).toBe(false);
+  });
+});
+
+describe("getEncryptionKey", () => {
+  it("returns encryption key when present", async () => {
+    mockGetEncryptionKey.mockResolvedValue("base64key==");
+    const result = await getEncryptionKey();
+    expect(result.success).toBe(true);
+    if (result.success) expect(result.data).toBe("base64key==");
+  });
+
+  it("returns null when no key", async () => {
+    mockGetEncryptionKey.mockResolvedValue(null);
+    const result = await getEncryptionKey();
+    expect(result.success).toBe(true);
+    if (result.success) expect(result.data).toBeNull();
+  });
+
+  it("returns unauthorized when not authenticated", async () => {
+    vi.mocked(getScopedDB).mockResolvedValue(null);
+    const result = await getEncryptionKey();
+    expect(result.success).toBe(false);
+    if (!result.success) expect(result.error).toBe("Unauthorized");
+  });
+
+  it("handles errors gracefully", async () => {
+    mockGetEncryptionKey.mockRejectedValue(new Error("fail"));
+    const result = await getEncryptionKey();
+    expect(result.success).toBe(false);
+  });
+});
+
+describe("generateAndSaveEncryptionKey", () => {
+  it("generates and saves a new key", async () => {
+    mockSetEncryptionKey.mockResolvedValue(undefined);
+    const result = await generateAndSaveEncryptionKey();
+    expect(result.success).toBe(true);
+    if (result.success) expect(result.data).toBe("generatedBase64Key==");
+    expect(mockSetEncryptionKey).toHaveBeenCalledWith("generatedBase64Key==");
+  });
+
+  it("returns unauthorized when not authenticated", async () => {
+    vi.mocked(getScopedDB).mockResolvedValue(null);
+    const result = await generateAndSaveEncryptionKey();
+    expect(result.success).toBe(false);
+    if (!result.success) expect(result.error).toBe("Unauthorized");
+  });
+
+  it("handles errors gracefully", async () => {
+    mockSetEncryptionKey.mockRejectedValue(new Error("DB error"));
+    const result = await generateAndSaveEncryptionKey();
     expect(result.success).toBe(false);
   });
 });

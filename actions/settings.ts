@@ -7,6 +7,7 @@
  */
 
 import { getScopedDB } from "@/lib/auth-context";
+import { generateEncryptionKey } from "@/models/encryption";
 import type { ActionResult, UserSettings } from "@/models/types";
 
 /**
@@ -58,5 +59,42 @@ export async function updateUserSettings(input: {
   } catch (error) {
     console.error("Failed to update user settings:", error);
     return { success: false, error: "Failed to update settings" };
+  }
+}
+
+// ── Encryption Key Management ─────────────────────────────────────────────
+
+/**
+ * Get the current encryption key.
+ * Returns the actual key (not hash) for display/copy purposes.
+ */
+export async function getEncryptionKey(): Promise<ActionResult<string | null>> {
+  try {
+    const db = await getScopedDB();
+    if (!db) return { success: false, error: "Unauthorized" };
+
+    const key = await db.getEncryptionKey();
+    return { success: true, data: key };
+  } catch (error) {
+    console.error("Failed to get encryption key:", error);
+    return { success: false, error: "Failed to load encryption key" };
+  }
+}
+
+/**
+ * Generate a new encryption key and save it.
+ * This replaces any existing key — the user must save the old key externally first.
+ */
+export async function generateAndSaveEncryptionKey(): Promise<ActionResult<string>> {
+  try {
+    const db = await getScopedDB();
+    if (!db) return { success: false, error: "Unauthorized" };
+
+    const key = await generateEncryptionKey();
+    await db.setEncryptionKey(key);
+    return { success: true, data: key };
+  } catch (error) {
+    console.error("Failed to generate encryption key:", error);
+    return { success: false, error: "Failed to generate encryption key" };
   }
 }
