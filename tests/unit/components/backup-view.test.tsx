@@ -55,7 +55,7 @@ beforeEach(() => {
   mockBackupVM.backups = [];
   mockBackupVM.busy = false;
   mockBackupVM.error = null;
-  mockUseDashboardState.mockReturnValue({ secrets: [] });
+  mockUseDashboardState.mockReturnValue({ secrets: [], encryptionEnabled: false });
 });
 
 // ── Tests ────────────────────────────────────────────────────────────────
@@ -95,6 +95,7 @@ describe("BackupView", () => {
   it("creates backup when button clicked", async () => {
     mockUseDashboardState.mockReturnValue({
       secrets: [{ id: "s1", name: "GitHub", account: "", secret: "KEY", type: "totp", digits: 6, period: 30, algorithm: "SHA-1", counter: 0, color: null }],
+      encryptionEnabled: false,
     });
     mockBackupVM.handleCreateBackup.mockResolvedValue(true);
 
@@ -181,5 +182,53 @@ describe("BackupView", () => {
   it("renders upload restore button", () => {
     render(<BackupView />);
     expect(screen.getByText("Upload Restore")).toBeDefined();
+  });
+
+  // ── Migration banner ──────────────────────────────────────────────────
+
+  it("shows migration banner when plain-text backups exist", () => {
+    mockBackupVM.backups = [sampleBackup];
+    render(<BackupView />);
+    expect(screen.getByTestId("migration-banner")).toBeDefined();
+    expect(screen.getByText(/1 backup in the old format/)).toBeDefined();
+  });
+
+  it("does not show migration banner when no backups", () => {
+    render(<BackupView />);
+    expect(screen.queryByTestId("migration-banner")).toBeNull();
+  });
+
+  it("does not show migration banner when all backups are encrypted", () => {
+    mockBackupVM.backups = [{ ...sampleBackup, encrypted: true }];
+    render(<BackupView />);
+    expect(screen.queryByTestId("migration-banner")).toBeNull();
+  });
+
+  it("shows export link enabled when encryption is configured", () => {
+    mockBackupVM.backups = [sampleBackup];
+    mockUseDashboardState.mockReturnValue({ secrets: [], encryptionEnabled: true });
+    render(<BackupView />);
+    const link = screen.getByTestId("migration-export-link");
+    expect(link.getAttribute("aria-disabled")).toBe("false");
+  });
+
+  it("shows export link disabled when no encryption key", () => {
+    mockBackupVM.backups = [sampleBackup];
+    render(<BackupView />);
+    const link = screen.getByTestId("migration-export-link");
+    expect(link.getAttribute("aria-disabled")).toBe("true");
+  });
+
+  it("shows setup-first message when encryption not enabled", () => {
+    mockBackupVM.backups = [sampleBackup];
+    render(<BackupView />);
+    expect(screen.getByText(/set up your encryption key in Settings/i)).toBeDefined();
+  });
+
+  it("shows export message when encryption is enabled", () => {
+    mockBackupVM.backups = [sampleBackup];
+    mockUseDashboardState.mockReturnValue({ secrets: [], encryptionEnabled: true });
+    render(<BackupView />);
+    expect(screen.getByText(/Export them as encrypted archives/)).toBeDefined();
   });
 });

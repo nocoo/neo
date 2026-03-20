@@ -288,14 +288,13 @@ These depend on Phase 1 models (`createEncryptedZip`, `openEncryptedZip`, `Backy
 |---|--------|-------------|---------------|
 | 4.1-4.3 ✅ | `feat: add encryption key and backy config to settings UI` | Combined into single commit (pre-commit hook requires passing tests). Encryption key management (generate, reveal/copy, regenerate, warning text), Backy config section (webhook URL, API key, test connection, pull webhook key CRUD), updated viewmodel with all new actions, new settings server actions (getEncryptionKey, generateAndSaveEncryptionKey), comprehensive test updates. | `components/settings-view.tsx`, `viewmodels/useSettingsViewModel.ts`, `actions/settings.ts`, `tests/unit/components/settings-view.test.tsx`, `tests/unit/viewmodels/useSettingsViewModel.test.ts`, `tests/unit/actions/settings.test.ts` |
 
-### Phase 5: Migration — Export Existing D1 Backups
+### Phase 5: Migration — Export Existing D1 Backups ✅
 
 **Precondition**: Phase 4 is deployed. User must have generated an encryption key via Settings before migration works.
 
 | # | Commit | Description | Files Changed |
 |---|--------|-------------|---------------|
-| 5.1 | `feat: add one-time D1 backup export route` | New `app/api/backup/migrate/route.ts`: authenticated `GET` → reads encryption key via `db.getEncryptionKey()`. **If no key exists, returns 400 with message "Set up your encryption key in Settings before exporting backups."** — never auto-generates. Reads all rows from `backups` table, converts each to the new encrypted ZIP format, returns as a combined download. This is a **temporary** route, removed in Phase 7. | `app/api/backup/migrate/route.ts` (new) |
-| 5.2 | `feat: add migration notice to backup page` | Show a banner on the backup page: "You have N existing backups in the old format. First, set up your encryption key in Settings, then [Export All] to download them as encrypted archives." The [Export All] link is **disabled** until encryption key is configured. Links to Settings page for key setup. | `components/backup-view.tsx` |
+| 5.1-5.2 ✅ | `feat: add D1 backup migration route and banner` | Combined into single commit. Migration route (GET /api/backup/migrate) reads old D1 backups, converts plain-text ones to encrypted ZIP archives, bundles into outer ZIP for download. Migration banner on backup page shows count of old-format backups with Export All link (disabled until encryption key configured). | `app/api/backup/migrate/route.ts` (new), `components/backup-view.tsx`, `tests/unit/components/backup-view.test.tsx` |
 
 ### Phase 6: UI — Backup Page Rewrite + Delete Old Actions
 

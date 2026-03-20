@@ -5,11 +5,18 @@
  */
 
 import { useEffect, useCallback, useRef } from "react";
-import { Archive, Download, Trash2, RefreshCw, Upload, RotateCcw } from "lucide-react";
+import { Archive, Download, Trash2, RefreshCw, Upload, RotateCcw, AlertTriangle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useBackupViewModel } from "@/viewmodels/useBackupViewModel";
 import { useDashboardState } from "@/contexts/dashboard-context";
 import type { Backup } from "@/models/types";
+
+/**
+ * Count of plain-text (non-encrypted) backups that need migration.
+ */
+function countMigratableBackups(backups: Backup[]): number {
+  return backups.filter((b) => !b.encrypted).length;
+}
 
 /**
  * Trigger a JSON file download in the browser.
@@ -30,7 +37,7 @@ function downloadBackup(backup: Backup): void {
 
 export function BackupView() {
   const vm = useBackupViewModel();
-  const { secrets } = useDashboardState();
+  const { secrets, encryptionEnabled } = useDashboardState();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Load backups on mount
@@ -140,6 +147,42 @@ export function BackupView() {
           >
             Dismiss
           </button>
+        </div>
+      )}
+
+      {/* Migration banner */}
+      {countMigratableBackups(vm.backups) > 0 && (
+        <div
+          className="rounded-lg border border-amber-300 dark:border-amber-700 bg-amber-50 dark:bg-amber-950/30 p-4"
+          data-testid="migration-banner"
+        >
+          <div className="flex items-start gap-3">
+            <AlertTriangle className="h-5 w-5 text-amber-600 dark:text-amber-400 mt-0.5 shrink-0" />
+            <div className="space-y-2">
+              <p className="text-sm font-medium text-amber-800 dark:text-amber-200">
+                You have {countMigratableBackups(vm.backups)} backup{countMigratableBackups(vm.backups) !== 1 ? "s" : ""} in the old format
+              </p>
+              <p className="text-xs text-amber-700 dark:text-amber-300">
+                {encryptionEnabled
+                  ? "Export them as encrypted archives to preserve your backup history in the new format."
+                  : "First, set up your encryption key in Settings, then export your old backups as encrypted archives."}
+              </p>
+              <a
+                href="/api/backup/migrate"
+                download
+                className={`inline-flex items-center gap-1 text-sm font-medium ${
+                  encryptionEnabled
+                    ? "text-amber-700 dark:text-amber-300 underline cursor-pointer"
+                    : "text-muted-foreground pointer-events-none opacity-50"
+                }`}
+                aria-disabled={!encryptionEnabled}
+                data-testid="migration-export-link"
+              >
+                <Download className="h-4 w-4" />
+                Export All
+              </a>
+            </div>
+          </div>
         </div>
       )}
 
