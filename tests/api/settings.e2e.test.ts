@@ -23,7 +23,6 @@ vi.mock("@/lib/auth-context", () => ({
 import { getUserSettings, updateUserSettings } from "@/actions/settings";
 import { getDashboardData } from "@/actions/dashboard";
 import { createSecret } from "@/actions/secrets";
-import { createManualBackup } from "@/actions/backup";
 
 // ── Reset ────────────────────────────────────────────────────────────────
 
@@ -132,15 +131,6 @@ describe("Dashboard — API E2E", () => {
     const result = await getDashboardData();
     expect(result.success).toBe(true);
     expect(result.data!.secrets).toHaveLength(2);
-  });
-
-  it("aggregates backup count", async () => {
-    await createManualBackup(JSON.stringify([{ name: "Test" }]));
-
-    const result = await getDashboardData();
-    expect(result.success).toBe(true);
-    // backupCount and lastBackupAt removed from dashboard data
-    // Just verify the call still succeeds
   });
 
   it("detects encryption enabled", async () => {

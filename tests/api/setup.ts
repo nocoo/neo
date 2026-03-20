@@ -10,11 +10,10 @@
 
 import {
   getMockSecrets,
-  getMockBackups,
   getMockUserSettings,
   clearMockStorage,
 } from "@/tests/mocks/db-storage";
-import type { Secret, Backup, UserSettings } from "@/models/types";
+import type { Secret, UserSettings } from "@/models/types";
 
 // ── Types for internal storage rows ──────────────────────────────────────
 
@@ -41,10 +40,6 @@ export class MockScopedDB {
 
   private get secrets(): MockSecretRow[] {
     return getMockSecrets();
-  }
-
-  private get backups() {
-    return getMockBackups();
   }
 
   private get settings() {
@@ -128,65 +123,6 @@ export class MockScopedDB {
     return this.secrets.filter((s) => s.user_id === this.userId).length;
   }
 
-  // ── Backups ──────────────────────────────────────────────────────────
-
-  async getBackups(): Promise<Backup[]> {
-    return this.backups
-      .filter((b) => b.user_id === this.userId)
-      .sort((a, b) => b.created_at - a.created_at)
-      .map(this.toBackup);
-  }
-
-  async createBackup(data: {
-    id: string;
-    filename: string;
-    data: string;
-    secretCount: number;
-    encrypted: boolean;
-    reason: string;
-    hash: string;
-  }): Promise<Backup> {
-    const now = Math.floor(Date.now() / 1000);
-    const row = {
-      id: data.id,
-      user_id: this.userId,
-      filename: data.filename,
-      data: data.data,
-      secret_count: data.secretCount,
-      encrypted: data.encrypted ? 1 : 0,
-      reason: data.reason,
-      hash: data.hash,
-      created_at: now,
-    };
-    this.backups.push(row);
-    return this.toBackup(row);
-  }
-
-  async getBackupCount(): Promise<number> {
-    return this.backups.filter((b) => b.user_id === this.userId).length;
-  }
-
-  async getLatestBackup(): Promise<Backup | null> {
-    const userBackups = this.backups
-      .filter((b) => b.user_id === this.userId)
-      .sort((a, b) => b.created_at - a.created_at);
-    return userBackups[0] ? this.toBackup(userBackups[0]) : null;
-  }
-
-  async deleteOldBackups(keepCount: number): Promise<number> {
-    const userBackups = this.backups
-      .filter((b) => b.user_id === this.userId)
-      .sort((a, b) => b.created_at - a.created_at);
-
-    const toDelete = userBackups.slice(keepCount);
-    const deleteIds = new Set(toDelete.map((b) => b.id));
-
-    const before = this.backups.length;
-    const remaining = this.backups.filter((b) => !deleteIds.has(b.id));
-    this.backups.splice(0, this.backups.length, ...remaining);
-    return before - remaining.length;
-  }
-
   // ── Settings ─────────────────────────────────────────────────────────
 
   async getUserSettings(): Promise<UserSettings | null> {
@@ -236,30 +172,6 @@ export class MockScopedDB {
       color: row.color ?? null,
       createdAt: row.created_at,
       updatedAt: row.updated_at,
-    };
-  }
-
-  private toBackup(row: {
-    id: string;
-    user_id: string;
-    filename: string;
-    data: string;
-    secret_count: number;
-    encrypted: number;
-    reason: string;
-    hash: string;
-    created_at: number;
-  }): Backup {
-    return {
-      id: row.id,
-      userId: row.user_id,
-      filename: row.filename,
-      data: row.data,
-      secretCount: row.secret_count,
-      encrypted: row.encrypted === 1,
-      reason: row.reason,
-      hash: row.hash,
-      createdAt: row.created_at,
     };
   }
 

@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { rowToSecret, rowToBackup, rowToUserSettings } from "@/lib/db/mappers";
+import { rowToSecret, rowToUserSettings } from "@/lib/db/mappers";
 
 describe("rowToSecret", () => {
   it("maps a D1 row to Secret type", () => {
@@ -78,49 +78,6 @@ describe("rowToSecret", () => {
     expect(secret.period).toBe(30);
     expect(secret.algorithm).toBe("SHA-1");
     expect(secret.counter).toBe(0);
-  });
-});
-
-describe("rowToBackup", () => {
-  it("maps a D1 row to Backup type", () => {
-    const row = {
-      id: "bak-1",
-      user_id: "user-1",
-      filename: "backup-2024-01-01.json",
-      data: '{"secrets":[]}',
-      secret_count: 5,
-      encrypted: 1,
-      reason: "manual",
-      hash: "abc123",
-      created_at: 1700000000,
-    };
-
-    const backup = rowToBackup(row);
-    expect(backup.id).toBe("bak-1");
-    expect(backup.userId).toBe("user-1");
-    expect(backup.filename).toBe("backup-2024-01-01.json");
-    expect(backup.secretCount).toBe(5);
-    expect(backup.encrypted).toBe(true);
-    expect(backup.reason).toBe("manual");
-    expect(backup.hash).toBe("abc123");
-    expect(backup.createdAt).toBeInstanceOf(Date);
-  });
-
-  it("maps encrypted=0 to false", () => {
-    const row = {
-      id: "bak-2",
-      user_id: "user-1",
-      filename: "b.json",
-      data: "{}",
-      secret_count: 0,
-      encrypted: 0,
-      reason: "auto",
-      hash: "def456",
-      created_at: 1700000000,
-    };
-
-    const backup = rowToBackup(row);
-    expect(backup.encrypted).toBe(false);
   });
 });
 

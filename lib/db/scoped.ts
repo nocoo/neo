@@ -5,8 +5,8 @@
  */
 
 import { executeD1Query } from "./d1-client";
-import { rowToSecret, rowToBackup, rowToUserSettings } from "./mappers";
-import type { Secret, Backup, UserSettings } from "@/models/types";
+import { rowToSecret, rowToUserSettings } from "./mappers";
+import type { Secret, UserSettings } from "@/models/types";
 
 export class ScopedDB {
   constructor(private readonly userId: string) {}
@@ -116,86 +116,6 @@ export class ScopedDB {
       [this.userId]
     );
     return rows[0]?.count ?? 0;
-  }
-
-  // ── Backups ──────────────────────────────────────────────────────────────
-
-  async getBackups(): Promise<Backup[]> {
-    const rows = await executeD1Query<Record<string, unknown>>(
-      "SELECT * FROM backups WHERE user_id = ? ORDER BY created_at DESC",
-      [this.userId]
-    );
-    return rows.map(rowToBackup);
-  }
-
-  async createBackup(data: {
-    id: string;
-    filename: string;
-    data: string;
-    secretCount: number;
-    encrypted: boolean;
-    reason: string;
-    hash: string;
-  }): Promise<Backup> {
-    const now = Math.floor(Date.now() / 1000);
-    const rows = await executeD1Query<Record<string, unknown>>(
-      `INSERT INTO backups (id, user_id, filename, data, secret_count, encrypted, reason, hash, created_at)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-       RETURNING *`,
-      [
-        data.id,
-        this.userId,
-        data.filename,
-        data.data,
-        data.secretCount,
-        data.encrypted ? 1 : 0,
-        data.reason,
-        data.hash,
-        now,
-      ]
-    );
-    return rowToBackup(rows[0]);
-  }
-
-  async getBackupCount(): Promise<number> {
-    const rows = await executeD1Query<{ count: number }>(
-      "SELECT COUNT(*) as count FROM backups WHERE user_id = ?",
-      [this.userId]
-    );
-    return rows[0]?.count ?? 0;
-  }
-
-  async getLatestBackup(): Promise<Backup | null> {
-    const rows = await executeD1Query<Record<string, unknown>>(
-      "SELECT * FROM backups WHERE user_id = ? ORDER BY created_at DESC LIMIT 1",
-      [this.userId]
-    );
-    return rows[0] ? rowToBackup(rows[0]) : null;
-  }
-
-  async deleteOldBackups(keepCount: number): Promise<number> {
-    // Count total before deletion
-    const totalBefore = await this.getBackupCount();
-    if (totalBefore <= keepCount) return 0;
-
-    // Get IDs of backups to keep (most recent N)
-    const keepers = await executeD1Query<{ id: string }>(
-      "SELECT id FROM backups WHERE user_id = ? ORDER BY created_at DESC LIMIT ?",
-      [this.userId, keepCount]
-    );
-    const keepIds = keepers.map((r) => r.id);
-
-    if (keepIds.length === 0) return 0;
-
-    const placeholders = keepIds.map(() => "?").join(",");
-    await executeD1Query(
-      `DELETE FROM backups WHERE user_id = ? AND id NOT IN (${placeholders})`,
-      [this.userId, ...keepIds]
-    );
-
-    // Count after deletion to get actual deleted count
-    const totalAfter = await this.getBackupCount();
-    return totalBefore - totalAfter;
   }
 
   // ── User Settings ────────────────────────────────────────────────────────

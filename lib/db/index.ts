@@ -5,4 +5,4 @@
 
 export { ScopedDB } from "./scoped";
 export { executeD1Query, isD1Configured } from "./d1-client";
-export { rowToSecret, rowToBackup, rowToUserSettings } from "./mappers";
+export { rowToSecret, rowToUserSettings } from "./mappers";

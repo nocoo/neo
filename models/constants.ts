@@ -39,17 +39,6 @@ export const AES_IV_LENGTH = 12;
 /** Encrypted value format prefix */
 export const ENCRYPTION_PREFIX = "v1:";
 
-// ── Backup ───────────────────────────────────────────────────────────────────
-
-/** Debounce interval for event-driven backups (ms) */
-export const BACKUP_DEBOUNCE_MS = 5 * 60 * 1000;
-
-/** Maximum number of backups to retain */
-export const BACKUP_MAX_COUNT = 100;
-
-/** Cron schedule for daily backup (UTC) */
-export const BACKUP_CRON_SCHEDULE = "0 16 * * *";
-
 // ── Import/Export ────────────────────────────────────────────────────────────
 
 /** Maximum number of secrets per batch import */

@@ -3,7 +3,7 @@
  * Converts raw D1 query results to typed application objects.
  */
 
-import type { Secret, Backup, UserSettings } from "@/models/types";
+import type { Secret, UserSettings } from "@/models/types";
 
 export function rowToSecret(row: Record<string, unknown>): Secret {
   return {
@@ -20,20 +20,6 @@ export function rowToSecret(row: Record<string, unknown>): Secret {
     color: (row.color as string | null) ?? null,
     createdAt: new Date((row.created_at as number) * 1000),
     updatedAt: new Date((row.updated_at as number) * 1000),
-  };
-}
-
-export function rowToBackup(row: Record<string, unknown>): Backup {
-  return {
-    id: row.id as string,
-    userId: row.user_id as string,
-    filename: row.filename as string,
-    data: row.data as string,
-    secretCount: row.secret_count as number,
-    encrypted: !!(row.encrypted as number),
-    reason: row.reason as string,
-    hash: row.hash as string,
-    createdAt: new Date((row.created_at as number) * 1000),
   };
 }
 
