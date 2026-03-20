@@ -182,11 +182,7 @@ export function AppSidebar({ collapsed, onToggle, user }: AppSidebarProps) {
 
   return (
     <aside
-      className={cn(
-        "sticky top-0 flex h-screen shrink-0 flex-col bg-background overflow-hidden",
-        "transition-[width] duration-150 ease-in-out",
-        collapsed ? "w-[68px]" : "w-[260px]",
-      )}
+      className={`sticky top-0 flex h-screen shrink-0 flex-col bg-background overflow-hidden transition-[width] duration-150 ease-in-out ${collapsed ? "w-[68px]" : "w-[260px]"}`}
     >
       {/* ── Header / Logo ──
            Fixed pl-[22px] pins the logo at the same X in both states.
