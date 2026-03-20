@@ -41,6 +41,10 @@ export function rowToUserSettings(row: Record<string, unknown>): UserSettings {
   return {
     userId: row.user_id as string,
     encryptionKeyHash: (row.encryption_key_hash as string | null) ?? null,
+    encryptionKey: (row.encryption_key as string | null) ?? null,
+    backyWebhookUrl: (row.backy_webhook_url as string | null) ?? null,
+    backyApiKey: (row.backy_api_key as string | null) ?? null,
+    backyPullKey: (row.backy_pull_key as string | null) ?? null,
     theme: (row.theme as string) || "system",
     language: (row.language as string) || "en",
   };

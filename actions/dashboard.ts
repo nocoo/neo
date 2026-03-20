@@ -18,10 +18,8 @@ export async function getDashboardData(): Promise<ActionResult<DashboardData>> {
     const db = await getScopedDB();
     if (!db) return { success: false, error: "Unauthorized" };
 
-    const [secrets, backupCount, latestBackup, settings] = await Promise.all([
+    const [secrets, settings] = await Promise.all([
       db.getSecrets(),
-      db.getBackupCount(),
-      db.getLatestBackup(),
       db.getUserSettings(),
     ]);
 
@@ -29,9 +27,7 @@ export async function getDashboardData(): Promise<ActionResult<DashboardData>> {
       success: true,
       data: {
         secrets,
-        backupCount,
-        lastBackupAt: latestBackup?.createdAt ?? null,
-        encryptionEnabled: !!settings?.encryptionKeyHash,
+        encryptionEnabled: !!settings?.encryptionKey,
       },
     };
   } catch (error) {

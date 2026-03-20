@@ -122,8 +122,6 @@ describe("Dashboard — API E2E", () => {
     const result = await getDashboardData();
     expect(result.success).toBe(true);
     expect(result.data!.secrets).toEqual([]);
-    expect(result.data!.backupCount).toBe(0);
-    expect(result.data!.lastBackupAt).toBeNull();
     expect(result.data!.encryptionEnabled).toBe(false);
   });
 
@@ -141,8 +139,8 @@ describe("Dashboard — API E2E", () => {
 
     const result = await getDashboardData();
     expect(result.success).toBe(true);
-    expect(result.data!.backupCount).toBe(1);
-    expect(result.data!.lastBackupAt).toBeTruthy();
+    // backupCount and lastBackupAt removed from dashboard data
+    // Just verify the call still succeeds
   });
 
   it("detects encryption enabled", async () => {

@@ -7,7 +7,7 @@
  */
 
 import { useState, useCallback } from "react";
-import { useDashboardState, useDashboardActions } from "@/contexts/dashboard-context";
+import { useDashboardActions } from "@/contexts/dashboard-context";
 import {
   getBackups as getBackupsAction,
   createManualBackup as createManualBackupAction,
@@ -21,10 +21,6 @@ import type { Backup } from "@/models/types";
 export interface BackupViewModelState {
   /** All backups (loaded on demand). */
   backups: Backup[];
-  /** Total backup count from dashboard context. */
-  backupCount: number;
-  /** Last backup timestamp from dashboard context. */
-  lastBackupAt: Date | null;
   /** Whether an operation is in progress. */
   busy: boolean;
   /** Error message from last operation. */
@@ -49,8 +45,7 @@ export type BackupViewModel = BackupViewModelState & BackupViewModelActions;
 // ── Hook ─────────────────────────────────────────────────────────────────
 
 export function useBackupViewModel(): BackupViewModel {
-  const { backupCount, lastBackupAt } = useDashboardState();
-  const { handleBackupCreated, refresh } = useDashboardActions();
+  const { refresh } = useDashboardActions();
 
   const [backups, setBackups] = useState<Backup[]>([]);
   const [busy, setBusy] = useState(false);
@@ -84,7 +79,6 @@ export function useBackupViewModel(): BackupViewModel {
       try {
         const result = await createManualBackupAction(secretsJson);
         if (result.success) {
-          handleBackupCreated(result.data.createdAt);
           // Prepend to local list
           setBackups((prev) => [result.data, ...prev]);
           return true;
@@ -98,7 +92,7 @@ export function useBackupViewModel(): BackupViewModel {
         setBusy(false);
       }
     },
-    [handleBackupCreated]
+    []
   );
 
   // ── Restore from backup ──────────────────────────────────────────────
@@ -160,8 +154,6 @@ export function useBackupViewModel(): BackupViewModel {
 
   return {
     backups,
-    backupCount,
-    lastBackupAt,
     busy,
     error,
     loadBackups,

@@ -252,4 +252,83 @@ export class ScopedDB {
     );
     return rowToUserSettings(rows[0]);
   }
+
+  // ── Encryption Key ──────────────────────────────────────────────────────
+
+  async getEncryptionKey(): Promise<string | null> {
+    const settings = await this.getUserSettings();
+    return settings?.encryptionKey ?? null;
+  }
+
+  async setEncryptionKey(key: string): Promise<void> {
+    const existing = await this.getUserSettings();
+    if (existing) {
+      await executeD1Query(
+        "UPDATE user_settings SET encryption_key = ? WHERE user_id = ?",
+        [key, this.userId]
+      );
+    } else {
+      await executeD1Query(
+        `INSERT INTO user_settings (user_id, encryption_key, theme, language)
+         VALUES (?, ?, 'system', 'en')`,
+        [this.userId, key]
+      );
+    }
+  }
+
+  // ── Backy Settings ──────────────────────────────────────────────────────
+
+  async getBackySettings(): Promise<{ webhookUrl: string | null; apiKey: string | null }> {
+    const settings = await this.getUserSettings();
+    return {
+      webhookUrl: settings?.backyWebhookUrl ?? null,
+      apiKey: settings?.backyApiKey ?? null,
+    };
+  }
+
+  async upsertBackySettings(data: { webhookUrl: string; apiKey: string }): Promise<void> {
+    const existing = await this.getUserSettings();
+    if (existing) {
+      await executeD1Query(
+        "UPDATE user_settings SET backy_webhook_url = ?, backy_api_key = ? WHERE user_id = ?",
+        [data.webhookUrl, data.apiKey, this.userId]
+      );
+    } else {
+      await executeD1Query(
+        `INSERT INTO user_settings (user_id, backy_webhook_url, backy_api_key, theme, language)
+         VALUES (?, ?, ?, 'system', 'en')`,
+        [this.userId, data.webhookUrl, data.apiKey]
+      );
+    }
+  }
+
+  // ── Backy Pull Webhook ──────────────────────────────────────────────────
+
+  async getBackyPullWebhook(): Promise<string | null> {
+    const settings = await this.getUserSettings();
+    return settings?.backyPullKey ?? null;
+  }
+
+  async upsertBackyPullWebhook(key: string): Promise<void> {
+    const existing = await this.getUserSettings();
+    if (existing) {
+      await executeD1Query(
+        "UPDATE user_settings SET backy_pull_key = ? WHERE user_id = ?",
+        [key, this.userId]
+      );
+    } else {
+      await executeD1Query(
+        `INSERT INTO user_settings (user_id, backy_pull_key, theme, language)
+         VALUES (?, ?, 'system', 'en')`,
+        [this.userId, key]
+      );
+    }
+  }
+
+  async deleteBackyPullWebhook(): Promise<void> {
+    await executeD1Query(
+      "UPDATE user_settings SET backy_pull_key = NULL WHERE user_id = ?",
+      [this.userId]
+    );
+  }
 }

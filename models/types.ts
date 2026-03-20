@@ -79,6 +79,10 @@ export interface Backup {
 export interface UserSettings {
   userId: string;
   encryptionKeyHash: string | null;
+  encryptionKey: string | null;
+  backyWebhookUrl: string | null;
+  backyApiKey: string | null;
+  backyPullKey: string | null;
   theme: string;
   language: string;
 }
@@ -155,7 +159,5 @@ export interface OtpResult {
 /** Dashboard aggregate data */
 export interface DashboardData {
   secrets: Secret[];
-  backupCount: number;
-  lastBackupAt: Date | null;
   encryptionEnabled: boolean;
 }

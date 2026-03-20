@@ -12,8 +12,6 @@ vi.mock("@/actions/dashboard", () => ({
     success: true,
     data: {
       secrets: [],
-      backupCount: 0,
-      lastBackupAt: null,
       encryptionEnabled: false,
     },
   }),
@@ -47,8 +45,6 @@ const sampleSecret: Secret = {
 
 const initialData = {
   secrets: [sampleSecret],
-  backupCount: 5,
-  lastBackupAt: new Date("2026-03-19T00:00:00Z"),
   encryptionEnabled: true,
 };
 
@@ -71,7 +67,6 @@ describe("DashboardProvider", () => {
     });
 
     expect(result.current.secrets).toHaveLength(1);
-    expect(result.current.backupCount).toBe(5);
     expect(result.current.encryptionEnabled).toBe(true);
     expect(result.current.loading).toBe(false);
   });
@@ -145,20 +140,6 @@ describe("useDashboardActions", () => {
     expect(result.current.secrets[0].name).toBe("AWS");
   });
 
-  it("increments backup count via handleBackupCreated", () => {
-    const { result } = renderHook(() => useDashboardService(), {
-      wrapper: createWrapper({ initialData }),
-    });
-
-    const backupDate = new Date("2026-03-20T00:00:00Z");
-
-    act(() => {
-      result.current.handleBackupCreated(backupDate);
-    });
-
-    expect(result.current.backupCount).toBe(6);
-    expect(result.current.lastBackupAt).toEqual(backupDate);
-  });
 });
 
 describe("context hooks", () => {

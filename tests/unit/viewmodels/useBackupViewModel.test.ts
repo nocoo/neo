@@ -12,16 +12,12 @@ const {
   mockCreateManualBackup,
   mockCleanupBackups,
   mockRestoreBackup,
-  mockUseDashboardState,
-  mockHandleBackupCreated,
   mockRefresh,
 } = vi.hoisted(() => {
   const mockGetBackups = vi.fn();
   const mockCreateManualBackup = vi.fn();
   const mockCleanupBackups = vi.fn();
   const mockRestoreBackup = vi.fn();
-  const mockUseDashboardState = vi.fn();
-  const mockHandleBackupCreated = vi.fn();
   const mockRefresh = vi.fn().mockResolvedValue(undefined);
 
   return {
@@ -29,8 +25,6 @@ const {
     mockCreateManualBackup,
     mockCleanupBackups,
     mockRestoreBackup,
-    mockUseDashboardState,
-    mockHandleBackupCreated,
     mockRefresh,
   };
 });
@@ -43,9 +37,7 @@ vi.mock("@/actions/backup", () => ({
 }));
 
 vi.mock("@/contexts/dashboard-context", () => ({
-  useDashboardState: mockUseDashboardState,
   useDashboardActions: vi.fn().mockReturnValue({
-    handleBackupCreated: mockHandleBackupCreated,
     refresh: mockRefresh,
   }),
 }));
@@ -75,23 +67,12 @@ const sampleBackup2: Backup = {
 
 beforeEach(() => {
   vi.clearAllMocks();
-  mockUseDashboardState.mockReturnValue({
-    backupCount: 5,
-    lastBackupAt: new Date("2026-03-19T00:00:00Z"),
-  });
 });
 
 // ── Tests ────────────────────────────────────────────────────────────────
 
 describe("useBackupViewModel", () => {
   describe("initial state", () => {
-    it("returns backup count and lastBackupAt from context", () => {
-      const { result } = renderHook(() => useBackupViewModel());
-
-      expect(result.current.backupCount).toBe(5);
-      expect(result.current.lastBackupAt).toEqual(new Date("2026-03-19T00:00:00Z"));
-    });
-
     it("starts with empty backups array", () => {
       const { result } = renderHook(() => useBackupViewModel());
       expect(result.current.backups).toHaveLength(0);
@@ -151,7 +132,7 @@ describe("useBackupViewModel", () => {
   });
 
   describe("handleCreateBackup", () => {
-    it("creates backup and syncs context", async () => {
+    it("creates backup and updates local list", async () => {
       mockCreateManualBackup.mockResolvedValue({
         success: true,
         data: sampleBackup,
@@ -166,7 +147,6 @@ describe("useBackupViewModel", () => {
 
       expect(success!).toBe(true);
       expect(mockCreateManualBackup).toHaveBeenCalledWith('[{"id":"s1"}]');
-      expect(mockHandleBackupCreated).toHaveBeenCalledWith(sampleBackup.createdAt);
       expect(result.current.backups).toHaveLength(1);
     });
 

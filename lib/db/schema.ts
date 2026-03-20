@@ -96,6 +96,10 @@ export const userSettings = sqliteTable("user_settings", {
     .primaryKey()
     .references(() => users.id, { onDelete: "cascade" }),
   encryptionKeyHash: text("encryption_key_hash"),
+  encryptionKey: text("encryption_key"),
+  backyWebhookUrl: text("backy_webhook_url"),
+  backyApiKey: text("backy_api_key"),
+  backyPullKey: text("backy_pull_key"),
   theme: text("theme").notNull().default("system"),
   language: text("language").notNull().default("en"),
 });

@@ -92,10 +92,7 @@ export function BackupView() {
         <div>
           <h1 className="text-2xl font-semibold">Backups</h1>
           <p className="text-sm text-muted-foreground">
-            {vm.backupCount} backup{vm.backupCount !== 1 ? "s" : ""} total
-            {vm.lastBackupAt && (
-              <> &middot; Last: {vm.lastBackupAt.toLocaleDateString()}</>
-            )}
+            {vm.backups.length} backup{vm.backups.length !== 1 ? "s" : ""} loaded
           </p>
         </div>
         <div className="flex items-center gap-2">

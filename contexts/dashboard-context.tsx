@@ -23,8 +23,6 @@ import type { Secret } from "@/models/types";
 
 export interface DashboardState {
   secrets: Secret[];
-  backupCount: number;
-  lastBackupAt: Date | null;
   encryptionEnabled: boolean;
   loading: boolean;
   error: string | null;
@@ -43,8 +41,6 @@ export interface DashboardActions {
   handleSecretUpdated: (secret: Secret) => void;
   /** Replace all secrets (e.g., after batch import). */
   handleSecretsReloaded: (secrets: Secret[]) => void;
-  /** Increment backup count. */
-  handleBackupCreated: (createdAt: Date) => void;
   /** Re-fetch all dashboard data from the server. */
   refresh: () => Promise<void>;
 }
@@ -57,16 +53,12 @@ interface DashboardProviderProps {
   children: ReactNode;
   initialData?: {
     secrets: Secret[];
-    backupCount: number;
-    lastBackupAt: Date | null;
     encryptionEnabled: boolean;
   };
 }
 
 export function DashboardProvider({ children, initialData }: DashboardProviderProps) {
   const [secrets, setSecrets] = useState<Secret[]>(initialData?.secrets ?? []);
-  const [backupCount, setBackupCount] = useState(initialData?.backupCount ?? 0);
-  const [lastBackupAt, setLastBackupAt] = useState<Date | null>(initialData?.lastBackupAt ?? null);
   const [encryptionEnabled, setEncryptionEnabled] = useState(initialData?.encryptionEnabled ?? false);
   const [loading, setLoading] = useState(!initialData);
   const [error, setError] = useState<string | null>(null);
@@ -83,8 +75,6 @@ export function DashboardProvider({ children, initialData }: DashboardProviderPr
 
       if (result.success) {
         setSecrets(result.data.secrets);
-        setBackupCount(result.data.backupCount);
-        setLastBackupAt(result.data.lastBackupAt);
         setEncryptionEnabled(result.data.encryptionEnabled);
         setError(null);
       } else {
@@ -118,18 +108,11 @@ export function DashboardProvider({ children, initialData }: DashboardProviderPr
     setSecrets(newSecrets);
   }, []);
 
-  const handleBackupCreated = useCallback((createdAt: Date) => {
-    setBackupCount((prev) => prev + 1);
-    setLastBackupAt(createdAt);
-  }, []);
-
   const refresh = useCallback(async () => {
     setLoading(true);
     const result = await getDashboardData();
     if (result.success) {
       setSecrets(result.data.secrets);
-      setBackupCount(result.data.backupCount);
-      setLastBackupAt(result.data.lastBackupAt);
       setEncryptionEnabled(result.data.encryptionEnabled);
       setError(null);
     } else {
@@ -141,8 +124,8 @@ export function DashboardProvider({ children, initialData }: DashboardProviderPr
   // ── Memoized values ─────────────────────────────────────────────────
 
   const stateValue = useMemo<DashboardState>(
-    () => ({ secrets, backupCount, lastBackupAt, encryptionEnabled, loading, error }),
-    [secrets, backupCount, lastBackupAt, encryptionEnabled, loading, error]
+    () => ({ secrets, encryptionEnabled, loading, error }),
+    [secrets, encryptionEnabled, loading, error]
   );
 
   const actionsValue = useMemo<DashboardActions>(
@@ -151,10 +134,9 @@ export function DashboardProvider({ children, initialData }: DashboardProviderPr
       handleSecretDeleted,
       handleSecretUpdated,
       handleSecretsReloaded,
-      handleBackupCreated,
       refresh,
     }),
-    [handleSecretCreated, handleSecretDeleted, handleSecretUpdated, handleSecretsReloaded, handleBackupCreated, refresh]
+    [handleSecretCreated, handleSecretDeleted, handleSecretUpdated, handleSecretsReloaded, refresh]
   );
 
   return (

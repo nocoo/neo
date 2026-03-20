@@ -10,8 +10,6 @@ import { render, screen, fireEvent, act } from "@testing-library/react";
 const { mockBackupVM, mockUseDashboardState } = vi.hoisted(() => {
   const mockBackupVM = {
     backups: [],
-    backupCount: 0,
-    lastBackupAt: null,
     busy: false,
     error: null,
     loadBackups: vi.fn(),
@@ -55,8 +53,6 @@ const sampleBackup: Backup = {
 beforeEach(() => {
   vi.clearAllMocks();
   mockBackupVM.backups = [];
-  mockBackupVM.backupCount = 0;
-  mockBackupVM.lastBackupAt = null;
   mockBackupVM.busy = false;
   mockBackupVM.error = null;
   mockUseDashboardState.mockReturnValue({ secrets: [] });
@@ -84,7 +80,6 @@ describe("BackupView", () => {
 
   it("renders backup items", () => {
     mockBackupVM.backups = [sampleBackup];
-    mockBackupVM.backupCount = 1;
 
     render(<BackupView />);
     expect(screen.getByText("backup_20260319.json")).toBeDefined();
@@ -92,9 +87,9 @@ describe("BackupView", () => {
   });
 
   it("shows backup count in header", () => {
-    mockBackupVM.backupCount = 3;
+    mockBackupVM.backups = [sampleBackup, { ...sampleBackup, id: "bk_2" }, { ...sampleBackup, id: "bk_3" }];
     render(<BackupView />);
-    expect(screen.getByText(/3 backups total/)).toBeDefined();
+    expect(screen.getByText(/3 backups loaded/)).toBeDefined();
   });
 
   it("creates backup when button clicked", async () => {
@@ -147,7 +142,6 @@ describe("BackupView", () => {
 
   it("triggers download when download button clicked", () => {
     mockBackupVM.backups = [sampleBackup];
-    mockBackupVM.backupCount = 1;
 
     // Spy on URL.createObjectURL and URL.revokeObjectURL
     const createObjectURL = vi.fn().mockReturnValue("blob:mock");
@@ -165,7 +159,6 @@ describe("BackupView", () => {
 
   it("renders restore button for each backup", () => {
     mockBackupVM.backups = [sampleBackup];
-    mockBackupVM.backupCount = 1;
 
     render(<BackupView />);
 
@@ -174,7 +167,6 @@ describe("BackupView", () => {
 
   it("calls handleRestore when restore button clicked", async () => {
     mockBackupVM.backups = [sampleBackup];
-    mockBackupVM.backupCount = 1;
     mockBackupVM.handleRestore.mockResolvedValue({ imported: 0, skipped: 0, duplicates: 0 });
 
     render(<BackupView />);
