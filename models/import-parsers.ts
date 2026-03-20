@@ -6,7 +6,7 @@
  * is the otpauth:// URI (RFC 6238 / RFC 4226).
  */
 
-import type { ParsedSecret } from "./types";
+import type { ParsedSecret, ImportFormat } from "./types";
 import type { OtpType, OtpAlgorithm } from "./constants";
 
 // ── OTPAuth URI Parser (core) ───────────────────────────────────────────────
@@ -624,23 +624,8 @@ export function parseGenericCSV(csv: string): ParsedSecret[] {
 
 // ── Format Detection & Unified Parse ────────────────────────────────────────
 
-export type ImportFormat =
-  | "otpauth-uri"
-  | "aegis"
-  | "2fas"
-  | "bitwarden"
-  | "andotp"
-  | "lastpass"
-  | "proton"
-  | "authenticator-pro"
-  | "freeotp-plus"
-  | "google-authenticator"
-  | "ente-auth"
-  | "winauth"
-  | "raivo"
-  | "step-two"
-  | "generic-json"
-  | "generic-csv";
+// Re-export ImportFormat from canonical source
+export type { ImportFormat } from "./types";
 
 /**
  * Auto-detect import format from content.

@@ -5,7 +5,7 @@
  * All formatters take ParsedSecret[] and return a string.
  */
 
-import type { ParsedSecret } from "./types";
+import type { ParsedSecret, ExportFormat } from "./types";
 import type { OtpAlgorithm } from "./constants";
 
 // ── OTPAuth URI Builder ─────────────────────────────────────────────────────
@@ -256,19 +256,8 @@ export function exportAsText(secrets: ParsedSecret[]): string {
 
 // ── Unified Export ──────────────────────────────────────────────────────────
 
-export type ExportFormat =
-  | "otpauth-uri"
-  | "aegis"
-  | "2fas"
-  | "andotp"
-  | "bitwarden"
-  | "lastpass"
-  | "proton"
-  | "authenticator-pro"
-  | "freeotp-plus"
-  | "generic-json"
-  | "generic-csv"
-  | "generic-txt";
+// Re-export ExportFormat from canonical source
+export type { ExportFormat } from "./types";
 
 /**
  * Export secrets in the specified format.
