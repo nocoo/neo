@@ -122,7 +122,7 @@ export default async function Home({
             {/* Logo avatar */}
             <div className="flex h-24 w-24 items-center justify-center rounded-full bg-secondary dark:bg-background ring-1 ring-border overflow-hidden">
               {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src="/logo-80.png" alt="Neo" className="h-16 w-16" />
+              <img src="/logo-80.png" alt="Neo" className="h-full w-full object-cover" />
             </div>
 
             <p className="mt-5 text-lg font-semibold text-foreground">
