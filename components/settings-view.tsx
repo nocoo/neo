@@ -9,8 +9,6 @@ import { Button } from "@/components/ui/button";
 import { useSettingsViewModel } from "@/viewmodels/useSettingsViewModel";
 import {
   Shield,
-  Palette,
-  Globe,
   Eye,
   EyeOff,
   Copy,
@@ -20,30 +18,17 @@ import {
   RefreshCw,
   Trash2,
 } from "lucide-react";
-import { useTheme } from "next-themes";
 
 // ── Component ────────────────────────────────────────────────────────────
 
 export function SettingsView() {
   const vm = useSettingsViewModel();
-  const { setTheme, theme: activeTheme } = useTheme();
 
   // Local state for Backy config form inputs
   const [backyUrl, setBackyUrl] = useState("");
   const [backyApiKey, setBackyApiKey] = useState("");
   const [keyCopied, setKeyCopied] = useState(false);
   const [connectionTestResult, setConnectionTestResult] = useState<"success" | "error" | null>(null);
-
-  // Sync DB-saved theme to next-themes on load / reload.
-  // This ensures the theme persists across devices and cleared localStorage.
-  const dbTheme = vm.settings?.theme;
-  useEffect(() => {
-    if (dbTheme && dbTheme !== activeTheme) {
-      setTheme(dbTheme);
-    }
-    // Only run when dbTheme changes (not activeTheme) to avoid infinite loop
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [dbTheme, setTheme]);
 
   // Populate Backy form when config loads
   useEffect(() => {
@@ -98,60 +83,6 @@ export function SettingsView() {
           </button>
         </div>
       )}
-
-      {/* Theme */}
-      <div className="rounded-lg border border-border bg-card p-6">
-        <div className="flex items-center gap-2 mb-4">
-          <Palette className="h-5 w-5 text-primary" />
-          <h2 className="text-lg font-medium">Appearance</h2>
-        </div>
-        <div className="space-y-2">
-          <label htmlFor="theme-select" className="block text-sm font-medium">
-            Theme
-          </label>
-          <select
-            id="theme-select"
-            value={dbTheme ?? activeTheme ?? "system"}
-            onChange={(e) => {
-              const newTheme = e.target.value;
-              setTheme(newTheme);
-              vm.handleUpdateTheme(newTheme);
-            }}
-            disabled={vm.busy}
-            className="w-full max-w-xs rounded-md border border-input bg-background px-3 py-2 text-sm"
-          >
-            <option value="light">Light</option>
-            <option value="dark">Dark</option>
-            <option value="system">System</option>
-          </select>
-        </div>
-      </div>
-
-      {/* Language */}
-      <div className="rounded-lg border border-border bg-card p-6">
-        <div className="flex items-center gap-2 mb-4">
-          <Globe className="h-5 w-5 text-primary" />
-          <h2 className="text-lg font-medium">Language</h2>
-        </div>
-        <div className="space-y-2">
-          <label htmlFor="language-select" className="block text-sm font-medium">
-            Display Language
-          </label>
-          <select
-            id="language-select"
-            value={vm.settings?.language ?? "en"}
-            onChange={(e) => vm.handleUpdateLanguage(e.target.value)}
-            disabled={vm.busy}
-            className="w-full max-w-xs rounded-md border border-input bg-background px-3 py-2 text-sm"
-          >
-            <option value="en">English</option>
-            <option value="zh">Chinese</option>
-          </select>
-          <p className="text-xs text-muted-foreground">
-            Multi-language support coming soon. Your preference is saved for future use.
-          </p>
-        </div>
-      </div>
 
       {/* Encryption Key Management */}
       <div className="rounded-lg border border-border bg-card p-6">

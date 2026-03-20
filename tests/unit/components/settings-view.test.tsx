@@ -7,7 +7,7 @@ import { render, screen, fireEvent, act } from "@testing-library/react";
 
 // ── Hoisted mocks ────────────────────────────────────────────────────────
 
-const { mockSettingsVM, mockSetTheme } = vi.hoisted(() => {
+const { mockSettingsVM } = vi.hoisted(() => {
   const mockSettingsVM = {
     settings: {
       userId: "test-user",
@@ -37,20 +37,11 @@ const { mockSettingsVM, mockSetTheme } = vi.hoisted(() => {
     clearError: vi.fn(),
   };
 
-  const mockSetTheme = vi.fn();
-
-  return { mockSettingsVM, mockSetTheme };
+  return { mockSettingsVM };
 });
 
 vi.mock("@/viewmodels/useSettingsViewModel", () => ({
   useSettingsViewModel: () => mockSettingsVM,
-}));
-
-vi.mock("next-themes", () => ({
-  useTheme: () => ({
-    theme: "system",
-    setTheme: mockSetTheme,
-  }),
 }));
 
 import { SettingsView } from "@/components/settings-view";
@@ -77,71 +68,6 @@ beforeEach(() => {
 // ── Tests ────────────────────────────────────────────────────────────────
 
 describe("SettingsView", () => {
-  // ── Basic rendering ──────────────────────────────────────────────────
-
-  it("renders theme selector", () => {
-    render(<SettingsView />);
-    expect(screen.getByLabelText("Theme")).toBeDefined();
-  });
-
-  it("renders language selector", () => {
-    render(<SettingsView />);
-    expect(screen.getByLabelText("Display Language")).toBeDefined();
-  });
-
-  // ── Theme ────────────────────────────────────────────────────────────
-
-  it("calls setTheme and handleUpdateTheme on change", async () => {
-    render(<SettingsView />);
-
-    await act(async () => {
-      fireEvent.change(screen.getByLabelText("Theme"), {
-        target: { value: "dark" },
-      });
-    });
-
-    expect(mockSetTheme).toHaveBeenCalledWith("dark");
-    expect(mockSettingsVM.handleUpdateTheme).toHaveBeenCalledWith("dark");
-  });
-
-  it("uses DB theme for select value", () => {
-    mockSettingsVM.settings = { ...mockSettingsVM.settings, theme: "dark" };
-    render(<SettingsView />);
-    const select = screen.getByLabelText("Theme") as HTMLSelectElement;
-    expect(select.value).toBe("dark");
-  });
-
-  it("syncs DB theme to next-themes on load when different", () => {
-    mockSettingsVM.settings = { ...mockSettingsVM.settings, theme: "dark" };
-    render(<SettingsView />);
-    expect(mockSetTheme).toHaveBeenCalledWith("dark");
-  });
-
-  it("does not sync theme when DB matches next-themes", () => {
-    mockSettingsVM.settings = { ...mockSettingsVM.settings, theme: "system" };
-    render(<SettingsView />);
-    expect(mockSetTheme).not.toHaveBeenCalled();
-  });
-
-  // ── Language ─────────────────────────────────────────────────────────
-
-  it("calls handleUpdateLanguage on change", async () => {
-    render(<SettingsView />);
-
-    await act(async () => {
-      fireEvent.change(screen.getByLabelText("Display Language"), {
-        target: { value: "zh" },
-      });
-    });
-
-    expect(mockSettingsVM.handleUpdateLanguage).toHaveBeenCalledWith("zh");
-  });
-
-  it("shows coming soon note for language", () => {
-    render(<SettingsView />);
-    expect(screen.getByText(/coming soon/i)).toBeDefined();
-  });
-
   // ── Encryption key management ────────────────────────────────────────
 
   it("shows generate key button when no key", () => {
