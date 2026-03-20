@@ -98,3 +98,22 @@ export async function generateAndSaveEncryptionKey(): Promise<ActionResult<strin
     return { success: false, error: "Failed to generate encryption key" };
   }
 }
+
+// ── Legacy Migration ──────────────────────────────────────────────────────
+
+/**
+ * Count legacy D1 backups awaiting migration.
+ * Returns 0 if the backups table has been dropped or no backups exist.
+ */
+export async function countLegacyBackups(): Promise<ActionResult<number>> {
+  try {
+    const db = await getScopedDB();
+    if (!db) return { success: false, error: "Unauthorized" };
+
+    const count = await db.getLegacyBackupCount();
+    return { success: true, data: count };
+  } catch (error) {
+    console.error("Failed to count legacy backups:", error);
+    return { success: false, error: "Failed to count legacy backups" };
+  }
+}

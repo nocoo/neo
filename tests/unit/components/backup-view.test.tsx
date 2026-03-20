@@ -16,6 +16,7 @@ const { mockBackupVM, mockUseDashboardState } = vi.hoisted(() => {
     lastPushResult: null as unknown,
     history: null as unknown,
     lastRestoreResult: null as unknown,
+    legacyBackupCount: 0,
     handleDownloadArchive: vi.fn().mockResolvedValue(undefined),
     handlePushToBacky: vi.fn().mockResolvedValue(true),
     handleRestore: vi.fn().mockResolvedValue(true),
@@ -46,6 +47,7 @@ beforeEach(() => {
   mockBackupVM.lastPushResult = null;
   mockBackupVM.history = null;
   mockBackupVM.lastRestoreResult = null;
+  mockBackupVM.legacyBackupCount = 0;
   mockUseDashboardState.mockReturnValue({ encryptionEnabled: true });
 });
 
@@ -171,6 +173,36 @@ describe("BackupView", () => {
     expect(screen.getByText(/3 imported/)).toBeDefined();
     expect(screen.getByText(/1 skipped/)).toBeDefined();
     expect(screen.getByText(/2 duplicates/)).toBeDefined();
+  });
+
+  // ── Legacy Migration ─────────────────────────────────────────────────
+
+  it("shows migration banner when legacy backups exist", () => {
+    mockBackupVM.legacyBackupCount = 3;
+    render(<BackupView />);
+    expect(screen.getByTestId("legacy-migration-banner")).toBeDefined();
+    expect(screen.getByText(/3 legacy backups found/)).toBeDefined();
+  });
+
+  it("hides migration banner when no legacy backups", () => {
+    mockBackupVM.legacyBackupCount = 0;
+    render(<BackupView />);
+    expect(screen.queryByTestId("legacy-migration-banner")).toBeNull();
+  });
+
+  it("shows export link in migration banner", () => {
+    mockBackupVM.legacyBackupCount = 1;
+    render(<BackupView />);
+    const link = screen.getByTestId("legacy-export-link") as HTMLAnchorElement;
+    expect(link.href).toContain("/api/backup/migrate");
+  });
+
+  it("disables export link when encryption not enabled", () => {
+    mockBackupVM.legacyBackupCount = 2;
+    mockUseDashboardState.mockReturnValue({ encryptionEnabled: false });
+    render(<BackupView />);
+    const link = screen.getByTestId("legacy-export-link");
+    expect(link.className).toContain("pointer-events-none");
   });
 
   // ── Error / General ──────────────────────────────────────────────────

@@ -14,18 +14,24 @@ const {
   mockFetchHistory,
   mockRefresh,
   mockUseDashboardState,
+  mockCountLegacy,
 } = vi.hoisted(() => {
   return {
     mockPushToBacky: vi.fn(),
     mockFetchHistory: vi.fn(),
     mockRefresh: vi.fn().mockResolvedValue(undefined),
     mockUseDashboardState: vi.fn(),
+    mockCountLegacy: vi.fn(),
   };
 });
 
 vi.mock("@/actions/backy", () => ({
   pushBackupToBacky: mockPushToBacky,
   fetchBackyHistory: mockFetchHistory,
+}));
+
+vi.mock("@/actions/settings", () => ({
+  countLegacyBackups: mockCountLegacy,
 }));
 
 vi.mock("@/contexts/dashboard-context", () => ({
@@ -41,6 +47,7 @@ beforeEach(() => {
   vi.clearAllMocks();
   mockUseDashboardState.mockReturnValue({ encryptionEnabled: true });
   mockFetchHistory.mockResolvedValue({ success: true, data: { project_name: "neo", environment: null, total_backups: 0, recent_backups: [] } });
+  mockCountLegacy.mockResolvedValue({ success: true, data: 0 });
   // Mock global fetch for archive download and restore
   vi.stubGlobal("fetch", vi.fn());
 });
@@ -262,6 +269,34 @@ describe("useBackupViewModel", () => {
         result.current.clearError();
       });
       expect(result.current.error).toBeNull();
+    });
+  });
+
+  describe("legacyBackupCount", () => {
+    it("defaults to 0", async () => {
+      const { result } = renderHook(() => useBackupViewModel());
+      await act(async () => {});
+
+      expect(result.current.legacyBackupCount).toBe(0);
+    });
+
+    it("loads count on mount", async () => {
+      mockCountLegacy.mockResolvedValue({ success: true, data: 5 });
+
+      const { result } = renderHook(() => useBackupViewModel());
+      await act(async () => {});
+
+      expect(mockCountLegacy).toHaveBeenCalled();
+      expect(result.current.legacyBackupCount).toBe(5);
+    });
+
+    it("stays 0 on failure", async () => {
+      mockCountLegacy.mockResolvedValue({ success: false, error: "nope" });
+
+      const { result } = renderHook(() => useBackupViewModel());
+      await act(async () => {});
+
+      expect(result.current.legacyBackupCount).toBe(0);
     });
   });
 });

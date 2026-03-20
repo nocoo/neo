@@ -17,6 +17,7 @@ import {
   pushBackupToBacky as pushToBackyAction,
   fetchBackyHistory as fetchHistoryAction,
 } from "@/actions/backy";
+import { countLegacyBackups as countLegacyAction } from "@/actions/settings";
 import type { BackyPushDetail, BackyHistoryResponse } from "@/models/backy";
 
 // ── Types ────────────────────────────────────────────────────────────────
@@ -32,6 +33,8 @@ export interface BackupViewModelState {
   history: BackyHistoryResponse | null;
   /** Restore result from last restore operation. */
   lastRestoreResult: { imported: number; skipped: number; duplicates: number } | null;
+  /** Number of legacy D1 backups available for migration (0 = none or table dropped). */
+  legacyBackupCount: number;
 }
 
 export interface BackupViewModelActions {
@@ -64,6 +67,7 @@ export function useBackupViewModel(): BackupViewModel {
     skipped: number;
     duplicates: number;
   } | null>(null);
+  const [legacyBackupCount, setLegacyBackupCount] = useState(0);
 
   // ── Load history on mount ────────────────────────────────────────────
 
@@ -80,6 +84,10 @@ export function useBackupViewModel(): BackupViewModel {
 
   useEffect(() => {
     refreshHistory();
+    // Check for legacy backups needing migration
+    countLegacyAction().then((result) => {
+      if (result.success) setLegacyBackupCount(result.data);
+    }).catch(() => {/* non-critical */});
   }, [refreshHistory]);
 
   // ── Download encrypted archive ────────────────────────────────────────
@@ -198,6 +206,7 @@ export function useBackupViewModel(): BackupViewModel {
     lastPushResult,
     history,
     lastRestoreResult,
+    legacyBackupCount,
     handleDownloadArchive,
     handlePushToBacky,
     handleRestore,

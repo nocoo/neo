@@ -19,6 +19,7 @@ import {
   Check,
   AlertTriangle,
   Key,
+  Database,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useBackupViewModel } from "@/viewmodels/useBackupViewModel";
@@ -84,6 +85,39 @@ export function BackupView() {
               <p className="text-xs text-amber-700 dark:text-amber-300">
                 Set up your encryption key in Settings before creating or restoring backups.
               </p>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Legacy migration banner */}
+      {vm.legacyBackupCount > 0 && (
+        <div
+          className="rounded-lg border border-blue-300 dark:border-blue-700 bg-blue-50 dark:bg-blue-950/30 p-4"
+          data-testid="legacy-migration-banner"
+        >
+          <div className="flex items-start gap-3">
+            <Database className="h-5 w-5 text-blue-600 dark:text-blue-400 mt-0.5 shrink-0" />
+            <div>
+              <p className="text-sm font-medium text-blue-800 dark:text-blue-200">
+                {vm.legacyBackupCount} legacy backup{vm.legacyBackupCount > 1 ? "s" : ""} found
+              </p>
+              <p className="text-xs text-blue-700 dark:text-blue-300">
+                Export your old backups as encrypted archives before they are removed.
+              </p>
+              <a
+                href="/api/backup/migrate"
+                className={`inline-flex items-center gap-1 mt-2 text-xs font-medium text-blue-700 dark:text-blue-300 hover:underline ${!encryptionEnabled ? "pointer-events-none opacity-50" : ""}`}
+                data-testid="legacy-export-link"
+              >
+                <Download className="h-3.5 w-3.5" />
+                Export All Legacy Backups
+              </a>
+              {!encryptionEnabled && (
+                <p className="text-xs text-blue-600 dark:text-blue-400 mt-1">
+                  Set up your encryption key in Settings first.
+                </p>
+              )}
             </div>
           </div>
         </div>

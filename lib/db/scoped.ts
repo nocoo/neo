@@ -251,6 +251,57 @@ export class ScopedDB {
       [this.userId]
     );
   }
+
+  // ── Legacy Backups (read-only, for migration) ─────────────────────────────
+
+  /** Count old D1 backups for this user. Returns 0 after table is dropped. */
+  async getLegacyBackupCount(): Promise<number> {
+    try {
+      const rows = await executeD1Query<{ count: number }>(
+        "SELECT COUNT(*) as count FROM backups WHERE user_id = ?",
+        [this.userId],
+      );
+      return rows[0]?.count ?? 0;
+    } catch {
+      // Table may not exist (dropped in Phase 7.6)
+      return 0;
+    }
+  }
+
+  /**
+   * Read old D1 backups for migration export.
+   * Returns raw rows — no mapper needed, no Backup type dependency.
+   */
+  async getLegacyBackups(): Promise<
+    Array<{
+      id: string;
+      filename: string;
+      data: string;
+      secretCount: number;
+      encrypted: boolean;
+      hash: string;
+      createdAt: number;
+    }>
+  > {
+    try {
+      const rows = await executeD1Query<Record<string, unknown>>(
+        "SELECT id, filename, data, secret_count, encrypted, hash, created_at FROM backups WHERE user_id = ? ORDER BY created_at DESC",
+        [this.userId],
+      );
+      return rows.map((r) => ({
+        id: r.id as string,
+        filename: r.filename as string,
+        data: r.data as string,
+        secretCount: r.secret_count as number,
+        encrypted: !!(r.encrypted as number),
+        hash: r.hash as string,
+        createdAt: r.created_at as number,
+      }));
+    } catch {
+      // Table may not exist (dropped in Phase 7.6)
+      return [];
+    }
+  }
 }
 
 // ── Standalone queries (not scoped to a user) ──────────────────────────────

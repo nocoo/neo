@@ -9,23 +9,27 @@ const {
   mockUpsertUserSettings,
   mockGetEncryptionKey,
   mockSetEncryptionKey,
+  mockGetLegacyBackupCount,
   mockScopedDB,
 } = vi.hoisted(() => {
   const mockGetUserSettings = vi.fn();
   const mockUpsertUserSettings = vi.fn();
   const mockGetEncryptionKey = vi.fn();
   const mockSetEncryptionKey = vi.fn();
+  const mockGetLegacyBackupCount = vi.fn();
 
   return {
     mockGetUserSettings,
     mockUpsertUserSettings,
     mockGetEncryptionKey,
     mockSetEncryptionKey,
+    mockGetLegacyBackupCount,
     mockScopedDB: {
       getUserSettings: mockGetUserSettings,
       upsertUserSettings: mockUpsertUserSettings,
       getEncryptionKey: mockGetEncryptionKey,
       setEncryptionKey: mockSetEncryptionKey,
+      getLegacyBackupCount: mockGetLegacyBackupCount,
     },
   };
 });
@@ -46,6 +50,7 @@ import {
   updateUserSettings,
   getEncryptionKey,
   generateAndSaveEncryptionKey,
+  countLegacyBackups,
 } from "@/actions/settings";
 import { getScopedDB } from "@/lib/auth-context";
 
@@ -191,6 +196,35 @@ describe("generateAndSaveEncryptionKey", () => {
   it("handles errors gracefully", async () => {
     mockSetEncryptionKey.mockRejectedValue(new Error("DB error"));
     const result = await generateAndSaveEncryptionKey();
+    expect(result.success).toBe(false);
+  });
+});
+
+describe("countLegacyBackups", () => {
+  it("returns count when backups exist", async () => {
+    mockGetLegacyBackupCount.mockResolvedValue(5);
+    const result = await countLegacyBackups();
+    expect(result.success).toBe(true);
+    if (result.success) expect(result.data).toBe(5);
+  });
+
+  it("returns 0 when no backups", async () => {
+    mockGetLegacyBackupCount.mockResolvedValue(0);
+    const result = await countLegacyBackups();
+    expect(result.success).toBe(true);
+    if (result.success) expect(result.data).toBe(0);
+  });
+
+  it("returns unauthorized when not authenticated", async () => {
+    vi.mocked(getScopedDB).mockResolvedValue(null);
+    const result = await countLegacyBackups();
+    expect(result.success).toBe(false);
+    if (!result.success) expect(result.error).toBe("Unauthorized");
+  });
+
+  it("handles errors gracefully", async () => {
+    mockGetLegacyBackupCount.mockRejectedValue(new Error("table not found"));
+    const result = await countLegacyBackups();
     expect(result.success).toBe(false);
   });
 });
