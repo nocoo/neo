@@ -1,5 +1,7 @@
 /**
  * BackupView component tests.
+ *
+ * Tests the new archive-based backup flow: download, push to Backy, restore.
  */
 
 import { describe, it, expect, vi, beforeEach } from "vitest";
@@ -9,13 +11,15 @@ import { render, screen, fireEvent, act } from "@testing-library/react";
 
 const { mockBackupVM, mockUseDashboardState } = vi.hoisted(() => {
   const mockBackupVM = {
-    backups: [],
     busy: false,
-    error: null,
-    loadBackups: vi.fn(),
-    handleCreateBackup: vi.fn(),
-    handleRestore: vi.fn(),
-    handleCleanup: vi.fn(),
+    error: null as string | null,
+    lastPushResult: null as unknown,
+    history: null as unknown,
+    lastRestoreResult: null as unknown,
+    handleDownloadArchive: vi.fn().mockResolvedValue(undefined),
+    handlePushToBacky: vi.fn().mockResolvedValue(true),
+    handleRestore: vi.fn().mockResolvedValue(true),
+    refreshHistory: vi.fn().mockResolvedValue(undefined),
     clearError: vi.fn(),
   };
 
@@ -34,79 +38,142 @@ vi.mock("@/contexts/dashboard-context", () => ({
 }));
 
 import { BackupView } from "@/components/backup-view";
-import type { Backup } from "@/models/types";
-
-// ── Helpers ──────────────────────────────────────────────────────────────
-
-const sampleBackup: Backup = {
-  id: "bk_1",
-  userId: "test-user",
-  filename: "backup_20260319.json",
-  data: "[]",
-  secretCount: 5,
-  encrypted: false,
-  reason: "manual",
-  hash: "abc",
-  createdAt: new Date("2026-03-19T00:00:00Z"),
-};
 
 beforeEach(() => {
   vi.clearAllMocks();
-  mockBackupVM.backups = [];
   mockBackupVM.busy = false;
   mockBackupVM.error = null;
-  mockUseDashboardState.mockReturnValue({ secrets: [], encryptionEnabled: false });
+  mockBackupVM.lastPushResult = null;
+  mockBackupVM.history = null;
+  mockBackupVM.lastRestoreResult = null;
+  mockUseDashboardState.mockReturnValue({ encryptionEnabled: true });
 });
 
 // ── Tests ────────────────────────────────────────────────────────────────
 
 describe("BackupView", () => {
+  // ── Basic rendering ──────────────────────────────────────────────────
+
   it("renders page header", () => {
     render(<BackupView />);
     expect(screen.getByText("Backups")).toBeDefined();
   });
 
-  it("loads backups on mount", () => {
+  it("renders all three sections", () => {
     render(<BackupView />);
-    expect(mockBackupVM.loadBackups).toHaveBeenCalled();
+    expect(screen.getByText("Create & Download")).toBeDefined();
+    expect(screen.getByText("Push to Backy")).toBeDefined();
+    expect(screen.getByText("Restore from Backup")).toBeDefined();
   });
 
-  it("shows empty state when no backups", () => {
+  // ── Encryption warning ───────────────────────────────────────────────
+
+  it("shows encryption warning when key not configured", () => {
+    mockUseDashboardState.mockReturnValue({ encryptionEnabled: false });
     render(<BackupView />);
-    expect(
-      screen.getByText("No backups yet. Create your first backup to protect your secrets.")
-    ).toBeDefined();
+    expect(screen.getByTestId("encryption-warning")).toBeDefined();
+    expect(screen.getByText(/Encryption key required/)).toBeDefined();
   });
 
-  it("renders backup items", () => {
-    mockBackupVM.backups = [sampleBackup];
-
+  it("does not show encryption warning when key is configured", () => {
     render(<BackupView />);
-    expect(screen.getByText("backup_20260319.json")).toBeDefined();
-    expect(screen.getByText(/5 secrets/)).toBeDefined();
+    expect(screen.queryByTestId("encryption-warning")).toBeNull();
   });
 
-  it("shows backup count in header", () => {
-    mockBackupVM.backups = [sampleBackup, { ...sampleBackup, id: "bk_2" }, { ...sampleBackup, id: "bk_3" }];
-    render(<BackupView />);
-    expect(screen.getByText(/3 backups loaded/)).toBeDefined();
-  });
+  // ── Download ─────────────────────────────────────────────────────────
 
-  it("creates backup when button clicked", async () => {
-    mockUseDashboardState.mockReturnValue({
-      secrets: [{ id: "s1", name: "GitHub", account: "", secret: "KEY", type: "totp", digits: 6, period: 30, algorithm: "SHA-1", counter: 0, color: null }],
-      encryptionEnabled: false,
-    });
-    mockBackupVM.handleCreateBackup.mockResolvedValue(true);
-
+  it("calls handleDownloadArchive on download button click", async () => {
     render(<BackupView />);
 
     await act(async () => {
-      fireEvent.click(screen.getByText("Create Backup"));
+      fireEvent.click(screen.getByTestId("download-archive-btn"));
     });
 
-    expect(mockBackupVM.handleCreateBackup).toHaveBeenCalled();
+    expect(mockBackupVM.handleDownloadArchive).toHaveBeenCalled();
   });
+
+  it("disables download button when encryption not enabled", () => {
+    mockUseDashboardState.mockReturnValue({ encryptionEnabled: false });
+    render(<BackupView />);
+    const btn = screen.getByTestId("download-archive-btn") as HTMLButtonElement;
+    expect(btn.disabled).toBe(true);
+  });
+
+  // ── Push to Backy ────────────────────────────────────────────────────
+
+  it("calls handlePushToBacky on push button click", async () => {
+    render(<BackupView />);
+
+    await act(async () => {
+      fireEvent.click(screen.getByTestId("push-backy-btn"));
+    });
+
+    expect(mockBackupVM.handlePushToBacky).toHaveBeenCalled();
+  });
+
+  it("disables push button when encryption not enabled", () => {
+    mockUseDashboardState.mockReturnValue({ encryptionEnabled: false });
+    render(<BackupView />);
+    const btn = screen.getByTestId("push-backy-btn") as HTMLButtonElement;
+    expect(btn.disabled).toBe(true);
+  });
+
+  it("shows push result", () => {
+    mockBackupVM.lastPushResult = {
+      ok: true,
+      message: "Push successful (100ms)",
+      durationMs: 100,
+      request: { tag: "neo/1.0", fileName: "backup.zip", fileSizeBytes: 1024, secretCount: 5 },
+    };
+    render(<BackupView />);
+    expect(screen.getByTestId("push-result")).toBeDefined();
+    expect(screen.getByText("Push successful (100ms)")).toBeDefined();
+  });
+
+  it("shows backup history when available", () => {
+    mockBackupVM.history = {
+      project_name: "neo",
+      environment: null,
+      total_backups: 1,
+      recent_backups: [
+        { id: "b1", tag: "neo/1.0", environment: "production", file_size: 1024, is_single_json: 0, created_at: "2026-03-20T00:00:00Z" },
+      ],
+    };
+    render(<BackupView />);
+    expect(screen.getByText("Recent Backups")).toBeDefined();
+    expect(screen.getByText("neo/1.0")).toBeDefined();
+  });
+
+  // ── Restore ──────────────────────────────────────────────────────────
+
+  it("renders encryption key input for restore", () => {
+    render(<BackupView />);
+    expect(screen.getByTestId("restore-key-input")).toBeDefined();
+  });
+
+  it("disables upload button when no key entered", () => {
+    render(<BackupView />);
+    const btn = screen.getByTestId("restore-upload-btn") as HTMLButtonElement;
+    expect(btn.disabled).toBe(true);
+  });
+
+  it("enables upload button when key is entered", () => {
+    render(<BackupView />);
+    fireEvent.change(screen.getByTestId("restore-key-input"), { target: { value: "myKey" } });
+    const btn = screen.getByTestId("restore-upload-btn") as HTMLButtonElement;
+    expect(btn.disabled).toBe(false);
+  });
+
+  it("shows restore result", () => {
+    mockBackupVM.lastRestoreResult = { imported: 3, skipped: 1, duplicates: 2 };
+    render(<BackupView />);
+    expect(screen.getByTestId("restore-result")).toBeDefined();
+    expect(screen.getByText(/3 imported/)).toBeDefined();
+    expect(screen.getByText(/1 skipped/)).toBeDefined();
+    expect(screen.getByText(/2 duplicates/)).toBeDefined();
+  });
+
+  // ── Error / General ──────────────────────────────────────────────────
 
   it("shows error banner", () => {
     mockBackupVM.error = "Something went wrong";
@@ -117,118 +184,7 @@ describe("BackupView", () => {
   it("dismisses error", () => {
     mockBackupVM.error = "Error";
     render(<BackupView />);
-
     fireEvent.click(screen.getByText("Dismiss"));
     expect(mockBackupVM.clearError).toHaveBeenCalled();
-  });
-
-  it("calls cleanup on button click", async () => {
-    mockBackupVM.handleCleanup.mockResolvedValue({ deleted: 0 });
-    render(<BackupView />);
-
-    await act(async () => {
-      fireEvent.click(screen.getByText("Cleanup"));
-    });
-
-    expect(mockBackupVM.handleCleanup).toHaveBeenCalled();
-  });
-
-  it("calls refresh on button click", () => {
-    render(<BackupView />);
-
-    fireEvent.click(screen.getByText("Refresh"));
-    // loadBackups called once on mount + once on refresh
-    expect(mockBackupVM.loadBackups).toHaveBeenCalledTimes(2);
-  });
-
-  it("triggers download when download button clicked", () => {
-    mockBackupVM.backups = [sampleBackup];
-
-    // Spy on URL.createObjectURL and URL.revokeObjectURL
-    const createObjectURL = vi.fn().mockReturnValue("blob:mock");
-    const revokeObjectURL = vi.fn();
-    globalThis.URL.createObjectURL = createObjectURL;
-    globalThis.URL.revokeObjectURL = revokeObjectURL;
-
-    render(<BackupView />);
-
-    fireEvent.click(screen.getByLabelText("Download backup_20260319.json"));
-
-    expect(createObjectURL).toHaveBeenCalledWith(expect.any(Blob));
-    expect(revokeObjectURL).toHaveBeenCalledWith("blob:mock");
-  });
-
-  it("renders restore button for each backup", () => {
-    mockBackupVM.backups = [sampleBackup];
-
-    render(<BackupView />);
-
-    expect(screen.getByLabelText("Restore backup_20260319.json")).toBeDefined();
-  });
-
-  it("calls handleRestore when restore button clicked", async () => {
-    mockBackupVM.backups = [sampleBackup];
-    mockBackupVM.handleRestore.mockResolvedValue({ imported: 0, skipped: 0, duplicates: 0 });
-
-    render(<BackupView />);
-
-    await act(async () => {
-      fireEvent.click(screen.getByLabelText("Restore backup_20260319.json"));
-    });
-
-    expect(mockBackupVM.handleRestore).toHaveBeenCalledWith("[]");
-  });
-
-  it("renders upload restore button", () => {
-    render(<BackupView />);
-    expect(screen.getByText("Upload Restore")).toBeDefined();
-  });
-
-  // ── Migration banner ──────────────────────────────────────────────────
-
-  it("shows migration banner when plain-text backups exist", () => {
-    mockBackupVM.backups = [sampleBackup];
-    render(<BackupView />);
-    expect(screen.getByTestId("migration-banner")).toBeDefined();
-    expect(screen.getByText(/1 backup in the old format/)).toBeDefined();
-  });
-
-  it("does not show migration banner when no backups", () => {
-    render(<BackupView />);
-    expect(screen.queryByTestId("migration-banner")).toBeNull();
-  });
-
-  it("does not show migration banner when all backups are encrypted", () => {
-    mockBackupVM.backups = [{ ...sampleBackup, encrypted: true }];
-    render(<BackupView />);
-    expect(screen.queryByTestId("migration-banner")).toBeNull();
-  });
-
-  it("shows export link enabled when encryption is configured", () => {
-    mockBackupVM.backups = [sampleBackup];
-    mockUseDashboardState.mockReturnValue({ secrets: [], encryptionEnabled: true });
-    render(<BackupView />);
-    const link = screen.getByTestId("migration-export-link");
-    expect(link.getAttribute("aria-disabled")).toBe("false");
-  });
-
-  it("shows export link disabled when no encryption key", () => {
-    mockBackupVM.backups = [sampleBackup];
-    render(<BackupView />);
-    const link = screen.getByTestId("migration-export-link");
-    expect(link.getAttribute("aria-disabled")).toBe("true");
-  });
-
-  it("shows setup-first message when encryption not enabled", () => {
-    mockBackupVM.backups = [sampleBackup];
-    render(<BackupView />);
-    expect(screen.getByText(/set up your encryption key in Settings/i)).toBeDefined();
-  });
-
-  it("shows export message when encryption is enabled", () => {
-    mockBackupVM.backups = [sampleBackup];
-    mockUseDashboardState.mockReturnValue({ secrets: [], encryptionEnabled: true });
-    render(<BackupView />);
-    expect(screen.getByText(/Export them as encrypted archives/)).toBeDefined();
   });
 });

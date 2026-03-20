@@ -1,5 +1,7 @@
 /**
  * Backup ViewModel tests.
+ *
+ * New flow: archive download, push to Backy, restore from ZIP.
  */
 
 import { describe, it, expect, vi, beforeEach } from "vitest";
@@ -8,299 +10,236 @@ import { renderHook, act } from "@testing-library/react";
 // ── Hoisted mocks ────────────────────────────────────────────────────────
 
 const {
-  mockGetBackups,
-  mockCreateManualBackup,
-  mockCleanupBackups,
-  mockRestoreBackup,
+  mockPushToBacky,
+  mockFetchHistory,
   mockRefresh,
+  mockUseDashboardState,
 } = vi.hoisted(() => {
-  const mockGetBackups = vi.fn();
-  const mockCreateManualBackup = vi.fn();
-  const mockCleanupBackups = vi.fn();
-  const mockRestoreBackup = vi.fn();
-  const mockRefresh = vi.fn().mockResolvedValue(undefined);
-
   return {
-    mockGetBackups,
-    mockCreateManualBackup,
-    mockCleanupBackups,
-    mockRestoreBackup,
-    mockRefresh,
+    mockPushToBacky: vi.fn(),
+    mockFetchHistory: vi.fn(),
+    mockRefresh: vi.fn().mockResolvedValue(undefined),
+    mockUseDashboardState: vi.fn(),
   };
 });
 
-vi.mock("@/actions/backup", () => ({
-  getBackups: mockGetBackups,
-  createManualBackup: mockCreateManualBackup,
-  cleanupBackups: mockCleanupBackups,
-  restoreBackup: mockRestoreBackup,
+vi.mock("@/actions/backy", () => ({
+  pushBackupToBacky: mockPushToBacky,
+  fetchBackyHistory: mockFetchHistory,
 }));
 
 vi.mock("@/contexts/dashboard-context", () => ({
-  useDashboardActions: vi.fn().mockReturnValue({
-    refresh: mockRefresh,
-  }),
+  useDashboardActions: vi.fn().mockReturnValue({ refresh: mockRefresh }),
+  useDashboardState: mockUseDashboardState,
 }));
 
 import { useBackupViewModel } from "@/viewmodels/useBackupViewModel";
-import type { Backup } from "@/models/types";
 
-// ── Helpers ──────────────────────────────────────────────────────────────
-
-const sampleBackup: Backup = {
-  id: "bk_test_1",
-  userId: "test-user",
-  filename: "backup_20260319_000000.json",
-  data: '[{"id":"s1","name":"GitHub"}]',
-  secretCount: 1,
-  encrypted: false,
-  reason: "manual",
-  hash: "abc12345",
-  createdAt: new Date("2026-03-19T00:00:00Z"),
-};
-
-const sampleBackup2: Backup = {
-  ...sampleBackup,
-  id: "bk_test_2",
-  createdAt: new Date("2026-03-18T00:00:00Z"),
-};
+// ── Setup ────────────────────────────────────────────────────────────────
 
 beforeEach(() => {
   vi.clearAllMocks();
+  mockUseDashboardState.mockReturnValue({ encryptionEnabled: true });
+  mockFetchHistory.mockResolvedValue({ success: true, data: { project_name: "neo", environment: null, total_backups: 0, recent_backups: [] } });
+  // Mock global fetch for archive download and restore
+  vi.stubGlobal("fetch", vi.fn());
 });
 
 // ── Tests ────────────────────────────────────────────────────────────────
 
 describe("useBackupViewModel", () => {
   describe("initial state", () => {
-    it("starts with empty backups array", () => {
+    it("starts not busy with no error", async () => {
       const { result } = renderHook(() => useBackupViewModel());
-      expect(result.current.backups).toHaveLength(0);
-    });
+      await act(async () => {});
 
-    it("starts not busy with no error", () => {
-      const { result } = renderHook(() => useBackupViewModel());
       expect(result.current.busy).toBe(false);
       expect(result.current.error).toBeNull();
+      expect(result.current.lastPushResult).toBeNull();
+      expect(result.current.lastRestoreResult).toBeNull();
+    });
+
+    it("fetches history on mount", async () => {
+      const { result } = renderHook(() => useBackupViewModel());
+      await act(async () => {});
+
+      expect(mockFetchHistory).toHaveBeenCalled();
+      expect(result.current.history).toBeDefined();
     });
   });
 
-  describe("loadBackups", () => {
-    it("loads backups from server", async () => {
-      mockGetBackups.mockResolvedValue({
-        success: true,
-        data: [sampleBackup, sampleBackup2],
-      });
+  describe("handleDownloadArchive", () => {
+    it("sets error when encryption not enabled", async () => {
+      mockUseDashboardState.mockReturnValue({ encryptionEnabled: false });
 
       const { result } = renderHook(() => useBackupViewModel());
+      await act(async () => {});
 
       await act(async () => {
-        await result.current.loadBackups();
+        await result.current.handleDownloadArchive();
       });
 
-      expect(result.current.backups).toHaveLength(2);
-      expect(result.current.backups[0].id).toBe("bk_test_1");
+      expect(result.current.error).toContain("encryption key");
     });
 
-    it("sets error on failure", async () => {
-      mockGetBackups.mockResolvedValue({
-        success: false,
-        error: "Unauthorized",
-      });
+    it("triggers download on success", async () => {
+      const mockBlob = new Blob(["zip"], { type: "application/zip" });
+      const mockCreateObjectURL = vi.fn().mockReturnValue("blob:mock");
+      const mockRevokeObjectURL = vi.fn();
+      globalThis.URL.createObjectURL = mockCreateObjectURL;
+      globalThis.URL.revokeObjectURL = mockRevokeObjectURL;
+
+      vi.mocked(fetch).mockResolvedValue({
+        ok: true,
+        blob: () => Promise.resolve(mockBlob),
+        headers: new Headers({ "Content-Disposition": 'attachment; filename="neo-backup-2026-03-20.zip"' }),
+      } as Response);
 
       const { result } = renderHook(() => useBackupViewModel());
+      await act(async () => {});
 
       await act(async () => {
-        await result.current.loadBackups();
+        await result.current.handleDownloadArchive();
       });
 
-      expect(result.current.backups).toHaveLength(0);
-      expect(result.current.error).toBe("Unauthorized");
+      expect(fetch).toHaveBeenCalledWith("/api/backup/archive");
+      expect(mockCreateObjectURL).toHaveBeenCalled();
+      expect(mockRevokeObjectURL).toHaveBeenCalledWith("blob:mock");
+      expect(result.current.error).toBeNull();
     });
 
-    it("sets generic error on exception", async () => {
-      mockGetBackups.mockRejectedValue(new Error("Network error"));
+    it("sets error on download failure", async () => {
+      vi.mocked(fetch).mockResolvedValue({
+        ok: false,
+        status: 400,
+        json: () => Promise.resolve({ error: "No encryption key" }),
+      } as Response);
 
       const { result } = renderHook(() => useBackupViewModel());
+      await act(async () => {});
 
       await act(async () => {
-        await result.current.loadBackups();
+        await result.current.handleDownloadArchive();
       });
 
-      expect(result.current.error).toBe("Failed to load backups");
+      expect(result.current.error).toBe("No encryption key");
     });
   });
 
-  describe("handleCreateBackup", () => {
-    it("creates backup and updates local list", async () => {
-      mockCreateManualBackup.mockResolvedValue({
-        success: true,
-        data: sampleBackup,
-      });
+  describe("handlePushToBacky", () => {
+    it("pushes backup and updates history", async () => {
+      const pushDetail = {
+        ok: true,
+        message: "Push successful (100ms)",
+        durationMs: 100,
+        request: { tag: "neo/1.0", fileName: "backup.zip", fileSizeBytes: 1024, secretCount: 5 },
+        history: { project_name: "neo", environment: null, total_backups: 1, recent_backups: [{ id: "b1", tag: "neo/1.0", environment: "production", file_size: 1024, is_single_json: 0, created_at: "2026-03-20" }] },
+      };
+      mockPushToBacky.mockResolvedValue({ success: true, data: pushDetail });
 
       const { result } = renderHook(() => useBackupViewModel());
+      await act(async () => {});
 
       let success: boolean;
       await act(async () => {
-        success = await result.current.handleCreateBackup('[{"id":"s1"}]');
+        success = await result.current.handlePushToBacky();
       });
 
       expect(success!).toBe(true);
-      expect(mockCreateManualBackup).toHaveBeenCalledWith('[{"id":"s1"}]');
-      expect(result.current.backups).toHaveLength(1);
+      expect(result.current.lastPushResult).toEqual(pushDetail);
+      expect(result.current.history?.total_backups).toBe(1);
     });
 
-    it("prepends new backup to local list", async () => {
-      mockGetBackups.mockResolvedValue({
-        success: true,
-        data: [sampleBackup2],
-      });
-      mockCreateManualBackup.mockResolvedValue({
-        success: true,
-        data: sampleBackup,
-      });
+    it("sets error on push failure", async () => {
+      mockPushToBacky.mockResolvedValue({ success: false, error: "Backy not configured" });
 
       const { result } = renderHook(() => useBackupViewModel());
+      await act(async () => {});
 
-      // Load existing backup first
+      let success: boolean;
       await act(async () => {
-        await result.current.loadBackups();
-      });
-      expect(result.current.backups).toHaveLength(1);
-
-      // Create new backup
-      await act(async () => {
-        await result.current.handleCreateBackup("[]");
+        success = await result.current.handlePushToBacky();
       });
 
-      expect(result.current.backups).toHaveLength(2);
-      expect(result.current.backups[0].id).toBe("bk_test_1"); // New one is first
+      expect(success!).toBe(false);
+      expect(result.current.error).toBe("Backy not configured");
     });
 
-    it("sets error on failure", async () => {
-      mockCreateManualBackup.mockResolvedValue({
-        success: false,
-        error: "Backup data is required",
-      });
+    it("handles exception during push", async () => {
+      mockPushToBacky.mockRejectedValue(new Error("network"));
 
       const { result } = renderHook(() => useBackupViewModel());
-
-      const success = await act(async () => {
-        return await result.current.handleCreateBackup("");
-      });
-
-      expect(success).toBe(false);
-      expect(result.current.error).toBe("Backup data is required");
-    });
-
-    it("sets generic error on exception", async () => {
-      mockCreateManualBackup.mockRejectedValue(new Error("fail"));
-
-      const { result } = renderHook(() => useBackupViewModel());
+      await act(async () => {});
 
       await act(async () => {
-        await result.current.handleCreateBackup("[]");
+        await result.current.handlePushToBacky();
       });
 
-      expect(result.current.error).toBe("Failed to create backup");
-    });
-  });
-
-  describe("handleCleanup", () => {
-    it("cleans up and reloads backups", async () => {
-      mockCleanupBackups.mockResolvedValue({
-        success: true,
-        data: { deleted: 3 },
-      });
-      mockGetBackups.mockResolvedValue({
-        success: true,
-        data: [sampleBackup],
-      });
-
-      const { result } = renderHook(() => useBackupViewModel());
-
-      let cleanupResult: { deleted: number } | null;
-      await act(async () => {
-        cleanupResult = await result.current.handleCleanup();
-      });
-
-      expect(cleanupResult!).toEqual({ deleted: 3 });
-      expect(mockGetBackups).toHaveBeenCalled();
-      expect(result.current.backups).toHaveLength(1);
-    });
-
-    it("sets error on failure", async () => {
-      mockCleanupBackups.mockResolvedValue({
-        success: false,
-        error: "Unauthorized",
-      });
-
-      const { result } = renderHook(() => useBackupViewModel());
-
-      const cleanupResult = await act(async () => {
-        return await result.current.handleCleanup();
-      });
-
-      expect(cleanupResult).toBeNull();
-      expect(result.current.error).toBe("Unauthorized");
-    });
-
-    it("sets generic error on exception", async () => {
-      mockCleanupBackups.mockRejectedValue(new Error("fail"));
-
-      const { result } = renderHook(() => useBackupViewModel());
-
-      await act(async () => {
-        await result.current.handleCleanup();
-      });
-
-      expect(result.current.error).toBe("Failed to cleanup backups");
+      expect(result.current.error).toBe("Failed to push backup to Backy");
     });
   });
 
   describe("handleRestore", () => {
-    it("restores from backup data and returns result", async () => {
-      mockRestoreBackup.mockResolvedValue({
-        success: true,
-        data: { imported: 3, skipped: 0, duplicates: 1 },
-      });
+    it("restores from file and refreshes dashboard", async () => {
+      vi.mocked(fetch).mockResolvedValue({
+        ok: true,
+        json: () => Promise.resolve({ success: true, imported: 3, skipped: 0, duplicates: 1 }),
+      } as Response);
+
+      const file = new File(["zip-content"], "backup.zip", { type: "application/zip" });
 
       const { result } = renderHook(() => useBackupViewModel());
+      await act(async () => {});
 
-      let restoreResult: { imported: number; skipped: number; duplicates: number } | null;
+      let success: boolean;
       await act(async () => {
-        restoreResult = await result.current.handleRestore('[{"name":"A","secret":"JBSWY3DPEHPK3PXP"}]');
+        success = await result.current.handleRestore(file, "encKey123");
       });
 
-      expect(restoreResult!).toEqual({ imported: 3, skipped: 0, duplicates: 1 });
-      expect(mockRestoreBackup).toHaveBeenCalledWith('[{"name":"A","secret":"JBSWY3DPEHPK3PXP"}]');
+      expect(success!).toBe(true);
+      expect(result.current.lastRestoreResult).toEqual({ imported: 3, skipped: 0, duplicates: 1 });
       expect(mockRefresh).toHaveBeenCalled();
+
+      // Verify fetch was called with correct FormData
+      const fetchCall = vi.mocked(fetch).mock.calls.find((c) => c[0] === "/api/backup/restore");
+      expect(fetchCall).toBeDefined();
+      const body = fetchCall![1]?.body as FormData;
+      expect(body.get("file")).toBeDefined();
+      expect(body.get("encryptionKey")).toBe("encKey123");
     });
 
-    it("sets error on failure", async () => {
-      mockRestoreBackup.mockResolvedValue({
-        success: false,
-        error: "Invalid JSON data",
-      });
+    it("sets error on restore failure", async () => {
+      vi.mocked(fetch).mockResolvedValue({
+        ok: false,
+        status: 400,
+        json: () => Promise.resolve({ error: "Decryption failed" }),
+      } as Response);
+
+      const file = new File(["zip"], "backup.zip");
 
       const { result } = renderHook(() => useBackupViewModel());
+      await act(async () => {});
 
-      const restoreResult = await act(async () => {
-        return await result.current.handleRestore("bad data");
+      let success: boolean;
+      await act(async () => {
+        success = await result.current.handleRestore(file, "badKey");
       });
 
-      expect(restoreResult).toBeNull();
-      expect(result.current.error).toBe("Invalid JSON data");
+      expect(success!).toBe(false);
+      expect(result.current.error).toBe("Decryption failed");
       expect(mockRefresh).not.toHaveBeenCalled();
     });
 
-    it("sets generic error on exception", async () => {
-      mockRestoreBackup.mockRejectedValue(new Error("fail"));
+    it("handles exception during restore", async () => {
+      vi.mocked(fetch).mockRejectedValue(new Error("network"));
+
+      const file = new File(["zip"], "backup.zip");
 
       const { result } = renderHook(() => useBackupViewModel());
+      await act(async () => {});
 
       await act(async () => {
-        await result.current.handleRestore("[]");
+        await result.current.handleRestore(file, "key");
       });
 
       expect(result.current.error).toBe("Failed to restore backup");
@@ -309,15 +248,13 @@ describe("useBackupViewModel", () => {
 
   describe("clearError", () => {
     it("clears error state", async () => {
-      mockGetBackups.mockResolvedValue({
-        success: false,
-        error: "some error",
-      });
+      mockPushToBacky.mockResolvedValue({ success: false, error: "some error" });
 
       const { result } = renderHook(() => useBackupViewModel());
+      await act(async () => {});
 
       await act(async () => {
-        await result.current.loadBackups();
+        await result.current.handlePushToBacky();
       });
       expect(result.current.error).toBe("some error");
 

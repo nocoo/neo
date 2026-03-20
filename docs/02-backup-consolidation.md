@@ -296,13 +296,11 @@ These depend on Phase 1 models (`createEncryptedZip`, `openEncryptedZip`, `Backy
 |---|--------|-------------|---------------|
 | 5.1-5.2 ✅ | `feat: add D1 backup migration route and banner` | Combined into single commit. Migration route (GET /api/backup/migrate) reads old D1 backups, converts plain-text ones to encrypted ZIP archives, bundles into outer ZIP for download. Migration banner on backup page shows count of old-format backups with Export All link (disabled until encryption key configured). | `app/api/backup/migrate/route.ts` (new), `components/backup-view.tsx`, `tests/unit/components/backup-view.test.tsx` |
 
-### Phase 6: UI — Backup Page Rewrite + Delete Old Actions
+### Phase 6: UI — Backup Page Rewrite + Delete Old Actions ✅
 
 | # | Commit | Description | Files Changed |
 |---|--------|-------------|---------------|
-| 6.1 | `refactor: rewrite backup page for archive flow` | Replace the backup list UI with: (1) "Create & Download" → `GET /api/backup/archive` triggers browser download of encrypted ZIP, (2) "Push to Backy" → calls `pushBackupToBacky()` from `actions/backy.ts`, shows result, (3) "Restore" → upload ZIP file + enter encryption key → `POST /api/backup/restore`. Remove: backup list, cleanup button. | `components/backup-view.tsx`, `viewmodels/useBackupViewModel.ts` |
-| 6.2 | `refactor: delete actions/backup.ts` | **Delete** the entire file. All 5 old server actions (`createManualBackup`, `getBackups`, `getLatestBackup`, `getBackupCount`, `cleanupBackups`, `restoreBackup`) are removed. Their consumers (old backup-view, old backup-viewmodel) were already rewritten in 6.1. Backy push lives in `actions/backy.ts` (Phase 3.3). Archive download/restore live in route handlers (Phase 3.1/3.2). Nothing remains for `actions/backup.ts` to export. | `actions/backup.ts` (delete) |
-| 6.3 | `test: update backup view and action tests` | Rewrite `tests/unit/components/backup-view.test.tsx` for the new UI. Delete `tests/unit/actions/backup.test.ts` (the file it tested no longer exists). | `tests/unit/components/backup-view.test.tsx`, `tests/unit/actions/backup.test.ts` (delete) |
+| 6.1-6.3 ✅ | `refactor: rewrite backup page for archive flow and delete old actions` | Combined into single commit. Rewrite backup page with three sections: Create & Download (GET /api/backup/archive), Push to Backy (server action), Restore from ZIP (POST /api/backup/restore). Rewrite viewmodel for new flow. Delete actions/backup.ts and its test file. Rewrite all backup view and viewmodel tests. | `components/backup-view.tsx`, `viewmodels/useBackupViewModel.ts`, `actions/backup.ts` (delete), `tests/unit/actions/backup.test.ts` (delete), `tests/unit/components/backup-view.test.tsx`, `tests/unit/viewmodels/useBackupViewModel.test.ts` |
 
 ### Phase 7: Cleanup
 
