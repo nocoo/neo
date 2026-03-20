@@ -180,15 +180,17 @@ export function SecretCard({ secret, otp, onEdit, onDelete }: SecretCardProps) {
         {/* ── Back face (Copied!) — absolute, sized to match front ── */}
         <div
           className={cn(
-            "absolute inset-0 flex flex-col items-center justify-center rounded-2xl",
+            "absolute inset-0 flex flex-col items-center justify-center rounded-2xl overflow-hidden",
             "[backface-visibility:hidden] [transform:rotateY(180deg)]",
             theme.bg,
             theme.text,
           )}
           aria-hidden={!flipped}
         >
-          <ClipboardCheck className="h-8 w-8 mb-2 drop-shadow" />
-          <span className="text-lg font-bold drop-shadow">Copied!</span>
+          {/* White overlay to lighten the back face */}
+          <div className="absolute inset-0 bg-white/20 pointer-events-none" />
+          <ClipboardCheck className="relative h-8 w-8 mb-2 drop-shadow" />
+          <span className="relative text-lg font-bold drop-shadow">Copied!</span>
         </div>
       </div>
     </div>
