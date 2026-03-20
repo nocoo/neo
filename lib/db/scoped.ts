@@ -332,3 +332,20 @@ export class ScopedDB {
     );
   }
 }
+
+// ── Standalone queries (not scoped to a user) ──────────────────────────────
+
+/**
+ * Verify a Backy pull webhook key and return the associated userId.
+ * Used by the pull webhook route handler where we don't have a session.
+ */
+export async function verifyBackyPullWebhook(
+  key: string,
+): Promise<{ userId: string } | null> {
+  const rows = await executeD1Query<Record<string, unknown>>(
+    "SELECT user_id FROM user_settings WHERE backy_pull_key = ? LIMIT 1",
+    [key],
+  );
+  if (!rows[0]) return null;
+  return { userId: rows[0].user_id as string };
+}
