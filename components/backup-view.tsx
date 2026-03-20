@@ -126,6 +126,7 @@ export function BackupView() {
           Create an encrypted ZIP archive of all your secrets and download it to your device.
         </p>
         <Button
+          size="sm"
           onClick={() => vm.handleDownloadArchive()}
           disabled={vm.busy || !encryptionEnabled}
           data-testid="download-archive-btn"
@@ -147,6 +148,7 @@ export function BackupView() {
 
         <div className="flex items-center gap-2 mb-4">
           <Button
+            size="sm"
             onClick={() => vm.handlePushToBacky()}
             disabled={vm.busy || !encryptionEnabled}
             data-testid="push-backy-btn"
@@ -247,6 +249,7 @@ export function BackupView() {
           {/* Upload button */}
           <Button
             variant="outline"
+            size="sm"
             onClick={() => fileInputRef.current?.click()}
             disabled={vm.busy || !restoreKey}
             data-testid="restore-upload-btn"
