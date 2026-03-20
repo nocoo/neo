@@ -3,6 +3,7 @@
  */
 
 import { describe, it, expect, vi, beforeEach } from "vitest";
+import React from "react";
 import { render, screen } from "@testing-library/react";
 
 // ── Hoisted mocks ────────────────────────────────────────────────────────
@@ -18,6 +19,21 @@ vi.mock("next/navigation", () => ({
 
 vi.mock("@/actions/auth", () => ({
   handleSignOut: mockHandleSignOut,
+}));
+
+vi.mock("@/components/ui/collapsible", () => ({
+  Collapsible: ({ children }: { children: React.ReactNode }) => (
+    <div>{children}</div>
+  ),
+  CollapsibleTrigger: ({
+    children,
+    ...props
+  }: {
+    children: React.ReactNode;
+  }) => <button {...props}>{children}</button>,
+  CollapsibleContent: ({ children }: { children: React.ReactNode }) => (
+    <div>{children}</div>
+  ),
 }));
 
 import { AppSidebar } from "@/components/app-sidebar";
@@ -61,9 +77,18 @@ describe("AppSidebar — expanded", () => {
   it("renders all navigation links", () => {
     render(<AppSidebar {...defaultProps} />);
     expect(screen.getByText("Secrets")).toBeDefined();
-    expect(screen.getByText("Backup")).toBeDefined();
+    // "Backup" appears as both group label and nav item
+    expect(screen.getAllByText("Backup").length).toBeGreaterThanOrEqual(1);
     expect(screen.getByText("Tools")).toBeDefined();
-    expect(screen.getByText("Settings")).toBeDefined();
+    // "Settings" appears as both group label and nav item
+    expect(screen.getAllByText("Settings").length).toBeGreaterThanOrEqual(1);
+  });
+
+  it("renders group labels", () => {
+    render(<AppSidebar {...defaultProps} />);
+    expect(screen.getByText("Secret")).toBeDefined();
+    expect(screen.getAllByText("Backup").length).toBeGreaterThanOrEqual(1);
+    expect(screen.getAllByText("Settings").length).toBeGreaterThanOrEqual(1);
   });
 
   it("renders sign out button as form submit", () => {
@@ -77,7 +102,10 @@ describe("AppSidebar — expanded", () => {
   it("highlights active nav item", () => {
     mockPathname.mockReturnValue("/dashboard/backup");
     render(<AppSidebar {...defaultProps} />);
-    const backupLink = screen.getByText("Backup").closest("a");
+    const backupElements = screen.getAllByText("Backup");
+    const backupLink = backupElements
+      .map((el) => el.closest("a"))
+      .find((a) => a !== null);
     expect(backupLink?.className).toContain("bg-accent");
   });
 

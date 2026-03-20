@@ -19,6 +19,7 @@
   },
   "dependencies": {
     "@auth/core": "^0.34.3",
+    "@radix-ui/react-collapsible": "^1.1.12",
     "@radix-ui/react-slot": "^1.2.4",
     "@serwist/next": "^9.5.7",
     "class-variance-authority": "^0.7.1",

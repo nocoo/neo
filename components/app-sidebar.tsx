@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
@@ -9,17 +10,56 @@ import {
   Settings,
   LogOut,
   PanelLeft,
+  ChevronUp,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { VERSION } from "@/lib/version";
 import { handleSignOut } from "@/actions/auth";
+import {
+  Collapsible,
+  CollapsibleTrigger,
+} from "@/components/ui/collapsible";
 
-const navItems = [
-  { href: "/dashboard", label: "Secrets", icon: Key },
-  { href: "/dashboard/backup", label: "Backup", icon: Archive },
-  { href: "/dashboard/tools", label: "Tools", icon: Wrench },
-  { href: "/dashboard/settings", label: "Settings", icon: Settings },
+// ── Navigation data model ──
+
+interface NavItem {
+  href: string;
+  label: string;
+  icon: React.ElementType;
+}
+
+interface NavGroup {
+  label: string;
+  items: NavItem[];
+  defaultOpen?: boolean;
+}
+
+const NAV_GROUPS: NavGroup[] = [
+  {
+    label: "Secret",
+    defaultOpen: true,
+    items: [
+      { href: "/dashboard", label: "Secrets", icon: Key },
+    ],
+  },
+  {
+    label: "Backup",
+    defaultOpen: true,
+    items: [
+      { href: "/dashboard/backup", label: "Backup", icon: Archive },
+    ],
+  },
+  {
+    label: "Settings",
+    defaultOpen: true,
+    items: [
+      { href: "/dashboard/tools", label: "Tools", icon: Wrench },
+      { href: "/dashboard/settings", label: "Settings", icon: Settings },
+    ],
+  },
 ];
+
+const ALL_NAV_ITEMS = NAV_GROUPS.flatMap((g) => g.items);
 
 export interface SidebarUser {
   name: string | null;
@@ -32,6 +72,68 @@ export interface AppSidebarProps {
   onToggle: () => void;
   user: SidebarUser;
 }
+
+// ── Sub-components ──
+
+function NavGroupSection({
+  group,
+  isActive,
+}: {
+  group: NavGroup;
+  isActive: (href: string) => boolean;
+}) {
+  const [open, setOpen] = useState(group.defaultOpen ?? true);
+
+  return (
+    <Collapsible open={open} onOpenChange={setOpen}>
+      <div className="px-3 mt-2">
+        <CollapsibleTrigger className="flex w-full items-center justify-between px-3 py-2.5 cursor-pointer">
+          <span className="text-sm font-normal text-muted-foreground">
+            {group.label}
+          </span>
+          <span className="flex h-7 w-7 shrink-0 items-center justify-center">
+            <ChevronUp
+              className={cn(
+                "h-4 w-4 text-muted-foreground transition-transform duration-200",
+                !open && "rotate-180",
+              )}
+              strokeWidth={1.5}
+            />
+          </span>
+        </CollapsibleTrigger>
+      </div>
+      <div
+        className="grid overflow-hidden"
+        style={{
+          gridTemplateRows: open ? "1fr" : "0fr",
+          transition: "grid-template-rows 200ms ease-out",
+        }}
+      >
+        <div className="min-h-0 overflow-hidden">
+          <div className="flex flex-col gap-0.5 px-3">
+            {group.items.map((item) => (
+              <Link
+                key={item.href}
+                href={item.href}
+                className={cn(
+                  "flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-normal transition-colors",
+                  isActive(item.href)
+                    ? "bg-accent text-foreground"
+                    : "text-muted-foreground hover:bg-accent hover:text-foreground",
+                )}
+              >
+                <item.icon className="h-4 w-4 shrink-0" strokeWidth={1.5} />
+                <span className="flex-1 text-left">{item.label}</span>
+              </Link>
+            ))}
+          </div>
+        </div>
+      </div>
+    </Collapsible>
+  );
+}
+
+// ── Main sidebar component ──
 
 export function AppSidebar({ collapsed, onToggle, user }: AppSidebarProps) {
   const pathname = usePathname();
@@ -70,9 +172,9 @@ export function AppSidebar({ collapsed, onToggle, user }: AppSidebarProps) {
           <PanelLeft className="h-4 w-4" strokeWidth={1.5} />
         </button>
 
-        {/* Nav — icon only */}
+        {/* Nav — icon only, flat list */}
         <nav className="flex-1 flex flex-col items-center gap-1 overflow-y-auto pt-1">
-          {navItems.map((item) => (
+          {ALL_NAV_ITEMS.map((item) => (
             <Link
               key={item.href}
               href={item.href}
@@ -81,7 +183,7 @@ export function AppSidebar({ collapsed, onToggle, user }: AppSidebarProps) {
                 "relative flex h-10 w-10 items-center justify-center rounded-lg transition-colors",
                 isActive(item.href)
                   ? "bg-accent text-foreground"
-                  : "text-muted-foreground hover:bg-accent hover:text-foreground"
+                  : "text-muted-foreground hover:bg-accent hover:text-foreground",
               )}
             >
               <item.icon className="h-4 w-4" strokeWidth={1.5} />
@@ -135,27 +237,15 @@ export function AppSidebar({ collapsed, onToggle, user }: AppSidebarProps) {
         </div>
       </div>
 
-      {/* Navigation */}
-      <nav className="flex-1 overflow-y-auto pt-2">
-        <div className="px-3 mb-1">
-          <div className="flex flex-col gap-0.5">
-            {navItems.map((item) => (
-              <Link
-                key={item.href}
-                href={item.href}
-                className={cn(
-                  "flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-normal transition-colors",
-                  isActive(item.href)
-                    ? "bg-accent text-foreground"
-                    : "text-muted-foreground hover:bg-accent hover:text-foreground"
-                )}
-              >
-                <item.icon className="h-4 w-4 shrink-0" strokeWidth={1.5} />
-                <span className="flex-1 text-left">{item.label}</span>
-              </Link>
-            ))}
-          </div>
-        </div>
+      {/* Navigation — grouped with collapsible sections */}
+      <nav className="flex-1 overflow-y-auto pt-1">
+        {NAV_GROUPS.map((group) => (
+          <NavGroupSection
+            key={group.label}
+            group={group}
+            isActive={isActive}
+          />
+        ))}
       </nav>
 
       {/* User section */}
