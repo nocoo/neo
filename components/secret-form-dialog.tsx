@@ -128,7 +128,7 @@ export function SecretFormDialog({
       aria-modal="true"
       aria-label={isEdit ? "Edit secret" : "Create secret"}
     >
-      <div className="w-full max-w-md rounded-lg bg-background p-6 shadow-lg">
+      <div className="w-full max-w-lg rounded-lg bg-background p-6 shadow-lg">
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-lg font-semibold">
             {isEdit ? "Edit Secret" : "Add Secret"}
