@@ -7,3 +7,4 @@ Project documentation organized by numbered documents.
 | # | Document | Description |
 |---|----------|-------------|
 | 01 | [Modernization Plan](./01-modernization-plan.md) | 2FA Manager modernization: goals, architecture, testing strategy, commit plan |
+| 02 | [Backup Consolidation](./02-backup-consolidation.md) | Unify four backup subsystems into encrypted archive → Backy webhook flow |
