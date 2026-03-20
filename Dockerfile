@@ -1,12 +1,12 @@
 # ── Stage 1: Dependencies ──────────────────────────────────────────────
-FROM oven/bun:1.3.9 AS deps
+FROM oven/bun:1 AS deps
 WORKDIR /app
 
 COPY package.json bun.lock ./
 RUN bun install --frozen-lockfile
 
 # ── Stage 2: Build ────────────────────────────────────────────────────
-FROM oven/bun:1.3.9 AS builder
+FROM oven/bun:1 AS builder
 WORKDIR /app
 
 COPY --from=deps /app/node_modules ./node_modules
@@ -22,7 +22,7 @@ ENV AUTH_SECRET=build-placeholder
 RUN bun run build
 
 # ── Stage 3: Runner ───────────────────────────────────────────────────
-FROM oven/bun:1.3.9 AS runner
+FROM oven/bun:1 AS runner
 WORKDIR /app
 
 ENV NODE_ENV=production
