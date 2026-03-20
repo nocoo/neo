@@ -23,6 +23,7 @@ vi.mock("@/lib/auth-context", () => ({
 import { getUserSettings, updateUserSettings } from "@/actions/settings";
 import { getDashboardData } from "@/actions/dashboard";
 import { createSecret } from "@/actions/secrets";
+import { generateAndSaveEncryptionKey } from "@/actions/settings";
 
 // ── Reset ────────────────────────────────────────────────────────────────
 
@@ -134,7 +135,7 @@ describe("Dashboard — API E2E", () => {
   });
 
   it("detects encryption enabled", async () => {
-    await updateUserSettings({ encryptionKeyHash: "someHash" });
+    await generateAndSaveEncryptionKey();
 
     const result = await getDashboardData();
     expect(result.success).toBe(true);
@@ -142,8 +143,7 @@ describe("Dashboard — API E2E", () => {
   });
 
   it("detects encryption disabled", async () => {
-    await updateUserSettings({ encryptionKeyHash: null });
-
+    // No encryption key set → disabled
     const result = await getDashboardData();
     expect(result.success).toBe(true);
     expect(result.data!.encryptionEnabled).toBe(false);

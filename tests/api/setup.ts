@@ -148,11 +148,40 @@ export class MockScopedDB {
     const row = {
       user_id: this.userId,
       encryption_key_hash: data.encryptionKeyHash ?? null,
+      encryption_key: null as string | null,
+      backy_webhook_url: null as string | null,
+      backy_api_key: null as string | null,
+      backy_pull_key: null as string | null,
       theme: data.theme ?? "system",
       language: data.language ?? "en",
     };
     this.settings.push(row);
     return this.toSettings(row);
+  }
+
+  // ── Encryption Key ────────────────────────────────────────────────────
+
+  async getEncryptionKey(): Promise<string | null> {
+    const row = this.settings.find((s) => s.user_id === this.userId);
+    return row?.encryption_key ?? null;
+  }
+
+  async setEncryptionKey(key: string): Promise<void> {
+    const existing = this.settings.find((s) => s.user_id === this.userId);
+    if (existing) {
+      existing.encryption_key = key;
+    } else {
+      this.settings.push({
+        user_id: this.userId,
+        encryption_key_hash: null,
+        encryption_key: key,
+        backy_webhook_url: null,
+        backy_api_key: null,
+        backy_pull_key: null,
+        theme: "system",
+        language: "en",
+      });
+    }
   }
 
   // ── Mappers ──────────────────────────────────────────────────────────
@@ -178,12 +207,20 @@ export class MockScopedDB {
   private toSettings(row: {
     user_id: string;
     encryption_key_hash: string | null;
+    encryption_key?: string | null;
+    backy_webhook_url?: string | null;
+    backy_api_key?: string | null;
+    backy_pull_key?: string | null;
     theme: string;
     language: string;
   }): UserSettings {
     return {
       userId: row.user_id,
       encryptionKeyHash: row.encryption_key_hash,
+      encryptionKey: row.encryption_key ?? null,
+      backyWebhookUrl: row.backy_webhook_url ?? null,
+      backyApiKey: row.backy_api_key ?? null,
+      backyPullKey: row.backy_pull_key ?? null,
       theme: row.theme,
       language: row.language,
     };
