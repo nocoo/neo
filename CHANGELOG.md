@@ -2,7 +2,65 @@
 
 All notable changes to this project will be documented in this file.
 
-## [0.1.0] - 2026-03-19
+## [0.2.0] - 2026-03-20
+
+Encrypted backup system overhaul, UI polish, and deployment hardening.
+
+### Added
+
+**Backup Consolidation**
+- AES-GCM 256-bit encrypted ZIP archive model with fflate compression
+- Backy integration model for off-site encrypted backup push
+- Backup route handlers: download archive, push to Backy, restore from ZIP
+- Encryption key management in Settings (generate, reveal, copy, regenerate)
+- Backy webhook config with connection test and pull webhook key
+- D1 legacy backup migration route with export banner
+- Upload size and decompression limits on restore route
+
+**UI Enhancements**
+- Redesigned secrets page with responsive card grid layout
+- 3D card flip animation on OTP copy
+- Color column for secrets with color picker in edit dialog
+- Alphabetical sorting of secrets by name
+- Collapsible sidebar nav groups with smooth animation
+- Unified sidebar with single `<aside>` and CSS width transition
+- Compact icon-only action buttons on secrets page
+- Removed duplicate page titles (shell header as single source)
+- Project logo integrated across all touchpoints
+- Step Two (macOS/iOS) RTF import format support
+
+**Infrastructure**
+- Worker rate-limit migrated from in-memory Map to D1-backed storage
+- Backup restore with hash-based deduplication via batchImportSecrets
+- DB-saved theme synced to next-themes on settings load
+
+### Changed
+
+- Rewritten backup page for archive-based flow (replaced old blob-based backup)
+- Removed worker cron backup, dead code, and stale tests
+- Sidebar footer aligned with basalt design pattern
+- Login page aligned with basalt badge card design
+- ThemeToggle converted to 3-state cycling (system/light/dark)
+- Dev port changed from 7021 to 7042
+
+### Fixed
+
+- ALLOWED_EMAILS fail-closed instead of fail-open
+- Backup download button wired with blob download handler
+- Duplicate detection added to batch import
+- OTP parameter validation on createSecret/updateSecret
+- Dialog overlay gap fixed by portaling to document.body
+- Uint8Array.from() for fflate cross-realm compatibility
+- Cast Uint8Array.buffer to ArrayBuffer for Web Crypto API
+- Railway container networking (bind to 0.0.0.0)
+- Docker build fixes (base image, lockfile, tsconfig context)
+
+### Test Coverage
+
+- **42 test files**, **813 Vitest tests** passing
+- Import-parsers coverage boosted to 95%+
+- Backy server action tests added
+
 
 Initial release — complete modernization from Cloudflare Workers template-string app to Next.js 15 full-stack PWA.
 
