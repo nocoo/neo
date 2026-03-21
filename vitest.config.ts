@@ -39,6 +39,13 @@ export default defineConfig({
         "app/api/auth/**",
         // Shadcn/UI auto-generated primitives
         "components/ui/",
+        // Thin page wrappers (SSR data fetch → context → view, no testable logic)
+        "app/page.tsx",
+        "app/(dashboard)/**/page.tsx",
+        // Single-line auth delegation
+        "actions/auth.ts",
+        // Pure barrel re-export
+        "lib/db/index.ts",
       ],
       // Model layer thresholds (Phase 3 complete)
       thresholds: {
