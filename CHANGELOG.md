@@ -2,6 +2,32 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.2.1] - 2026-03-21
+
+Test infrastructure hardening and UI polish.
+
+### Fixed
+
+- ESLint now ignores `public/sw.js` (Serwist build artifact) — resolves lint failure with `--max-warnings=0`
+- Transparent border added to non-outline button variants
+- Unified button sizes on backup page to `size="sm"`
+- Hydration mismatch on sidebar `<aside>` element resolved
+- Sidebar animation timing aligned with basalt spec (150ms)
+- Logo jitter prevented during sidebar collapse/expand
+- `transition-[width]` used instead of `transition-all` for sidebar animation
+
+### Changed
+
+- Removed Appearance and Language sections from settings page
+
+### Test Coverage
+
+- **47 test files**, **886 Vitest tests** passing
+- Unit test coverage: **95.1% statements / 96.3% lines** (up from 83%)
+- Added tests: auth-context, middleware, d1-client, ScopedDB, theme-toggle, dashboard layout VM
+- Added catch-branch tests for backy, secrets, and settings viewmodel
+- Excluded low-ROI thin wrappers from coverage targets
+
 ## [0.2.0] - 2026-03-20
 
 Encrypted backup system overhaul, UI polish, and deployment hardening.
