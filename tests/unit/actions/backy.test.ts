@@ -263,4 +263,18 @@ describe("pull webhook key CRUD", () => {
     expect(result.success).toBe(true);
     expect(mockDeleteBackyPullWebhook).toHaveBeenCalled();
   });
+
+  it("returns error when generateBackyPullWebhook throws", async () => {
+    mockUpsertBackyPullWebhook.mockRejectedValue(new Error("DB error"));
+    const result = await generateBackyPullWebhook();
+    expect(result.success).toBe(false);
+    if (!result.success) expect(result.error).toBe("Failed to generate pull webhook");
+  });
+
+  it("returns error when revokeBackyPullWebhook throws", async () => {
+    mockDeleteBackyPullWebhook.mockRejectedValue(new Error("DB error"));
+    const result = await revokeBackyPullWebhook();
+    expect(result.success).toBe(false);
+    if (!result.success) expect(result.error).toBe("Failed to revoke pull webhook");
+  });
 });

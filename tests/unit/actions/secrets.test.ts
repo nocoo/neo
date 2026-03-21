@@ -293,6 +293,13 @@ describe("getSecretCount", () => {
     const result = await getSecretCount();
     expect(result.success).toBe(false);
   });
+
+  it("handles database errors gracefully", async () => {
+    mockGetSecretCount.mockRejectedValue(new Error("DB error"));
+    const result = await getSecretCount();
+    expect(result.success).toBe(false);
+    if (!result.success) expect(result.error).toBe("Failed to get secret count");
+  });
 });
 
 describe("batchImportSecrets", () => {
@@ -392,5 +399,14 @@ describe("batchImportSecrets", () => {
       { name: "Test", secret: "JBSWY3DPEHPK3PXP" },
     ]);
     expect(result.success).toBe(false);
+  });
+
+  it("handles outer database error gracefully", async () => {
+    mockGetSecrets.mockRejectedValue(new Error("DB error"));
+    const result = await batchImportSecrets([
+      { name: "Test", secret: "JBSWY3DPEHPK3PXP" },
+    ]);
+    expect(result.success).toBe(false);
+    if (!result.success) expect(result.error).toBe("Failed to import secrets");
   });
 });

@@ -373,6 +373,66 @@ describe("useSettingsViewModel", () => {
       expect(success!).toBe(true);
       expect(result.current.backyPullKey).toBeNull();
     });
+
+    it("sets error when generatePullWebhook throws", async () => {
+      mockGeneratePullWebhook.mockRejectedValue(new Error("Network error"));
+
+      const { result } = renderHook(() => useSettingsViewModel());
+      await act(async () => {});
+
+      let success: boolean;
+      await act(async () => {
+        success = await result.current.handleGeneratePullWebhook();
+      });
+
+      expect(success!).toBe(false);
+      expect(result.current.error).toBe("Failed to generate pull webhook");
+    });
+
+    it("sets error when revokePullWebhook throws", async () => {
+      mockRevokePullWebhook.mockRejectedValue(new Error("Network error"));
+
+      const { result } = renderHook(() => useSettingsViewModel());
+      await act(async () => {});
+
+      let success: boolean;
+      await act(async () => {
+        success = await result.current.handleRevokePullWebhook();
+      });
+
+      expect(success!).toBe(false);
+      expect(result.current.error).toBe("Failed to revoke pull webhook");
+    });
+
+    it("sets error when generatePullWebhook returns failure", async () => {
+      mockGeneratePullWebhook.mockResolvedValue({ success: false, error: "DB error" });
+
+      const { result } = renderHook(() => useSettingsViewModel());
+      await act(async () => {});
+
+      let success: boolean;
+      await act(async () => {
+        success = await result.current.handleGeneratePullWebhook();
+      });
+
+      expect(success!).toBe(false);
+      expect(result.current.error).toBe("DB error");
+    });
+
+    it("sets error when revokePullWebhook returns failure", async () => {
+      mockRevokePullWebhook.mockResolvedValue({ success: false, error: "DB error" });
+
+      const { result } = renderHook(() => useSettingsViewModel());
+      await act(async () => {});
+
+      let success: boolean;
+      await act(async () => {
+        success = await result.current.handleRevokePullWebhook();
+      });
+
+      expect(success!).toBe(false);
+      expect(result.current.error).toBe("DB error");
+    });
   });
 
   describe("reload", () => {
