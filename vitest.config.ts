@@ -46,6 +46,8 @@ export default defineConfig({
         "actions/auth.ts",
         // Pure barrel re-export
         "lib/db/index.ts",
+        // Auth.js adapter (pure D1 delegation, same pattern as scoped.ts)
+        "lib/auth-adapter.ts",
       ],
       // Model layer thresholds (Phase 3 complete)
       thresholds: {
