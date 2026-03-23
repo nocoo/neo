@@ -2,6 +2,34 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.2.2] - 2026-03-23
+
+Quality system upgrade to six-dimension architecture (L1/L2/L3 + G1/G2 + D1).
+
+### Added
+
+- **G1 Static Analysis** — `tsc --noEmit` type-check gate in pre-commit hook
+- **G2 Security Gate** — `osv-scanner` (dependency CVEs) + `gitleaks` (secret detection) in pre-push hook
+- **D1 Test Isolation** — `[env.test]` config in worker `wrangler.toml` with dedicated `neo-db-test` D1 instance
+- Security scan script (`scripts/run-security.ts`) with Bun shell
+- OSV-scanner config (`.osv-scanner.toml`) with known-exception allowlist
+
+### Changed
+
+- Promoted `@typescript-eslint/no-unused-vars` from `warn` to `error` for zero-tolerance lint
+- Expanded coverage thresholds: `viewmodels/**` ≥90%, `actions/**` ≥85%, `lib/**` ≥80%
+- Updated hook comments to quality system naming (L1/G1/L2/G2)
+
+### Fixed
+
+- Resolved all TypeScript strict-mode errors across 10+ test files (ActionResult narrowing, OtpAlgorithm literals, Date types, mock properties)
+- Fixed 3 dependency CVEs: next→15.5.14, cookie/esbuild via overrides
+
+### Test Coverage
+
+- **47 test files**, **886+ Vitest tests** passing
+- Quality tier upgraded from **B** to **S** (all six dimensions green)
+
 ## [0.2.1] - 2026-03-21
 
 Test infrastructure hardening and UI polish.
