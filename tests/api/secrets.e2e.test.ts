@@ -5,7 +5,13 @@
  */
 
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { createMockScopedDB, resetStorage, TEST_USER_ID } from "./setup";
+import {
+  createMockScopedDB,
+  resetStorage,
+  TEST_USER_ID,
+  assertSuccess,
+  assertError,
+} from "./setup";
 
 // ── Top-level mock ───────────────────────────────────────────────────────
 
@@ -50,13 +56,13 @@ describe("Secret CRUD — API E2E", () => {
         secret: "JBSWY3DPEHPK3PXP",
       });
 
-      expect(result.success).toBe(true);
-      expect(result.data!.name).toBe("GitHub");
-      expect(result.data!.secret).toBe("JBSWY3DPEHPK3PXP");
-      expect(result.data!.type).toBe("totp");
-      expect(result.data!.digits).toBe(6);
-      expect(result.data!.period).toBe(30);
-      expect(result.data!.algorithm).toBe("SHA-1");
+      assertSuccess(result);
+      expect(result.data.name).toBe("GitHub");
+      expect(result.data.secret).toBe("JBSWY3DPEHPK3PXP");
+      expect(result.data.type).toBe("totp");
+      expect(result.data.digits).toBe(6);
+      expect(result.data.period).toBe(30);
+      expect(result.data.algorithm).toBe("SHA-1");
     });
 
     it("creates a secret with custom params", async () => {
@@ -67,14 +73,14 @@ describe("Secret CRUD — API E2E", () => {
         type: "totp",
         digits: 8,
         period: 60,
-        algorithm: "SHA256",
+        algorithm: "SHA-256",
       });
 
-      expect(result.success).toBe(true);
-      expect(result.data!.digits).toBe(8);
-      expect(result.data!.period).toBe(60);
-      expect(result.data!.algorithm).toBe("SHA256");
-      expect(result.data!.account).toBe("admin@aws.com");
+      assertSuccess(result);
+      expect(result.data.digits).toBe(8);
+      expect(result.data.period).toBe(60);
+      expect(result.data.algorithm).toBe("SHA-256");
+      expect(result.data.account).toBe("admin@aws.com");
     });
 
     it("normalizes secret to uppercase", async () => {
@@ -83,8 +89,8 @@ describe("Secret CRUD — API E2E", () => {
         secret: "jbswy3dpehpk3pxp",
       });
 
-      expect(result.success).toBe(true);
-      expect(result.data!.secret).toBe("JBSWY3DPEHPK3PXP");
+      assertSuccess(result);
+      expect(result.data.secret).toBe("JBSWY3DPEHPK3PXP");
     });
 
     it("trims name whitespace", async () => {
@@ -93,8 +99,8 @@ describe("Secret CRUD — API E2E", () => {
         secret: "JBSWY3DPEHPK3PXP",
       });
 
-      expect(result.success).toBe(true);
-      expect(result.data!.name).toBe("GitHub");
+      assertSuccess(result);
+      expect(result.data.name).toBe("GitHub");
     });
 
     it("rejects empty name", async () => {
@@ -103,7 +109,7 @@ describe("Secret CRUD — API E2E", () => {
         secret: "JBSWY3DPEHPK3PXP",
       });
 
-      expect(result.success).toBe(false);
+      assertError(result);
       expect(result.error).toContain("Name is required");
     });
 
@@ -113,7 +119,7 @@ describe("Secret CRUD — API E2E", () => {
         secret: "JBSWY3DPEHPK3PXP",
       });
 
-      expect(result.success).toBe(false);
+      assertError(result);
       expect(result.error).toContain("Name is required");
     });
 
@@ -123,7 +129,7 @@ describe("Secret CRUD — API E2E", () => {
         secret: "not-valid-base32!!!",
       });
 
-      expect(result.success).toBe(false);
+      assertError(result);
       expect(result.error).toContain("Invalid secret");
     });
 
@@ -133,7 +139,7 @@ describe("Secret CRUD — API E2E", () => {
         secret: "",
       });
 
-      expect(result.success).toBe(false);
+      assertError(result);
       expect(result.error).toContain("Invalid secret");
     });
 
@@ -144,7 +150,7 @@ describe("Secret CRUD — API E2E", () => {
         type: "steam" as never,
       });
 
-      expect(result.success).toBe(false);
+      assertError(result);
       expect(result.error).toContain("Unsupported OTP type");
     });
 
@@ -155,7 +161,7 @@ describe("Secret CRUD — API E2E", () => {
         digits: 7,
       });
 
-      expect(result.success).toBe(false);
+      assertError(result);
       expect(result.error).toContain("Invalid digit count");
     });
 
@@ -166,7 +172,7 @@ describe("Secret CRUD — API E2E", () => {
         period: 45,
       });
 
-      expect(result.success).toBe(false);
+      assertError(result);
       expect(result.error).toContain("Invalid TOTP period");
     });
 
@@ -177,7 +183,7 @@ describe("Secret CRUD — API E2E", () => {
         algorithm: "MD5" as never,
       });
 
-      expect(result.success).toBe(false);
+      assertError(result);
       expect(result.error).toContain("Unsupported algorithm");
     });
 
@@ -188,7 +194,7 @@ describe("Secret CRUD — API E2E", () => {
         algorithm: "SHA-1",
       });
 
-      expect(result.success).toBe(true);
+      assertSuccess(result);
     });
 
     it("generates unique IDs", async () => {
@@ -201,8 +207,9 @@ describe("Secret CRUD — API E2E", () => {
         secret: "JBSWY3DPEHPK3PXP",
       });
 
-      expect(r1.success && r2.success).toBe(true);
-      expect(r1.data!.id).not.toBe(r2.data!.id);
+      assertSuccess(r1);
+      assertSuccess(r2);
+      expect(r1.data.id).not.toBe(r2.data.id);
     });
   });
 
@@ -211,7 +218,7 @@ describe("Secret CRUD — API E2E", () => {
   describe("getSecrets", () => {
     it("returns empty list initially", async () => {
       const result = await getSecrets();
-      expect(result.success).toBe(true);
+      assertSuccess(result);
       expect(result.data).toEqual([]);
     });
 
@@ -220,7 +227,7 @@ describe("Secret CRUD — API E2E", () => {
       await createSecret({ name: "B", secret: "JBSWY3DPEHPK3PXP" });
 
       const result = await getSecrets();
-      expect(result.success).toBe(true);
+      assertSuccess(result);
       expect(result.data).toHaveLength(2);
     });
   });
@@ -232,20 +239,21 @@ describe("Secret CRUD — API E2E", () => {
         secret: "JBSWY3DPEHPK3PXP",
       });
 
-      const result = await getSecretById(created.data!.id);
-      expect(result.success).toBe(true);
-      expect(result.data!.name).toBe("Target");
+      assertSuccess(created);
+      const result = await getSecretById(created.data.id);
+      assertSuccess(result);
+      expect(result.data.name).toBe("Target");
     });
 
     it("returns error for non-existent id", async () => {
       const result = await getSecretById("nonexistent");
-      expect(result.success).toBe(false);
+      assertError(result);
       expect(result.error).toContain("not found");
     });
 
     it("rejects empty id", async () => {
       const result = await getSecretById("");
-      expect(result.success).toBe(false);
+      assertError(result);
       expect(result.error).toContain("required");
     });
   });
@@ -253,7 +261,7 @@ describe("Secret CRUD — API E2E", () => {
   describe("getSecretCount", () => {
     it("returns 0 initially", async () => {
       const result = await getSecretCount();
-      expect(result.success).toBe(true);
+      assertSuccess(result);
       expect(result.data).toBe(0);
     });
 
@@ -263,7 +271,7 @@ describe("Secret CRUD — API E2E", () => {
       await createSecret({ name: "C", secret: "JBSWY3DPEHPK3PXP" });
 
       const result = await getSecretCount();
-      expect(result.success).toBe(true);
+      assertSuccess(result);
       expect(result.data).toBe(3);
     });
   });
@@ -277,13 +285,14 @@ describe("Secret CRUD — API E2E", () => {
         secret: "JBSWY3DPEHPK3PXP",
       });
 
+      assertSuccess(created);
       const result = await updateSecret({
-        id: created.data!.id,
+        id: created.data.id,
         name: "New",
       });
 
-      expect(result.success).toBe(true);
-      expect(result.data!.name).toBe("New");
+      assertSuccess(result);
+      expect(result.data.name).toBe("New");
     });
 
     it("updates multiple fields", async () => {
@@ -292,17 +301,18 @@ describe("Secret CRUD — API E2E", () => {
         secret: "JBSWY3DPEHPK3PXP",
       });
 
+      assertSuccess(created);
       const result = await updateSecret({
-        id: created.data!.id,
+        id: created.data.id,
         name: "Updated",
         account: "new@account.com",
         digits: 8,
       });
 
-      expect(result.success).toBe(true);
-      expect(result.data!.name).toBe("Updated");
-      expect(result.data!.account).toBe("new@account.com");
-      expect(result.data!.digits).toBe(8);
+      assertSuccess(result);
+      expect(result.data.name).toBe("Updated");
+      expect(result.data.account).toBe("new@account.com");
+      expect(result.data.digits).toBe(8);
     });
 
     it("rejects non-existent id", async () => {
@@ -311,13 +321,13 @@ describe("Secret CRUD — API E2E", () => {
         name: "Nothing",
       });
 
-      expect(result.success).toBe(false);
+      assertError(result);
       expect(result.error).toContain("not found");
     });
 
     it("rejects empty id", async () => {
       const result = await updateSecret({ id: "", name: "Nothing" });
-      expect(result.success).toBe(false);
+      assertError(result);
       expect(result.error).toContain("required");
     });
 
@@ -327,12 +337,13 @@ describe("Secret CRUD — API E2E", () => {
         secret: "JBSWY3DPEHPK3PXP",
       });
 
+      assertSuccess(created);
       const result = await updateSecret({
-        id: created.data!.id,
+        id: created.data.id,
         secret: "invalid!!!",
       });
 
-      expect(result.success).toBe(false);
+      assertError(result);
       expect(result.error).toContain("Invalid secret");
     });
 
@@ -342,12 +353,13 @@ describe("Secret CRUD — API E2E", () => {
         secret: "JBSWY3DPEHPK3PXP",
       });
 
+      assertSuccess(created);
       const result = await updateSecret({
-        id: created.data!.id,
+        id: created.data.id,
         digits: 7,
       });
 
-      expect(result.success).toBe(false);
+      assertError(result);
       expect(result.error).toContain("Invalid digit count");
     });
   });
@@ -361,16 +373,18 @@ describe("Secret CRUD — API E2E", () => {
         secret: "JBSWY3DPEHPK3PXP",
       });
 
-      const result = await deleteSecret(created.data!.id);
-      expect(result.success).toBe(true);
+      assertSuccess(created);
+      const result = await deleteSecret(created.data.id);
+      assertSuccess(result);
 
       const count = await getSecretCount();
+      assertSuccess(count);
       expect(count.data).toBe(0);
     });
 
     it("rejects empty id", async () => {
       const result = await deleteSecret("");
-      expect(result.success).toBe(false);
+      assertError(result);
       expect(result.error).toContain("required");
     });
   });
@@ -384,9 +398,9 @@ describe("Secret CRUD — API E2E", () => {
         { name: "B", secret: "GEZDGNBVGY3TQOJQ" },
       ]);
 
-      expect(result.success).toBe(true);
-      expect(result.data!.imported).toBe(2);
-      expect(result.data!.skipped).toBe(0);
+      assertSuccess(result);
+      expect(result.data.imported).toBe(2);
+      expect(result.data.skipped).toBe(0);
     });
 
     it("skips invalid entries", async () => {
@@ -396,14 +410,14 @@ describe("Secret CRUD — API E2E", () => {
         { name: "Bad", secret: "invalid!!!" },
       ]);
 
-      expect(result.success).toBe(true);
-      expect(result.data!.imported).toBe(1);
-      expect(result.data!.skipped).toBe(2);
+      assertSuccess(result);
+      expect(result.data.imported).toBe(1);
+      expect(result.data.skipped).toBe(2);
     });
 
     it("rejects empty array", async () => {
       const result = await batchImportSecrets([]);
-      expect(result.success).toBe(false);
+      assertError(result);
       expect(result.error).toContain("No secrets");
     });
 
@@ -414,7 +428,7 @@ describe("Secret CRUD — API E2E", () => {
       }));
 
       const result = await batchImportSecrets(tooMany);
-      expect(result.success).toBe(false);
+      assertError(result);
       expect(result.error).toContain("Maximum 100");
     });
 
@@ -427,6 +441,7 @@ describe("Secret CRUD — API E2E", () => {
 
       // A, B, C all have different names — all should be imported
       const count = await getSecretCount();
+      assertSuccess(count);
       expect(count.data).toBe(3);
     });
 
@@ -436,9 +451,9 @@ describe("Secret CRUD — API E2E", () => {
         { name: "GitHub", secret: "JBSWY3DPEHPK3PXP" },
       ]);
 
-      expect(result.success).toBe(true);
-      expect(result.data!.imported).toBe(1);
-      expect(result.data!.duplicates).toBe(1);
+      assertSuccess(result);
+      expect(result.data.imported).toBe(1);
+      expect(result.data.duplicates).toBe(1);
     });
 
     it("skips duplicates of existing secrets", async () => {
@@ -450,11 +465,12 @@ describe("Secret CRUD — API E2E", () => {
         { name: "AWS", secret: "GEZDGNBVGY3TQOJQ" },
       ]);
 
-      expect(result.success).toBe(true);
-      expect(result.data!.imported).toBe(1);
-      expect(result.data!.duplicates).toBe(1);
+      assertSuccess(result);
+      expect(result.data.imported).toBe(1);
+      expect(result.data.duplicates).toBe(1);
 
       const count = await getSecretCount();
+      assertSuccess(count);
       expect(count.data).toBe(2); // 1 original + 1 new
     });
   });

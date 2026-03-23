@@ -66,6 +66,10 @@ import type { UserSettings } from "@/models/types";
 const sampleSettings: UserSettings = {
   userId: "test-user",
   encryptionKeyHash: null,
+  encryptionKey: null,
+  backyWebhookUrl: null,
+  backyApiKey: null,
+  backyPullKey: null,
   theme: "system",
   language: "en",
 };

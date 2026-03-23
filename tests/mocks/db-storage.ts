@@ -36,6 +36,10 @@ interface MockBackup {
 interface MockUserSettings {
   user_id: string;
   encryption_key_hash: string | null;
+  encryption_key: string | null;
+  backy_webhook_url: string | null;
+  backy_api_key: string | null;
+  backy_pull_key: string | null;
   theme: string;
   language: string;
 }

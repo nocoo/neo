@@ -230,12 +230,12 @@ describe("fetchBackyHistory", () => {
     mockGetBackySettings.mockResolvedValue({ webhookUrl: "https://backy.test/webhook/p1", apiKey: "key123" });
     vi.stubGlobal("fetch", vi.fn().mockResolvedValue({
       ok: true,
-      json: () => Promise.resolve({ backups: [{ id: "b1" }], totalCount: 1 }),
+      json: () => Promise.resolve({ project_name: "neo", environment: null, recent_backups: [{ id: "b1" }], total_backups: 1 }),
     }));
 
     const result = await fetchBackyHistory();
     expect(result.success).toBe(true);
-    if (result.success) expect(result.data.totalCount).toBe(1);
+    if (result.success) expect(result.data.total_backups).toBe(1);
   });
 });
 

@@ -3,7 +3,13 @@
  */
 
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { createMockScopedDB, resetStorage, TEST_USER_ID } from "./setup";
+import {
+  createMockScopedDB,
+  resetStorage,
+  TEST_USER_ID,
+  assertSuccess,
+  assertError,
+} from "./setup";
 
 // ── Top-level mock (authenticated) ──────────────────────────────────────
 
@@ -37,14 +43,14 @@ describe("Settings — API E2E", () => {
   describe("getUserSettings", () => {
     it("returns null for new user", async () => {
       const result = await getUserSettings();
-      expect(result.success).toBe(true);
+      assertSuccess(result);
       expect(result.data).toBeNull();
     });
 
     it("returns settings after creation", async () => {
       await updateUserSettings({ theme: "dark" });
       const result = await getUserSettings();
-      expect(result.success).toBe(true);
+      assertSuccess(result);
       expect(result.data!.theme).toBe("dark");
     });
   });
@@ -52,64 +58,64 @@ describe("Settings — API E2E", () => {
   describe("updateUserSettings", () => {
     it("creates settings with defaults", async () => {
       const result = await updateUserSettings({ theme: "dark" });
-      expect(result.success).toBe(true);
-      expect(result.data!.theme).toBe("dark");
-      expect(result.data!.language).toBe("en");
-      expect(result.data!.encryptionKeyHash).toBeNull();
+      assertSuccess(result);
+      expect(result.data.theme).toBe("dark");
+      expect(result.data.language).toBe("en");
+      expect(result.data.encryptionKeyHash).toBeNull();
     });
 
     it("updates theme", async () => {
       await updateUserSettings({ theme: "light" });
       const result = await updateUserSettings({ theme: "dark" });
-      expect(result.success).toBe(true);
-      expect(result.data!.theme).toBe("dark");
+      assertSuccess(result);
+      expect(result.data.theme).toBe("dark");
     });
 
     it("updates language", async () => {
       await updateUserSettings({ language: "en" });
       const result = await updateUserSettings({ language: "zh" });
-      expect(result.success).toBe(true);
-      expect(result.data!.language).toBe("zh");
+      assertSuccess(result);
+      expect(result.data.language).toBe("zh");
     });
 
     it("updates encryption key hash", async () => {
       const result = await updateUserSettings({
         encryptionKeyHash: "abc123hash",
       });
-      expect(result.success).toBe(true);
-      expect(result.data!.encryptionKeyHash).toBe("abc123hash");
+      assertSuccess(result);
+      expect(result.data.encryptionKeyHash).toBe("abc123hash");
     });
 
     it("clears encryption key hash", async () => {
       await updateUserSettings({ encryptionKeyHash: "abc123hash" });
       const result = await updateUserSettings({ encryptionKeyHash: null });
-      expect(result.success).toBe(true);
-      expect(result.data!.encryptionKeyHash).toBeNull();
+      assertSuccess(result);
+      expect(result.data.encryptionKeyHash).toBeNull();
     });
 
     it("rejects invalid theme", async () => {
       const result = await updateUserSettings({ theme: "neon" });
-      expect(result.success).toBe(false);
+      assertError(result);
       expect(result.error).toContain("Invalid theme");
     });
 
     it("rejects invalid language", async () => {
       const result = await updateUserSettings({ language: "fr" });
-      expect(result.success).toBe(false);
+      assertError(result);
       expect(result.error).toContain("Invalid language");
     });
 
     it("validates theme values", async () => {
       for (const theme of ["light", "dark", "system"]) {
         const result = await updateUserSettings({ theme });
-        expect(result.success).toBe(true);
+        assertSuccess(result);
       }
     });
 
     it("validates language values", async () => {
       for (const language of ["en", "zh"]) {
         const result = await updateUserSettings({ language });
-        expect(result.success).toBe(true);
+        assertSuccess(result);
       }
     });
   });
@@ -120,9 +126,9 @@ describe("Settings — API E2E", () => {
 describe("Dashboard — API E2E", () => {
   it("returns empty dashboard for new user", async () => {
     const result = await getDashboardData();
-    expect(result.success).toBe(true);
-    expect(result.data!.secrets).toEqual([]);
-    expect(result.data!.encryptionEnabled).toBe(false);
+    assertSuccess(result);
+    expect(result.data.secrets).toEqual([]);
+    expect(result.data.encryptionEnabled).toBe(false);
   });
 
   it("aggregates secrets count", async () => {
@@ -130,22 +136,22 @@ describe("Dashboard — API E2E", () => {
     await createSecret({ name: "B", secret: "GEZDGNBVGY3TQOJQ" });
 
     const result = await getDashboardData();
-    expect(result.success).toBe(true);
-    expect(result.data!.secrets).toHaveLength(2);
+    assertSuccess(result);
+    expect(result.data.secrets).toHaveLength(2);
   });
 
   it("detects encryption enabled", async () => {
     await generateAndSaveEncryptionKey();
 
     const result = await getDashboardData();
-    expect(result.success).toBe(true);
-    expect(result.data!.encryptionEnabled).toBe(true);
+    assertSuccess(result);
+    expect(result.data.encryptionEnabled).toBe(true);
   });
 
   it("detects encryption disabled", async () => {
     // No encryption key set → disabled
     const result = await getDashboardData();
-    expect(result.success).toBe(true);
-    expect(result.data!.encryptionEnabled).toBe(false);
+    assertSuccess(result);
+    expect(result.data.encryptionEnabled).toBe(false);
   });
 });

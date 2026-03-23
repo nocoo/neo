@@ -4,16 +4,17 @@
 
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen, fireEvent } from "@testing-library/react";
+import type { Secret, OtpResult } from "@/models/types";
 
 // ── Hoisted mocks ────────────────────────────────────────────────────────
 
 const { mockSecretsVM, mockDevToolsVM } = vi.hoisted(() => {
   const mockSecretsVM = {
-    filteredSecrets: [],
+    filteredSecrets: [] as Secret[],
     searchQuery: "",
-    otpMap: new Map(),
+    otpMap: new Map<string, OtpResult>(),
     busy: false,
-    error: null,
+    error: null as string | null,
     setSearchQuery: vi.fn(),
     handleCreate: vi.fn(),
     handleUpdate: vi.fn(),
@@ -27,9 +28,9 @@ const { mockSecretsVM, mockDevToolsVM } = vi.hoisted(() => {
     parsedSecrets: [],
     detectedFormat: null,
     exportOutput: "",
-    otpTestResult: null,
+    otpTestResult: null as string | null,
     busy: false,
-    error: null,
+    error: null as string | null,
     handleParseImport: vi.fn(),
     handleExport: vi.fn(),
     handleTestOtp: vi.fn(),
@@ -50,7 +51,6 @@ vi.mock("@/viewmodels/useDevToolsViewModel", () => ({
 }));
 
 import { SecretsView } from "@/components/secrets-view";
-import type { Secret } from "@/models/types";
 
 // ── Helpers ──────────────────────────────────────────────────────────────
 

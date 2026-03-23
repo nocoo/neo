@@ -131,21 +131,21 @@ describe("getBackyEnvironment", () => {
   const originalEnv = process.env.NODE_ENV;
 
   afterEach(() => {
-    process.env.NODE_ENV = originalEnv;
+    (process.env as Record<string, string | undefined>).NODE_ENV = originalEnv;
   });
 
   it("returns 'prod' in production", () => {
-    process.env.NODE_ENV = "production";
+    (process.env as Record<string, string | undefined>).NODE_ENV = "production";
     expect(getBackyEnvironment()).toBe("prod");
   });
 
   it("returns 'dev' in development", () => {
-    process.env.NODE_ENV = "development";
+    (process.env as Record<string, string | undefined>).NODE_ENV = "development";
     expect(getBackyEnvironment()).toBe("dev");
   });
 
   it("returns 'dev' in test", () => {
-    process.env.NODE_ENV = "test";
+    (process.env as Record<string, string | undefined>).NODE_ENV = "test";
     expect(getBackyEnvironment()).toBe("dev");
   });
 });

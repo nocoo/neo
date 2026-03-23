@@ -52,7 +52,7 @@ describe("auth-context", () => {
       mockAuth.mockResolvedValue({ user: { id: "u1" } });
       const db = await getScopedDB();
       expect(db).toBeDefined();
-      expect((db as { userId: string }).userId).toBe("u1");
+      expect((db as unknown as { userId: string }).userId).toBe("u1");
     });
 
     it("returns null when no session", async () => {

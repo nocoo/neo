@@ -13,7 +13,9 @@ import {
   getMockUserSettings,
   clearMockStorage,
 } from "@/tests/mocks/db-storage";
-import type { Secret, UserSettings } from "@/models/types";
+import { expect } from "vitest";
+import type { Secret, UserSettings, ActionResult } from "@/models/types";
+import type { OtpAlgorithm } from "@/models/constants";
 
 // ── Types for internal storage rows ──────────────────────────────────────
 
@@ -104,7 +106,7 @@ export class MockScopedDB {
 
     for (const [key, value] of Object.entries(data)) {
       if (value !== undefined) {
-        (row as Record<string, unknown>)[key] = value;
+        (row as unknown as Record<string, unknown>)[key] = value;
       }
     }
     row.updated_at = Math.floor(Date.now() / 1000);
@@ -196,11 +198,11 @@ export class MockScopedDB {
       type: row.type as "totp" | "hotp",
       digits: row.digits,
       period: row.period,
-      algorithm: row.algorithm as "SHA1" | "SHA256" | "SHA512",
+      algorithm: row.algorithm as OtpAlgorithm,
       counter: row.counter,
       color: row.color ?? null,
-      createdAt: row.created_at,
-      updatedAt: row.updated_at,
+      createdAt: new Date(row.created_at * 1000),
+      updatedAt: new Date(row.updated_at * 1000),
     };
   }
 
@@ -239,4 +241,20 @@ export function createMockScopedDB() {
 /** Reset in-memory storage between tests. */
 export function resetStorage() {
   clearMockStorage();
+}
+
+// ── Type-narrowing assertion helpers ────────────────────────────────────
+
+/** Assert that an ActionResult is success and narrow its type. Fails the test otherwise. */
+export function assertSuccess<T>(
+  result: ActionResult<T>,
+): asserts result is { success: true; data: T } {
+  expect(result.success).toBe(true);
+}
+
+/** Assert that an ActionResult is failure and narrow its type. Fails the test otherwise. */
+export function assertError<T>(
+  result: ActionResult<T>,
+): asserts result is { success: false; error: string } {
+  expect(result.success).toBe(false);
 }
