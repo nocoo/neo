@@ -12,3 +12,19 @@ database_id = "placeholder-replace-in-production"
 
 [vars]
 ENVIRONMENT = "development"
+
+# ── D1 Test Isolation ─────────────────────────────────────────────────────
+# Physically isolated test resources per quality system D1 dimension.
+# E2E tests MUST use `--env test` to connect to test DB, never production.
+# Create test DB: wrangler d1 create neo-db-test
+
+[env.test]
+name = "neo-worker-test"
+
+[[env.test.d1_databases]]
+binding = "DB"
+database_name = "neo-db-test"
+database_id = "placeholder-replace-with-test-db-id"
+
+[env.test.vars]
+ENVIRONMENT = "test"
