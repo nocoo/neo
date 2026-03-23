@@ -413,16 +413,19 @@ import { verifyTestDatabase } from "./helpers/verify-d1";
 
 /**
  * Vitest globalSetup: runs once before any test file.
- * 1. Acquires a session cookie via Credentials provider.
- * 2. Calls /api/health/db to verify the _test_marker table.
- * If either step fails, vitest aborts — no tests run against an unverified database.
+ * 1. Verifies D1 test database isolation (no auth needed — /api/health/db is public).
+ * 2. Acquires a session cookie via Credentials provider (for use by test files).
+ * If D1 verification fails, vitest aborts — no tests run against an unverified database.
  */
 export async function setup(): Promise<void> {
+  console.log("🗄️  Verifying D1 test database isolation...");
+  await verifyTestDatabase();
+
   console.log("🔐 Acquiring E2E session cookie...");
   const sessionCookie = await getSessionCookie();
 
-  console.log("🗄️  Verifying D1 test database isolation...");
-  await verifyTestDatabase(sessionCookie);
+  // Make session cookie available to test files via env
+  process.env.E2E_SESSION_COOKIE = sessionCookie;
 }
 ```
 
@@ -515,13 +518,13 @@ if (!testDbId) {
  * D1 Verification Layer 2 (Main App): Query _test_marker table via a
  * dedicated verification endpoint to confirm we're connected to the test database.
  * Called once in globalSetup before any test runs. Hard-fails if verification fails.
+ *
+ * No auth required — /api/health/db calls executeD1Query directly (no user scoping).
  */
 const BASE_URL = process.env.E2E_API_BASE_URL || "http://localhost:13042";
 
-export async function verifyTestDatabase(sessionCookie: string): Promise<void> {
-  const res = await fetch(`${BASE_URL}/api/health/db`, {
-    headers: { Cookie: sessionCookie },
-  });
+export async function verifyTestDatabase(): Promise<void> {
+  const res = await fetch(`${BASE_URL}/api/health/db`);
 
   if (!res.ok) {
     throw new Error(
@@ -542,41 +545,37 @@ export async function verifyTestDatabase(sessionCookie: string): Promise<void> {
 }
 ```
 
-**Requires**: A new lightweight route handler to expose the marker check:
+**Requires**: A new lightweight route handler to expose the marker check.
+This endpoint does NOT need user-scoped access — `_test_marker` is a global table.
+It calls `executeD1Query` directly from `lib/db/d1-client.ts` (already exported),
+bypassing `ScopedDB` entirely (which has no `raw()` method and should not gain one
+just for infrastructure plumbing).
 
 **File**: `app/api/health/db/route.ts`
 
 ```typescript
 import { NextResponse } from "next/server";
-import { getScopedDB } from "@/lib/auth-context";
+import { executeD1Query } from "@/lib/db/d1-client";
 
 /**
  * D1 test database verification endpoint.
  * Queries _test_marker table — returns { env: "test" } if present.
- * Only useful in E2E mode; returns 404 or error in production (table won't exist).
+ * Only useful in E2E mode; returns error in production (table won't exist).
  */
 export async function GET() {
   try {
-    const db = await getScopedDB();
-    if (!db) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
-
-    // Query the _test_marker table — this table only exists in test databases
-    const result = await db.raw<{ value: string }>(
+    const rows = await executeD1Query<{ value: string }>(
       "SELECT value FROM _test_marker WHERE key = 'env' LIMIT 1"
     );
-    const env = result?.[0]?.value;
+    const env = rows[0]?.value;
 
     return NextResponse.json({ env: env || null });
   } catch {
-    // Table doesn't exist → not a test database
+    // Table doesn't exist or D1 not configured → not a test database
     return NextResponse.json({ env: null });
   }
 }
 ```
-
-> **Note**: `ScopedDB.raw()` may need to be added if it doesn't already exist — a thin
-> wrapper around `executeD1Query` that returns raw rows. Alternatively, use the existing
-> `executeD1Query` directly from `d1-client.ts`.
 
 #### 7c. Worker: Build-time binding verification
 
