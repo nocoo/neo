@@ -27,7 +27,7 @@ Modern TOTP/HOTP authenticator — a full-stack 2FA manager built with Next.js 1
 | Auth | NextAuth v5 + Google OAuth |
 | PWA | Serwist 9 |
 | Worker | Cloudflare Workers (edge tasks: Quick OTP, Favicon, Cron) |
-| Testing | Vitest 4 (697 tests) + Playwright (35 E2E tests) |
+| Testing | Vitest 4 (937 tests) + Playwright (35+ E2E specs) |
 
 ## Architecture
 
@@ -144,13 +144,20 @@ neo/
 └── docs/           # Project documentation
 ```
 
-## Testing
+## Quality System (L1+L2+L3+G1+G2+D1)
 
-| Layer | Tool | Count | Purpose |
-|-------|------|-------|---------|
-| Unit | Vitest | 697 | Models, libs, actions, viewmodels, components |
-| API E2E | Vitest | 58 | Full action → mock DB flow |
-| Browser E2E | Playwright | 35 | Auth, navigation, UI interactions |
+Six-dimension quality architecture. See [docs/04-quality-system-upgrade.md](./docs/04-quality-system-upgrade.md) for full details.
+
+| Dimension | Tool | Hook | Status |
+|-----------|------|------|--------|
+| **L1** Unit/Component | Vitest (886 tests, 95%+ coverage) | pre-commit | ✅ |
+| **L2** Integration/API | Vitest (51 API E2E tests) | pre-push | ✅ |
+| **L3** System/E2E | Playwright (35+ specs) | manual/CI | ✅ |
+| **G1** Static Analysis | `tsc --noEmit` + ESLint `--max-warnings=0` | pre-commit | ✅ |
+| **G2** Security | osv-scanner + gitleaks | pre-push | ✅ |
+| **D1** Test Isolation | `neo-db-test` (Cloudflare D1) | — | N/A |
+
+**Tier: S** — all dimensions green (N/A counts as green).
 
 ## Documentation
 
