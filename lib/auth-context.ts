@@ -2,10 +2,28 @@ import { cache } from "react";
 import { auth } from "@/auth";
 import { ScopedDB } from "@/lib/db/scoped";
 
+// ── E2E auth bypass ─────────────────────────────────────────────────────────
+// When E2E_SKIP_AUTH=true, all auth functions return a hardcoded test user.
+// Same pattern as pew, backy, otter, raven.
+
+const E2E_TEST_USER_ID = "e2e-test-user";
+
+function isE2EMode(): boolean {
+  return process.env.E2E_SKIP_AUTH === "true";
+}
+
 /**
  * Deduplicated auth() — cached within a single React server render.
  */
-export const getSession = cache(() => auth());
+export const getSession = cache(async () => {
+  if (isE2EMode()) {
+    return {
+      user: { id: E2E_TEST_USER_ID, name: "E2E User", email: "e2e@test.local" },
+      expires: new Date(Date.now() + 86_400_000).toISOString(),
+    };
+  }
+  return auth();
+});
 
 /**
  * Get a ScopedDB instance for the current authenticated user.
