@@ -1,6 +1,8 @@
+# L1: Unit tests + coverage (pre-commit, <30s)
 bun run test:unit:coverage
 
 # G1: Type check (strict: true)
 bun run typecheck
 
+# G1: Lint (zero-tolerance)
 bunx lint-staged
