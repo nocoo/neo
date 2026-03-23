@@ -1,0 +1,3 @@
+[[IgnoredVulns]]
+id = "GHSA-5f7q-jpqc-wp7h"
+reason = "Requires next@canary (15.6.0-canary.61+), not suitable for production. Medium severity (5.9). Will fix when stable release is available."
