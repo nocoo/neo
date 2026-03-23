@@ -49,13 +49,31 @@ export default defineConfig({
         // Auth.js adapter (pure D1 delegation, same pattern as scoped.ts)
         "lib/auth-adapter.ts",
       ],
-      // Model layer thresholds (Phase 3 complete)
+      // Coverage thresholds per quality system L1 dimension
       thresholds: {
         "models/**": {
           lines: 90,
           functions: 90,
           branches: 80,
           statements: 90,
+        },
+        "viewmodels/**": {
+          lines: 90,
+          functions: 90,
+          branches: 80,
+          statements: 90,
+        },
+        "actions/**": {
+          lines: 85,
+          functions: 85,
+          branches: 75,
+          statements: 85,
+        },
+        "lib/**": {
+          lines: 80,
+          functions: 80,
+          branches: 70,
+          statements: 80,
         },
       },
     },
