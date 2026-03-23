@@ -131,7 +131,7 @@ describe("pushBackupToBacky", () => {
 
     // Verify FormData was sent correctly
     expect(mockFetch).toHaveBeenCalledTimes(2);
-    const [pushUrl, pushInit] = mockFetch.mock.calls[0];
+    const [pushUrl, pushInit] = mockFetch.mock.calls[0]!;
     expect(pushUrl).toBe("https://backy.test/webhook/p1");
     expect(pushInit.method).toBe("POST");
     expect(pushInit.headers.Authorization).toBe("Bearer key123");

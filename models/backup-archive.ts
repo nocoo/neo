@@ -183,7 +183,9 @@ export async function openEncryptedZip(
   // Guard: limit total decompressed size
   let totalBytes = 0;
   for (const name of entryNames) {
-    totalBytes += files[name].byteLength;
+    const file = files[name];
+    if (!file) continue;
+    totalBytes += file.byteLength;
     if (totalBytes > MAX_PAYLOAD_BYTES) {
       throw new Error(
         `Decompressed archive too large: exceeds ${MAX_PAYLOAD_BYTES} byte limit`,

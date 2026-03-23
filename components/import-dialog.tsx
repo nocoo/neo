@@ -63,7 +63,7 @@ export function ImportDialog({
     const input = parsedSecrets.map((s) => ({
       name: s.name,
       secret: s.secret,
-      account: s.account || undefined,
+      ...(s.account ? { account: s.account } : {}),
     }));
     const result = await onImport(input);
     if (result) {

@@ -190,8 +190,8 @@ describe("PerformanceTimer", () => {
     timer.checkpoint("step2");
     const result = timer.end();
     expect(result.checkpoints).toHaveLength(2);
-    expect(result.checkpoints[0].label).toBe("step1");
-    expect(result.checkpoints[1].label).toBe("step2");
+    expect(result.checkpoints[0]!.label).toBe("step1");
+    expect(result.checkpoints[1]!.label).toBe("step2");
   });
 
   it("can be cancelled", () => {

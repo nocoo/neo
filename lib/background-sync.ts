@@ -68,6 +68,11 @@ export function getHandler(type: OperationType): ReplayHandler | undefined {
 
 /** Replay a single queue entry. */
 async function replayEntry(entry: QueueEntry): Promise<boolean> {
+  if (entry.id == null) {
+    // Entries from IndexedDB always have an id; skip if missing
+    return false;
+  }
+
   const handler = handlers.get(entry.type);
   if (!handler) {
     // No handler registered — skip but don't remove
@@ -77,16 +82,16 @@ async function replayEntry(entry: QueueEntry): Promise<boolean> {
   try {
     const success = await handler(entry.payload);
     if (success) {
-      await remove(entry.id!);
+      await remove(entry.id);
       return true;
     }
 
     // Handler returned false — increment retry
-    await incrementRetry(entry.id!);
+    await incrementRetry(entry.id);
     return false;
   } catch {
     // Handler threw — increment retry
-    await incrementRetry(entry.id!);
+    await incrementRetry(entry.id);
     return false;
   }
 }
@@ -99,9 +104,10 @@ export async function replayAll(): Promise<SyncResult> {
   let failed = 0;
 
   for (const entry of entries) {
+    const entryId = entry.id ?? -1;
     const success = await replayEntry(entry);
     results.push({
-      id: entry.id!,
+      id: entryId,
       type: entry.type,
       success,
     });

@@ -16,7 +16,7 @@ function arrayBufferToBase64(buffer: ArrayBuffer | Uint8Array): string {
   const bytes = buffer instanceof Uint8Array ? buffer : new Uint8Array(buffer);
   let binary = "";
   for (let i = 0; i < bytes.length; i++) {
-    binary += String.fromCharCode(bytes[i]);
+    binary += String.fromCharCode(bytes[i] ?? 0);
   }
   return btoa(binary);
 }
@@ -103,7 +103,13 @@ export async function decryptData<T>(encrypted: string, keyBase64: string): Prom
     );
   }
 
-  const [version, ivBase64, ciphertextBase64] = parts;
+  const version = parts[0];
+  const ivBase64 = parts[1];
+  const ciphertextBase64 = parts[2];
+
+  if (!ivBase64 || !ciphertextBase64) {
+    throw new Error("Invalid encrypted data format: missing IV or ciphertext");
+  }
 
   if (version !== "v1") {
     throw new Error(`Unsupported encryption version: ${version}`);

@@ -4,10 +4,9 @@ import { SettingsView } from "@/components/settings-view";
 
 export default async function SettingsPage() {
   const result = await getDashboardData();
-  const initialData = result.success ? result.data : undefined;
 
   return (
-    <DashboardProvider initialData={initialData}>
+    <DashboardProvider {...(result.success ? { initialData: result.data } : {})}>
       <SettingsView />
     </DashboardProvider>
   );

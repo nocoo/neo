@@ -127,7 +127,7 @@ describe("useDevToolsViewModel", () => {
 
       expect(result.current.detectedFormat).toBe("aegis");
       expect(result.current.parsedSecrets).toHaveLength(1);
-      expect(result.current.parsedSecrets[0].name).toBe("GitHub");
+      expect(result.current.parsedSecrets[0]!.name).toBe("GitHub");
     });
 
     it("uses explicit format when provided", () => {

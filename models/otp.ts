@@ -147,7 +147,9 @@ export async function generateOTP(
   const hmacBuffer = await crypto.subtle.sign("HMAC", key, counterBytes);
   const hmacArray = Array.from(new Uint8Array(hmacBuffer));
 
-  const offset = hmacArray[hmacArray.length - 1] & 0xf;
+  const lastByte = hmacArray[hmacArray.length - 1];
+  if (lastByte === undefined) throw new Error("HMAC produced empty output");
+  const offset = lastByte & 0xf;
   const truncatedHash = hmacArray.slice(offset, offset + 4);
   const otpValue =
     new DataView(new Uint8Array(truncatedHash).buffer).getUint32(0) &
@@ -195,12 +197,19 @@ export async function generateTOTP(
     const signature = await crypto.subtle.sign("HMAC", cryptoKey, counterBytes);
     const hmac = new Uint8Array(signature);
 
-    const offset = hmac[hmac.length - 1] & 0x0f;
+    const lastByte = hmac[hmac.length - 1];
+    if (lastByte === undefined) throw new Error("HMAC produced empty output");
+    const offset = lastByte & 0x0f;
+
+    const b0 = hmac[offset] ?? 0;
+    const b1 = hmac[offset + 1] ?? 0;
+    const b2 = hmac[offset + 2] ?? 0;
+    const b3 = hmac[offset + 3] ?? 0;
     const binary =
-      ((hmac[offset] & 0x7f) << 24) |
-      ((hmac[offset + 1] & 0xff) << 16) |
-      ((hmac[offset + 2] & 0xff) << 8) |
-      (hmac[offset + 3] & 0xff);
+      ((b0 & 0x7f) << 24) |
+      ((b1 & 0xff) << 16) |
+      ((b2 & 0xff) << 8) |
+      (b3 & 0xff);
 
     const modulus = Math.pow(10, digits);
     const otp = binary % modulus;

@@ -108,7 +108,7 @@ export function SecretsView() {
 
       <SecretFormDialog
         open={!!editingSecret}
-        secret={editingSecret ?? undefined}
+        {...(editingSecret ? { secret: editingSecret } : {})}
         onClose={() => setEditingSecret(null)}
         onUpdate={vm.handleUpdate}
         busy={vm.busy}

@@ -92,7 +92,7 @@ describe("getSecrets", () => {
     expect(result.success).toBe(true);
     if (result.success) {
       expect(result.data).toHaveLength(1);
-      expect(result.data[0].name).toBe("GitHub");
+      expect(result.data[0]!.name).toBe("GitHub");
     }
   });
 

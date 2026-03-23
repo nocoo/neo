@@ -42,16 +42,19 @@ export function SecretList({
           role="list"
           aria-label="Secrets list"
         >
-          {secrets.map((secret) => (
-            <div key={secret.id} role="listitem">
-              <SecretCard
-                secret={secret}
-                otp={otpMap.get(secret.id)}
-                onEdit={onEdit}
-                onDelete={onDelete}
-              />
-            </div>
-          ))}
+          {secrets.map((secret) => {
+            const otp = otpMap.get(secret.id);
+            return (
+              <div key={secret.id} role="listitem">
+                <SecretCard
+                  secret={secret}
+                  {...(otp ? { otp } : {})}
+                  {...(onEdit ? { onEdit } : {})}
+                  {...(onDelete ? { onDelete } : {})}
+                />
+              </div>
+            );
+          })}
         </div>
       )}
     </div>

@@ -62,7 +62,9 @@ export class ScopedDB {
         now,
       ]
     );
-    return rowToSecret(rows[0]);
+    const row = rows[0];
+    if (!row) throw new Error("INSERT INTO secrets RETURNING * returned no rows");
+    return rowToSecret(row);
   }
 
   async updateSecret(
@@ -154,7 +156,9 @@ export class ScopedDB {
           `UPDATE user_settings SET ${setClauses.join(", ")} WHERE user_id = ? RETURNING *`,
           params
         );
-        return rowToUserSettings(rows[0]);
+        const updatedRow = rows[0];
+        if (!updatedRow) throw new Error("UPDATE user_settings RETURNING * returned no rows");
+        return rowToUserSettings(updatedRow);
       }
       return existing;
     }
@@ -170,7 +174,9 @@ export class ScopedDB {
         data.language ?? "en",
       ]
     );
-    return rowToUserSettings(rows[0]);
+    const insertedRow = rows[0];
+    if (!insertedRow) throw new Error("INSERT INTO user_settings RETURNING * returned no rows");
+    return rowToUserSettings(insertedRow);
   }
 
   // ── Encryption Key ──────────────────────────────────────────────────────

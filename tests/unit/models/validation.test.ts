@@ -375,10 +375,10 @@ describe("sortSecretsByName", () => {
     ];
 
     const sorted = sortSecretsByName(secrets);
-    expect(sorted[0].name).toBe("Apple");
-    expect(sorted[1].name).toBe("google");
-    expect(sorted[2].name).toBe("MICROSOFT");
-    expect(sorted[3].name).toBe("zoom");
+    expect(sorted[0]!.name).toBe("Apple");
+    expect(sorted[1]!.name).toBe("google");
+    expect(sorted[2]!.name).toBe("MICROSOFT");
+    expect(sorted[3]!.name).toBe("zoom");
   });
 
   it("handles chinese names", () => {
@@ -400,7 +400,7 @@ describe("sortSecretsByName", () => {
     const original = [{ name: "Zoom" }, { name: "Apple" }];
     const sorted = sortSecretsByName(original);
     expect(sorted).not.toBe(original);
-    expect(original[0].name).toBe("Zoom"); // unchanged
+    expect(original[0]!.name).toBe("Zoom"); // unchanged
   });
 
   it("handles duplicate names", () => {
@@ -411,9 +411,9 @@ describe("sortSecretsByName", () => {
     ];
 
     const sorted = sortSecretsByName(secrets);
-    expect(sorted[0].name).toBe("Apple");
-    expect(sorted[1].name).toBe("GitHub");
-    expect(sorted[2].name).toBe("GitHub");
+    expect(sorted[0]!.name).toBe("Apple");
+    expect(sorted[1]!.name).toBe("GitHub");
+    expect(sorted[2]!.name).toBe("GitHub");
   });
 });
 
@@ -556,7 +556,7 @@ describe("integration: full secret creation flow", () => {
     ];
 
     const sorted = sortSecretsByName(secrets);
-    expect(sorted[0].name).toBe("Apple");
+    expect(sorted[0]!.name).toBe("Apple");
 
     expect(
       checkDuplicateSecret(sorted, "GitHub", "", "JBSWY3DPEHPK3PXP")

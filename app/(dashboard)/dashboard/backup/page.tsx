@@ -4,10 +4,9 @@ import { BackupView } from "@/components/backup-view";
 
 export default async function BackupPage() {
   const result = await getDashboardData();
-  const initialData = result.success ? result.data : undefined;
 
   return (
-    <DashboardProvider initialData={initialData}>
+    <DashboardProvider {...(result.success ? { initialData: result.data } : {})}>
       <BackupView />
     </DashboardProvider>
   );

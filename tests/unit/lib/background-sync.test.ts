@@ -105,7 +105,7 @@ describe("background-sync", () => {
 
     expect(result.total).toBe(1);
     expect(result.failed).toBe(1);
-    expect(result.results[0].success).toBe(false);
+    expect(result.results[0]!.success).toBe(false);
   });
 
   it("handles mixed success and failure", async () => {

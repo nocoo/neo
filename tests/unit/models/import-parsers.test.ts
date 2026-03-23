@@ -137,8 +137,8 @@ describe("parseOtpauthUris", () => {
 
     const results = parseOtpauthUris(text);
     expect(results).toHaveLength(3);
-    expect(results[0].name).toBe("GitHub");
-    expect(results[2].type).toBe("hotp");
+    expect(results[0]!.name).toBe("GitHub");
+    expect(results[2]!.type).toBe("hotp");
   });
 
   it("returns empty array for empty text", () => {
@@ -161,10 +161,10 @@ describe("parseAegis", () => {
 
     const results = parseAegis(json);
     expect(results).toHaveLength(2);
-    expect(results[0].name).toBe("GitHub");
-    expect(results[0].account).toBe("user@gh.com");
-    expect(results[1].type).toBe("hotp");
-    expect(results[1].counter).toBe(10);
+    expect(results[0]!.name).toBe("GitHub");
+    expect(results[0]!.account).toBe("user@gh.com");
+    expect(results[1]!.type).toBe("hotp");
+    expect(results[1]!.counter).toBe(10);
   });
 
   it("skips entries without secrets", () => {
@@ -179,7 +179,7 @@ describe("parseAegis", () => {
       db: { entries: [{ type: "totp", name: "fallback-name", info: { secret: "ABC" } }] },
     });
     const results = parseAegis(json);
-    expect(results[0].name).toBe("fallback-name");
+    expect(results[0]!.name).toBe("fallback-name");
   });
 
   it("falls back to 'Unknown' when both issuer and name are missing", () => {
@@ -187,7 +187,7 @@ describe("parseAegis", () => {
       db: { entries: [{ type: "totp", info: { secret: "ABC" } }] },
     });
     const results = parseAegis(json);
-    expect(results[0].name).toBe("Unknown");
+    expect(results[0]!.name).toBe("Unknown");
   });
 
   it("handles missing db.entries gracefully", () => {
@@ -213,8 +213,8 @@ describe("parse2FAS", () => {
 
     const results = parse2FAS(json);
     expect(results).toHaveLength(1);
-    expect(results[0].name).toBe("GitHub");
-    expect(results[0].account).toBe("user");
+    expect(results[0]!.name).toBe("GitHub");
+    expect(results[0]!.account).toBe("user");
   });
 
   it("skips entries without secret", () => {
@@ -231,7 +231,7 @@ describe("parse2FAS", () => {
       services: [{ name: "FallbackName", secret: "ABC", otp: { tokenType: "TOTP" } }],
     });
     const results = parse2FAS(json);
-    expect(results[0].name).toBe("FallbackName");
+    expect(results[0]!.name).toBe("FallbackName");
   });
 
   it("falls back to 'Unknown' when both issuer and name are missing", () => {
@@ -240,7 +240,7 @@ describe("parse2FAS", () => {
       services: [{ secret: "ABC", otp: { tokenType: "TOTP" } }],
     });
     const results = parse2FAS(json);
-    expect(results[0].name).toBe("Unknown");
+    expect(results[0]!.name).toBe("Unknown");
   });
 
   it("handles missing services array", () => {
@@ -254,7 +254,7 @@ describe("parse2FAS", () => {
       services: [{ name: "X", secret: "ABC", otp: { tokenType: "TOTP", issuer: "X" } }],
     });
     const results = parse2FAS(json);
-    expect(results[0].account).toBe("");
+    expect(results[0]!.account).toBe("");
   });
 });
 
@@ -271,8 +271,8 @@ describe("parseBitwarden", () => {
 
     const results = parseBitwarden(json);
     expect(results).toHaveLength(1);
-    expect(results[0].name).toBe("GitHub");
-    expect(results[0].secret).toBe("JBSWY3DP");
+    expect(results[0]!.name).toBe("GitHub");
+    expect(results[0]!.secret).toBe("JBSWY3DP");
   });
 
   it("parses Bitwarden with otpauth URIs", () => {
@@ -284,7 +284,7 @@ describe("parseBitwarden", () => {
 
     const results = parseBitwarden(json);
     expect(results).toHaveLength(1);
-    expect(results[0].name).toBe("Test");
+    expect(results[0]!.name).toBe("Test");
   });
 
   it("falls back to 'Unknown' when item name is missing", () => {
@@ -292,8 +292,8 @@ describe("parseBitwarden", () => {
       items: [{ login: { username: "user", totp: "JBSWY3DP" } }],
     });
     const results = parseBitwarden(json);
-    expect(results[0].name).toBe("Unknown");
-    expect(results[0].account).toBe("user");
+    expect(results[0]!.name).toBe("Unknown");
+    expect(results[0]!.account).toBe("user");
   });
 
   it("defaults empty username when login.username is missing", () => {
@@ -301,7 +301,7 @@ describe("parseBitwarden", () => {
       items: [{ name: "X", login: { totp: "JBSWY3DP" } }],
     });
     const results = parseBitwarden(json);
-    expect(results[0].account).toBe("");
+    expect(results[0]!.account).toBe("");
   });
 });
 
@@ -315,7 +315,7 @@ describe("parseAndOTP", () => {
 
     const results = parseAndOTP(json);
     expect(results).toHaveLength(1);
-    expect(results[0].name).toBe("GitHub");
+    expect(results[0]!.name).toBe("GitHub");
   });
 
   it("returns empty for non-array JSON", () => {
@@ -330,13 +330,13 @@ describe("parseAndOTP", () => {
   it("falls back name from label when issuer is missing", () => {
     const json = JSON.stringify([{ secret: "ABC", label: "from-label", type: "TOTP" }]);
     const results = parseAndOTP(json);
-    expect(results[0].name).toBe("from-label");
+    expect(results[0]!.name).toBe("from-label");
   });
 
   it("falls back to 'Unknown' when both issuer and label are missing", () => {
     const json = JSON.stringify([{ secret: "ABC", type: "TOTP" }]);
     const results = parseAndOTP(json);
-    expect(results[0].name).toBe("Unknown");
+    expect(results[0]!.name).toBe("Unknown");
   });
 });
 
@@ -353,8 +353,8 @@ describe("parseLastPass", () => {
 
     const results = parseLastPass(json);
     expect(results).toHaveLength(1);
-    expect(results[0].name).toBe("GitHub");
-    expect(results[0].period).toBe(30);
+    expect(results[0]!.name).toBe("GitHub");
+    expect(results[0]!.period).toBe(30);
   });
 
   it("skips entries without secret", () => {
@@ -371,7 +371,7 @@ describe("parseLastPass", () => {
       accounts: [{ secret: "ABC", userName: "user" }],
     });
     const results = parseLastPass(json);
-    expect(results[0].name).toBe("Unknown");
+    expect(results[0]!.name).toBe("Unknown");
   });
 
   it("handles missing accounts array", () => {
@@ -393,7 +393,7 @@ describe("parseProton", () => {
 
     const results = parseProton(json);
     expect(results).toHaveLength(1);
-    expect(results[0].name).toBe("GitHub");
+    expect(results[0]!.name).toBe("GitHub");
   });
 
   it("skips entries without URI", () => {
@@ -419,8 +419,8 @@ describe("parseAuthenticatorPro", () => {
 
     const results = parseAuthenticatorPro(json);
     expect(results).toHaveLength(1);
-    expect(results[0].name).toBe("GitHub");
-    expect(results[0].algorithm).toBe("SHA-1");
+    expect(results[0]!.name).toBe("GitHub");
+    expect(results[0]!.algorithm).toBe("SHA-1");
   });
 
   it("maps algorithm numbers correctly", () => {
@@ -432,8 +432,8 @@ describe("parseAuthenticatorPro", () => {
     });
 
     const results = parseAuthenticatorPro(json);
-    expect(results[0].algorithm).toBe("SHA-256");
-    expect(results[1].algorithm).toBe("SHA-512");
+    expect(results[0]!.algorithm).toBe("SHA-256");
+    expect(results[1]!.algorithm).toBe("SHA-512");
   });
 
   it("skips entries without Secret", () => {
@@ -448,7 +448,7 @@ describe("parseAuthenticatorPro", () => {
       Authenticators: [{ Secret: "ABC", Type: 1 }],
     });
     const results = parseAuthenticatorPro(json);
-    expect(results[0].name).toBe("Unknown");
+    expect(results[0]!.name).toBe("Unknown");
   });
 
   it("defaults unknown Type to totp and unknown Algorithm to SHA-1", () => {
@@ -456,8 +456,8 @@ describe("parseAuthenticatorPro", () => {
       Authenticators: [{ Secret: "ABC", Type: 99, Algorithm: 99 }],
     });
     const results = parseAuthenticatorPro(json);
-    expect(results[0].type).toBe("totp");
-    expect(results[0].algorithm).toBe("SHA-1");
+    expect(results[0]!.type).toBe("totp");
+    expect(results[0]!.algorithm).toBe("SHA-1");
   });
 
   it("handles missing Authenticators array", () => {
@@ -479,8 +479,8 @@ describe("parseFreeOTPPlus", () => {
 
     const results = parseFreeOTPPlus(json);
     expect(results).toHaveLength(1);
-    expect(results[0].name).toBe("Test");
-    expect(results[0].secret.length).toBeGreaterThan(0);
+    expect(results[0]!.name).toBe("Test");
+    expect(results[0]!.secret.length).toBeGreaterThan(0);
   });
 
   it("handles negative bytes (Java signed)", () => {
@@ -523,8 +523,8 @@ describe("parseFreeOTPPlus", () => {
       tokens: [{ secret: [72, 101, 108], label: "from-label" }],
     });
     const results = parseFreeOTPPlus(json);
-    expect(results[0].name).toBe("from-label");
-    expect(results[0].type).toBe("totp");
+    expect(results[0]!.name).toBe("from-label");
+    expect(results[0]!.type).toBe("totp");
   });
 });
 
@@ -538,8 +538,8 @@ describe("parseRaivo", () => {
 
     const results = parseRaivo(json);
     expect(results).toHaveLength(1);
-    expect(results[0].name).toBe("GitHub");
-    expect(results[0].period).toBe(30);
+    expect(results[0]!.name).toBe("GitHub");
+    expect(results[0]!.period).toBe(30);
   });
 
   it("returns empty for non-array JSON", () => {
@@ -554,21 +554,21 @@ describe("parseRaivo", () => {
   it("falls back to 'Unknown' when issuer is missing", () => {
     const json = JSON.stringify([{ secret: "ABC", kind: "TOTP", timer: 30 }]);
     const results = parseRaivo(json);
-    expect(results[0].name).toBe("Unknown");
+    expect(results[0]!.name).toBe("Unknown");
   });
 
   it("normalizes SHA-512 algorithm", () => {
     const json = JSON.stringify([{ issuer: "X", secret: "ABC", algorithm: "SHA512", kind: "TOTP", timer: 30 }]);
     const results = parseRaivo(json);
-    expect(results[0].algorithm).toBe("SHA-512");
+    expect(results[0]!.algorithm).toBe("SHA-512");
   });
 
   it("defaults kind, digits, account when missing", () => {
     const json = JSON.stringify([{ issuer: "X", secret: "ABC", timer: 30 }]);
     const results = parseRaivo(json);
-    expect(results[0].type).toBe("totp");
-    expect(results[0].digits).toBe(6);
-    expect(results[0].account).toBe("");
+    expect(results[0]!.type).toBe("totp");
+    expect(results[0]!.digits).toBe(6);
+    expect(results[0]!.account).toBe("");
   });
 });
 
@@ -585,7 +585,7 @@ describe("parseGenericJSON", () => {
 
     const results = parseGenericJSON(json);
     expect(results).toHaveLength(2);
-    expect(results[0].name).toBe("GitHub");
+    expect(results[0]!.name).toBe("GitHub");
   });
 
   it("parses plain array format", () => {
@@ -605,15 +605,15 @@ describe("parseGenericJSON", () => {
   it("uses issuer as name fallback, email as account fallback", () => {
     const json = JSON.stringify([{ issuer: "FromIssuer", email: "user@test.com", secret: "ABC" }]);
     const results = parseGenericJSON(json);
-    expect(results[0].name).toBe("FromIssuer");
-    expect(results[0].account).toBe("user@test.com");
+    expect(results[0]!.name).toBe("FromIssuer");
+    expect(results[0]!.account).toBe("user@test.com");
   });
 
   it("falls back to 'Unknown' name when neither name nor issuer exists", () => {
     const json = JSON.stringify([{ secret: "ABC" }]);
     const results = parseGenericJSON(json);
-    expect(results[0].name).toBe("Unknown");
-    expect(results[0].account).toBe("");
+    expect(results[0]!.name).toBe("Unknown");
+    expect(results[0]!.account).toBe("");
   });
 
   it("returns empty for non-object non-array data without secrets key", () => {
@@ -635,9 +635,9 @@ describe("parseGenericCSV", () => {
 
     const results = parseGenericCSV(csv);
     expect(results).toHaveLength(2);
-    expect(results[0].name).toBe("GitHub");
-    expect(results[0].account).toBe("user@example.com");
-    expect(results[1].digits).toBe(8);
+    expect(results[0]!.name).toBe("GitHub");
+    expect(results[0]!.account).toBe("user@example.com");
+    expect(results[1]!.digits).toBe(8);
   });
 
   it("handles quoted fields", () => {
@@ -648,7 +648,7 @@ describe("parseGenericCSV", () => {
 
     const results = parseGenericCSV(csv);
     expect(results).toHaveLength(1);
-    expect(results[0].name).toBe("Service, Inc.");
+    expect(results[0]!.name).toBe("Service, Inc.");
   });
 
   it("returns empty for CSV without secret column", () => {
@@ -664,15 +664,15 @@ describe("parseGenericCSV", () => {
     const csv = "name,secret\nHasSecret,ABC\nNoSecret,";
     const results = parseGenericCSV(csv);
     expect(results).toHaveLength(1);
-    expect(results[0].name).toBe("HasSecret");
+    expect(results[0]!.name).toBe("HasSecret");
   });
 
   it("falls back to 'Unknown' name and empty account when columns are missing", () => {
     const csv = "secret\nABC";
     const results = parseGenericCSV(csv);
     expect(results).toHaveLength(1);
-    expect(results[0].name).toBe("Unknown");
-    expect(results[0].account).toBe("");
+    expect(results[0]!.name).toBe("Unknown");
+    expect(results[0]!.account).toBe("");
   });
 
   it("handles escaped quotes in CSV fields", () => {
@@ -682,15 +682,15 @@ describe("parseGenericCSV", () => {
     ].join("\n");
     const results = parseGenericCSV(csv);
     expect(results).toHaveLength(1);
-    expect(results[0].name).toBe('She said "hello"');
+    expect(results[0]!.name).toBe('She said "hello"');
   });
 
   it("defaults type, digits, period when columns are absent", () => {
     const csv = "name,secret\nTest,ABC";
     const results = parseGenericCSV(csv);
-    expect(results[0].type).toBe("totp");
-    expect(results[0].digits).toBe(6);
-    expect(results[0].period).toBe(30);
+    expect(results[0]!.type).toBe("totp");
+    expect(results[0]!.digits).toBe(6);
+    expect(results[0]!.period).toBe(30);
   });
 });
 
@@ -720,21 +720,21 @@ Account Name: GitHub\\uc0\\u8232 Email Address or Username: user@example.com\\u8
   it("parses Step Two RTF with multiple accounts", () => {
     const results = parseStepTwo(sampleRtf);
     expect(results).toHaveLength(2);
-    expect(results[0].name).toBe("GitHub");
-    expect(results[0].account).toBe("user@example.com");
-    expect(results[0].secret).toBe("JBSWY3DPEHPK3PXP");
-    expect(results[0].type).toBe("totp");
-    expect(results[0].digits).toBe(6);
-    expect(results[0].period).toBe(30);
-    expect(results[0].algorithm).toBe("SHA-1");
+    expect(results[0]!.name).toBe("GitHub");
+    expect(results[0]!.account).toBe("user@example.com");
+    expect(results[0]!.secret).toBe("JBSWY3DPEHPK3PXP");
+    expect(results[0]!.type).toBe("totp");
+    expect(results[0]!.digits).toBe(6);
+    expect(results[0]!.period).toBe(30);
+    expect(results[0]!.algorithm).toBe("SHA-1");
   });
 
   it("handles SHA-256 algorithm and non-default digits/period", () => {
     const results = parseStepTwo(sampleRtf);
-    expect(results[1].name).toBe("Google");
-    expect(results[1].algorithm).toBe("SHA-256");
-    expect(results[1].digits).toBe(8);
-    expect(results[1].period).toBe(60);
+    expect(results[1]!.name).toBe("Google");
+    expect(results[1]!.algorithm).toBe("SHA-256");
+    expect(results[1]!.digits).toBe(8);
+    expect(results[1]!.period).toBe(60);
   });
 
   it("handles account with empty username", () => {
@@ -745,8 +745,8 @@ Account Name: GitHub\\uc0\\u8232 Email Address or Username: user@example.com\\u8
     ].join("\n");
     const results = parseStepTwo(rtf);
     expect(results).toHaveLength(1);
-    expect(results[0].name).toBe("NoEmail");
-    expect(results[0].account).toBe("");
+    expect(results[0]!.name).toBe("NoEmail");
+    expect(results[0]!.account).toBe("");
   });
 
   it("skips entries without secret key", () => {
@@ -763,14 +763,14 @@ Account Name: \\uc0\\u29926 \\u24037 \\u8232 Email Address or Username: user\\u8
 }`;
     const results = parseStepTwo(rtf);
     expect(results).toHaveLength(1);
-    expect(results[0].secret).toBe("ABCDEF");
+    expect(results[0]!.secret).toBe("ABCDEF");
   });
 
   it("handles RTF with hex escapes and \\par control words", () => {
     const rtf = "{\\rtf1\\ansi Your Step Two Data in iCloud\\par\nAccount Name: Caf\\'e9\\par\nEmail Address or Username: user\\par\nSecret Key: ABCDEF\\par\nHash Algorithm: sha1\\par\nPeriod: 30 seconds\\par\nDigits: 6\\par\nColor: Default color\\par\n}";
     const results = parseStepTwo(rtf);
     expect(results).toHaveLength(1);
-    expect(results[0].name).toBe("Café");
+    expect(results[0]!.name).toBe("Café");
   });
 });
 
@@ -865,7 +865,7 @@ describe("parseImport", () => {
     const text = "otpauth://totp/GitHub?secret=JBSWY3DP&issuer=GitHub";
     const results = parseImport(text);
     expect(results).toHaveLength(1);
-    expect(results[0].name).toBe("GitHub");
+    expect(results[0]!.name).toBe("GitHub");
   });
 
   it("parses with explicit format", () => {

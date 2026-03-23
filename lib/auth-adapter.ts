@@ -37,7 +37,9 @@ export function D1Adapter(): Adapter {
           user.image ?? null,
         ]
       );
-      return rowToUser(rows[0]);
+      const row = rows[0];
+      if (!row) throw new Error("INSERT INTO users RETURNING * returned no rows");
+      return rowToUser(row);
     },
 
     async getUser(id) {
@@ -93,7 +95,9 @@ export function D1Adapter(): Adapter {
         `UPDATE users SET ${setClauses.join(", ")} WHERE id = ? RETURNING *`,
         params
       );
-      return rowToUser(rows[0]);
+      const updatedRow = rows[0];
+      if (!updatedRow) throw new Error("UPDATE users RETURNING * returned no rows");
+      return rowToUser(updatedRow);
     },
 
     async deleteUser(userId) {

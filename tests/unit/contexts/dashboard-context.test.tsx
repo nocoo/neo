@@ -51,7 +51,7 @@ const initialData = {
 function createWrapper(props?: { initialData?: typeof initialData }) {
   return function Wrapper({ children }: { children: ReactNode }) {
     return (
-      <DashboardProvider initialData={props?.initialData}>
+      <DashboardProvider {...(props?.initialData ? { initialData: props.initialData } : {})}>
         {children}
       </DashboardProvider>
     );
@@ -93,7 +93,7 @@ describe("useDashboardActions", () => {
     });
 
     expect(stateResult.current.secrets).toHaveLength(2);
-    expect(stateResult.current.secrets[0].name).toBe("GitLab");
+    expect(stateResult.current.secrets[0]!.name).toBe("GitLab");
   });
 
   it("removes secret via handleSecretDeleted", () => {
@@ -119,7 +119,7 @@ describe("useDashboardActions", () => {
       result.current.handleSecretUpdated(updated);
     });
 
-    expect(result.current.secrets[0].name).toBe("GitHub Enterprise");
+    expect(result.current.secrets[0]!.name).toBe("GitHub Enterprise");
   });
 
   it("replaces all secrets via handleSecretsReloaded", () => {
@@ -137,7 +137,7 @@ describe("useDashboardActions", () => {
     });
 
     expect(result.current.secrets).toHaveLength(2);
-    expect(result.current.secrets[0].name).toBe("AWS");
+    expect(result.current.secrets[0]!.name).toBe("AWS");
   });
 
 });

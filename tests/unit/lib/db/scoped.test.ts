@@ -44,7 +44,7 @@ describe("ScopedDB", () => {
         [userId]
       );
       expect(result).toHaveLength(2);
-      expect(result[0]).toHaveProperty("_mapped", "secret");
+      expect(result[0]!).toHaveProperty("_mapped", "secret");
     });
   });
 
@@ -107,7 +107,7 @@ describe("ScopedDB", () => {
 
       await db.createSecret(input);
 
-      const params = mockExecuteD1Query.mock.calls[0][1];
+      const params = mockExecuteD1Query.mock.calls[0]![1];
       expect(params).toContain("#ff0000");
     });
   });
@@ -142,8 +142,8 @@ describe("ScopedDB", () => {
 
     it("skips undefined values in update data", async () => {
       mockExecuteD1Query.mockResolvedValue([{ id: "s1" }]);
-      await db.updateSecret("s1", { name: "New", account: undefined });
-      const sql = mockExecuteD1Query.mock.calls[0][0];
+      await db.updateSecret("s1", { name: "New", account: undefined } as unknown as Parameters<typeof db.updateSecret>[1]);
+      const sql = mockExecuteD1Query.mock.calls[0]![0];
       expect(sql).toContain("name = ?");
       expect(sql).not.toContain("account = ?");
     });
@@ -201,7 +201,7 @@ describe("ScopedDB", () => {
       const result = await db.upsertUserSettings({ theme: "dark" });
 
       expect(mockExecuteD1Query).toHaveBeenCalledTimes(2);
-      const updateSql = mockExecuteD1Query.mock.calls[1][0];
+      const updateSql = mockExecuteD1Query.mock.calls[1]![0];
       expect(updateSql).toContain("UPDATE user_settings SET");
       expect(result).toHaveProperty("_mapped", "settings");
     });
@@ -223,7 +223,7 @@ describe("ScopedDB", () => {
 
       const result = await db.upsertUserSettings({ theme: "dark" });
 
-      const insertSql = mockExecuteD1Query.mock.calls[1][0];
+      const insertSql = mockExecuteD1Query.mock.calls[1]![0];
       expect(insertSql).toContain("INSERT INTO user_settings");
       expect(result).toHaveProperty("_mapped", "settings");
     });
@@ -235,7 +235,7 @@ describe("ScopedDB", () => {
 
       await db.upsertUserSettings({ encryptionKeyHash: "abc" });
 
-      const updateSql = mockExecuteD1Query.mock.calls[1][0];
+      const updateSql = mockExecuteD1Query.mock.calls[1]![0];
       expect(updateSql).toContain("encryption_key_hash = ?");
     });
   });
@@ -272,7 +272,7 @@ describe("ScopedDB", () => {
 
       await db.setEncryptionKey("new-key");
 
-      const updateSql = mockExecuteD1Query.mock.calls[1][0];
+      const updateSql = mockExecuteD1Query.mock.calls[1]![0];
       expect(updateSql).toContain("UPDATE user_settings SET encryption_key = ?");
     });
 
@@ -283,9 +283,9 @@ describe("ScopedDB", () => {
 
       await db.setEncryptionKey("new-key");
 
-      const insertSql = mockExecuteD1Query.mock.calls[1][0];
+      const insertSql = mockExecuteD1Query.mock.calls[1]![0];
       expect(insertSql).toContain("INSERT INTO user_settings");
-      expect(mockExecuteD1Query.mock.calls[1][1]).toContain("new-key");
+      expect(mockExecuteD1Query.mock.calls[1]![1]).toContain("new-key");
     });
   });
 
@@ -319,7 +319,7 @@ describe("ScopedDB", () => {
 
       await db.upsertBackySettings({ webhookUrl: "https://new.com", apiKey: "k" });
 
-      const updateSql = mockExecuteD1Query.mock.calls[1][0];
+      const updateSql = mockExecuteD1Query.mock.calls[1]![0];
       expect(updateSql).toContain("UPDATE user_settings SET backy_webhook_url = ?");
     });
 
@@ -330,7 +330,7 @@ describe("ScopedDB", () => {
 
       await db.upsertBackySettings({ webhookUrl: "https://new.com", apiKey: "k" });
 
-      const insertSql = mockExecuteD1Query.mock.calls[1][0];
+      const insertSql = mockExecuteD1Query.mock.calls[1]![0];
       expect(insertSql).toContain("INSERT INTO user_settings");
     });
   });
@@ -361,7 +361,7 @@ describe("ScopedDB", () => {
 
       await db.upsertBackyPullWebhook("new-pull-key");
 
-      const updateSql = mockExecuteD1Query.mock.calls[1][0];
+      const updateSql = mockExecuteD1Query.mock.calls[1]![0];
       expect(updateSql).toContain("UPDATE user_settings SET backy_pull_key = ?");
     });
 
@@ -372,7 +372,7 @@ describe("ScopedDB", () => {
 
       await db.upsertBackyPullWebhook("new-pull-key");
 
-      const insertSql = mockExecuteD1Query.mock.calls[1][0];
+      const insertSql = mockExecuteD1Query.mock.calls[1]![0];
       expect(insertSql).toContain("INSERT INTO user_settings");
     });
   });
@@ -427,7 +427,7 @@ describe("ScopedDB", () => {
       const result = await db.getLegacyBackups();
 
       expect(result).toHaveLength(1);
-      expect(result[0]).toEqual({
+      expect(result[0]!).toEqual({
         id: "b1",
         filename: "backup.zip",
         data: "{}",
@@ -458,7 +458,7 @@ describe("ScopedDB", () => {
       ]);
 
       const result = await db.getLegacyBackups();
-      expect(result[0].encrypted).toBe(true);
+      expect(result[0]!.encrypted).toBe(true);
     });
   });
 });

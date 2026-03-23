@@ -74,7 +74,7 @@ const HOTP_SECRET: ParsedSecret = {
 
 describe("toOtpauthUri", () => {
   it("builds a valid TOTP URI", () => {
-    const uri = toOtpauthUri(SAMPLE_SECRETS[0]);
+    const uri = toOtpauthUri(SAMPLE_SECRETS[0]!);
     expect(uri).toContain("otpauth://totp/");
     expect(uri).toContain("secret=JBSWY3DPEHPK3PXP");
     expect(uri).toContain("issuer=GitHub");
@@ -90,7 +90,7 @@ describe("toOtpauthUri", () => {
   });
 
   it("round-trips with parseOtpauthUri", () => {
-    const uri = toOtpauthUri(SAMPLE_SECRETS[0]);
+    const uri = toOtpauthUri(SAMPLE_SECRETS[0]!);
     const parsed = parseOtpauthUri(uri);
     expect(parsed).not.toBeNull();
     expect(parsed!.name).toBe("GitHub");
@@ -106,8 +106,8 @@ describe("exportAsOtpauthUris", () => {
     const result = exportAsOtpauthUris(SAMPLE_SECRETS);
     const lines = result.split("\n");
     expect(lines).toHaveLength(2);
-    expect(lines[0]).toContain("otpauth://totp/");
-    expect(lines[1]).toContain("otpauth://totp/");
+    expect(lines[0]!).toContain("otpauth://totp/");
+    expect(lines[1]!).toContain("otpauth://totp/");
   });
 
   it("handles empty array", () => {
@@ -129,8 +129,8 @@ describe("exportAsAegis", () => {
     const exported = exportAsAegis(SAMPLE_SECRETS);
     const imported = parseAegis(exported);
     expect(imported).toHaveLength(2);
-    expect(imported[0].name).toBe("GitHub");
-    expect(imported[0].secret).toBe("JBSWY3DPEHPK3PXP");
+    expect(imported[0]!.name).toBe("GitHub");
+    expect(imported[0]!.secret).toBe("JBSWY3DPEHPK3PXP");
   });
 });
 
@@ -141,7 +141,7 @@ describe("exportAs2FAS", () => {
     const exported = exportAs2FAS(SAMPLE_SECRETS);
     const imported = parse2FAS(exported);
     expect(imported).toHaveLength(2);
-    expect(imported[0].name).toBe("GitHub");
+    expect(imported[0]!.name).toBe("GitHub");
   });
 });
 
@@ -152,7 +152,7 @@ describe("exportAsAndOTP", () => {
     const exported = exportAsAndOTP(SAMPLE_SECRETS);
     const imported = parseAndOTP(exported);
     expect(imported).toHaveLength(2);
-    expect(imported[0].name).toBe("GitHub");
+    expect(imported[0]!.name).toBe("GitHub");
   });
 });
 
@@ -163,7 +163,7 @@ describe("exportAsBitwarden", () => {
     const exported = exportAsBitwarden(SAMPLE_SECRETS);
     const imported = parseBitwarden(exported);
     expect(imported).toHaveLength(2);
-    expect(imported[0].name).toBe("GitHub");
+    expect(imported[0]!.name).toBe("GitHub");
   });
 });
 
@@ -174,8 +174,8 @@ describe("exportAsLastPass", () => {
     const exported = exportAsLastPass(SAMPLE_SECRETS);
     const imported = parseLastPass(exported);
     expect(imported).toHaveLength(2);
-    expect(imported[0].name).toBe("GitHub");
-    expect(imported[0].period).toBe(30);
+    expect(imported[0]!.name).toBe("GitHub");
+    expect(imported[0]!.period).toBe(30);
   });
 });
 
@@ -186,7 +186,7 @@ describe("exportAsProton", () => {
     const exported = exportAsProton(SAMPLE_SECRETS);
     const imported = parseProton(exported);
     expect(imported).toHaveLength(2);
-    expect(imported[0].name).toBe("GitHub");
+    expect(imported[0]!.name).toBe("GitHub");
   });
 });
 
@@ -197,9 +197,9 @@ describe("exportAsAuthenticatorPro", () => {
     const exported = exportAsAuthenticatorPro(SAMPLE_SECRETS);
     const imported = parseAuthenticatorPro(exported);
     expect(imported).toHaveLength(2);
-    expect(imported[0].name).toBe("GitHub");
-    expect(imported[0].algorithm).toBe("SHA-1");
-    expect(imported[1].algorithm).toBe("SHA-256");
+    expect(imported[0]!.name).toBe("GitHub");
+    expect(imported[0]!.algorithm).toBe("SHA-1");
+    expect(imported[1]!.algorithm).toBe("SHA-256");
   });
 });
 
@@ -210,7 +210,7 @@ describe("exportAsFreeOTPPlus", () => {
     const exported = exportAsFreeOTPPlus(SAMPLE_SECRETS);
     const imported = parseFreeOTPPlus(exported);
     expect(imported).toHaveLength(2);
-    expect(imported[0].name).toBe("GitHub");
+    expect(imported[0]!.name).toBe("GitHub");
   });
 });
 
@@ -221,8 +221,8 @@ describe("exportAsGenericJSON", () => {
     const exported = exportAsGenericJSON(SAMPLE_SECRETS);
     const imported = parseGenericJSON(exported);
     expect(imported).toHaveLength(2);
-    expect(imported[0].name).toBe("GitHub");
-    expect(imported[0].secret).toBe("JBSWY3DPEHPK3PXP");
+    expect(imported[0]!.name).toBe("GitHub");
+    expect(imported[0]!.secret).toBe("JBSWY3DPEHPK3PXP");
   });
 });
 
@@ -232,7 +232,7 @@ describe("exportAsCSV", () => {
   it("produces valid CSV with headers", () => {
     const csv = exportAsCSV(SAMPLE_SECRETS);
     const lines = csv.split("\n");
-    expect(lines[0]).toBe("name,account,secret,type,digits,period,algorithm,counter");
+    expect(lines[0]!).toBe("name,account,secret,type,digits,period,algorithm,counter");
     expect(lines).toHaveLength(3); // header + 2 rows
   });
 
@@ -240,13 +240,13 @@ describe("exportAsCSV", () => {
     const exported = exportAsCSV(SAMPLE_SECRETS);
     const imported = parseGenericCSV(exported);
     expect(imported).toHaveLength(2);
-    expect(imported[0].name).toBe("GitHub");
-    expect(imported[0].secret).toBe("JBSWY3DPEHPK3PXP");
+    expect(imported[0]!.name).toBe("GitHub");
+    expect(imported[0]!.secret).toBe("JBSWY3DPEHPK3PXP");
   });
 
   it("escapes commas in names", () => {
     const secrets: ParsedSecret[] = [
-      { ...SAMPLE_SECRETS[0], name: "Service, Inc." },
+      { ...SAMPLE_SECRETS[0]!, name: "Service, Inc." },
     ];
     const csv = exportAsCSV(secrets);
     expect(csv).toContain('"Service, Inc."');
@@ -264,7 +264,7 @@ describe("exportAsText", () => {
 
   it("omits parentheses when no account", () => {
     const secrets: ParsedSecret[] = [
-      { ...SAMPLE_SECRETS[0], account: "" },
+      { ...SAMPLE_SECRETS[0]!, account: "" },
     ];
     const text = exportAsText(secrets);
     expect(text).toBe("GitHub: JBSWY3DPEHPK3PXP");

@@ -13,7 +13,8 @@ const compat = new FlatCompat({
 export default tseslint.config(
   { ignores: [".next/", "coverage/", "drizzle/", "next-env.d.ts", "public/sw.js", "worker/"] },
   ...compat.extends("next/core-web-vitals", "next/typescript"),
-  ...tseslint.configs.strict,
+  // Only rules from tseslint.strict (skip [0] which re-registers the plugin already loaded by next/typescript)
+  ...tseslint.configs.strict.slice(1),
   {
     rules: {
       "@typescript-eslint/no-unused-vars": [
@@ -25,6 +26,8 @@ export default tseslint.config(
   {
     files: ["tests/**/*.{ts,tsx}"],
     rules: {
+      // Non-null assertions are safe in tests where data existence is known
+      "@typescript-eslint/no-non-null-assertion": "off",
       "no-restricted-syntax": [
         "error",
         {

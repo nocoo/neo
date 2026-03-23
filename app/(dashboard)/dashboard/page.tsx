@@ -4,10 +4,9 @@ import { SecretsView } from "@/components/secrets-view";
 
 export default async function DashboardPage() {
   const result = await getDashboardData();
-  const initialData = result.success ? result.data : undefined;
 
   return (
-    <DashboardProvider initialData={initialData}>
+    <DashboardProvider {...(result.success ? { initialData: result.data } : {})}>
       <SecretsView />
     </DashboardProvider>
   );

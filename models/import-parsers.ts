@@ -186,7 +186,8 @@ export function parseBitwarden(json: string): ParsedSecret[] {
   return items
     .filter((item) => item.login?.totp)
     .map((item): ParsedSecret | null => {
-      const totp = item.login!.totp!;
+      const totp = item.login?.totp;
+      if (!totp) return null;
 
       // Bitwarden stores either otpauth:// URIs or plain secrets
       if (totp.startsWith("otpauth://")) {
@@ -573,7 +574,10 @@ export function parseGenericCSV(csv: string): ParsedSecret[] {
   const lines = csv.split(/\r?\n/).filter((l) => l.trim());
   if (lines.length < 2) return [];
 
-  const headerLine = lines[0].toLowerCase();
+  const firstLine = lines[0];
+  if (!firstLine) return [];
+
+  const headerLine = firstLine.toLowerCase();
   const headers = parseCSVLine(headerLine);
 
   // Find column indices
@@ -663,7 +667,7 @@ export function detectImportFormat(content: string): ImportFormat | null {
   }
 
   // CSV
-  const firstLine = trimmed.split(/\r?\n/)[0].toLowerCase();
+  const firstLine = (trimmed.split(/\r?\n/)[0] ?? "").toLowerCase();
   if (
     firstLine.includes(",") &&
     (firstLine.includes("secret") ||

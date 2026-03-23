@@ -43,7 +43,7 @@ describe("offline-queue", () => {
     const entries = await getAll();
     expect(entries).toHaveLength(1);
 
-    const entry = entries[0];
+    const entry = entries[0]!;
     expect(entry.type).toBe("delete_secret");
     expect(entry.payload).toEqual({ id: "42" });
     expect(entry.retryCount).toBe(0);
@@ -54,7 +54,7 @@ describe("offline-queue", () => {
   it("uses default max retries of 3", async () => {
     await enqueue("create_backup", { data: "json" });
     const entries = await getAll();
-    expect(entries[0].maxRetries).toBe(3);
+    expect(entries[0]!.maxRetries).toBe(3);
   });
 
   // ── getAll ───────────────────────────────────────────────────────────
@@ -71,9 +71,9 @@ describe("offline-queue", () => {
 
     const entries = await getAll();
     expect(entries).toHaveLength(3);
-    expect((entries[0].payload as { name: string }).name).toBe("first");
-    expect((entries[1].payload as { name: string }).name).toBe("second");
-    expect((entries[2].payload as { id: string }).id).toBe("third");
+    expect((entries[0]!.payload as { name: string }).name).toBe("first");
+    expect((entries[1]!.payload as { name: string }).name).toBe("second");
+    expect((entries[2]!.payload as { id: string }).id).toBe("third");
   });
 
   // ── count ────────────────────────────────────────────────────────────
@@ -100,7 +100,7 @@ describe("offline-queue", () => {
 
     const entries = await getAll();
     expect(entries).toHaveLength(1);
-    expect(entries[0].id).toBe(id1);
+    expect(entries[0]!.id).toBe(id1);
   });
 
   it("is a no-op when removing non-existent id", async () => {

@@ -65,11 +65,11 @@ describe("round-trip: create → restore", () => {
 
     const restored = await openEncryptedZip(zipBytes, key);
     expect(restored).toHaveLength(2);
-    expect(restored[0].name).toBe("GitHub");
-    expect(restored[0].secret).toBe("JBSWY3DPEHPK3PXP");
-    expect(restored[0].account).toBe("user@github.com");
-    expect(restored[1].name).toBe("Google");
-    expect(restored[1].secret).toBe("HXDMVJECJJWSRB3HWIZR4IFUGFTMXBOZ");
+    expect(restored[0]!.name).toBe("GitHub");
+    expect(restored[0]!.secret).toBe("JBSWY3DPEHPK3PXP");
+    expect(restored[0]!.account).toBe("user@github.com");
+    expect(restored[1]!.name).toBe("Google");
+    expect(restored[1]!.secret).toBe("HXDMVJECJJWSRB3HWIZR4IFUGFTMXBOZ");
   });
 
   it("preserves all secret fields through round-trip", async () => {
@@ -104,11 +104,11 @@ describe("round-trip: create → restore", () => {
   it("handles single secret", async () => {
     const key = await generateEncryptionKey();
 
-    const zipBytes = await createEncryptedZip([SAMPLE_SECRETS[0]], key);
+    const zipBytes = await createEncryptedZip([SAMPLE_SECRETS[0]!], key);
     const restored = await openEncryptedZip(zipBytes, key);
 
     expect(restored).toHaveLength(1);
-    expect(restored[0].name).toBe("GitHub");
+    expect(restored[0]!.name).toBe("GitHub");
   });
 
   it("handles large payload (100 secrets)", async () => {
@@ -128,8 +128,8 @@ describe("round-trip: create → restore", () => {
     const restored = await openEncryptedZip(zipBytes, key);
 
     expect(restored).toHaveLength(100);
-    expect(restored[0].name).toBe("Service 0");
-    expect(restored[99].name).toBe("Service 99");
+    expect(restored[0]!.name).toBe("Service 0");
+    expect(restored[99]!.name).toBe("Service 99");
   });
 });
 

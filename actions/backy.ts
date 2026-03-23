@@ -116,7 +116,7 @@ export async function pushBackupToBacky(): Promise<ActionResult<BackyPushDetail>
           fileSizeBytes: zipBytes.byteLength,
           secretCount: secrets.length,
         },
-        history,
+        ...(history ? { history } : {}),
       },
     };
   } catch (error) {
@@ -164,7 +164,7 @@ export async function saveBackyConfig(config: {
 
     const validation = validateBackyConfig(config);
     if (!validation.valid) {
-      return { success: false, error: validation.error! };
+      return { success: false, error: validation.error };
     }
 
     await db.upsertBackySettings({

@@ -128,7 +128,7 @@ describe("useSecretsViewModel", () => {
       const { result } = renderHook(() => useSecretsViewModel());
 
       expect(result.current.filteredSecrets).toHaveLength(1);
-      expect(result.current.filteredSecrets[0].name).toBe("GitHub");
+      expect(result.current.filteredSecrets[0]!.name).toBe("GitHub");
     });
 
     it("starts with empty search query", () => {
@@ -157,7 +157,7 @@ describe("useSecretsViewModel", () => {
       });
 
       expect(result.current.filteredSecrets).toHaveLength(1);
-      expect(result.current.filteredSecrets[0].name).toBe("GitHub");
+      expect(result.current.filteredSecrets[0]!.name).toBe("GitHub");
     });
 
     it("filters secrets by account", () => {
@@ -169,7 +169,7 @@ describe("useSecretsViewModel", () => {
       });
 
       expect(result.current.filteredSecrets).toHaveLength(1);
-      expect(result.current.filteredSecrets[0].name).toBe("GitLab");
+      expect(result.current.filteredSecrets[0]!.name).toBe("GitLab");
     });
 
     it("returns all secrets when query is empty", () => {

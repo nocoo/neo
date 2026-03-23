@@ -10,8 +10,8 @@ import { isEmailAllowed } from "@/lib/auth-whitelist";
 // provider so tests can authenticate without Google OAuth.
 const providers: Provider[] = [
   Google({
-    clientId: process.env.AUTH_GOOGLE_ID,
-    clientSecret: process.env.AUTH_GOOGLE_SECRET,
+    clientId: process.env.AUTH_GOOGLE_ID ?? "",
+    clientSecret: process.env.AUTH_GOOGLE_SECRET ?? "",
   }),
 ];
 
@@ -43,7 +43,7 @@ const useAdapter = isD1Configured() && process.env.PLAYWRIGHT !== "1";
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
   trustHost: true,
-  adapter: useAdapter ? D1Adapter() : undefined,
+  ...(useAdapter ? { adapter: D1Adapter() } : {}),
   session: {
     strategy: "jwt",
   },
@@ -68,7 +68,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     },
     jwt({ token, user }) {
       // On sign-in, persist the database user id into the JWT
-      if (user) {
+      if (user?.id) {
         token.sub = user.id;
       }
       return token;

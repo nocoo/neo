@@ -149,9 +149,9 @@ export function useDevToolsViewModel(): DevToolsViewModel {
         const period = options?.period ?? 30;
         const counter = Math.floor(Date.now() / 1000 / period);
         const otp = await generateTOTP(secret, counter, {
-          digits: options?.digits,
+          ...(options?.digits !== undefined ? { digits: options.digits } : {}),
           period,
-          algorithm: options?.algorithm,
+          ...(options?.algorithm !== undefined ? { algorithm: options.algorithm } : {}),
         });
         setOtpTestResult(otp);
       } catch {

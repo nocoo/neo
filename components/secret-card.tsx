@@ -64,7 +64,10 @@ export function resolveThemeKey(secret: { name: string; color?: string | null })
     const found = getThemeByKey(secret.color);
     if (found) return found.key;
   }
-  return HASH_THEMES[hashCode(firstWord(secret.name)) % HASH_THEMES.length].key;
+  // HASH_THEMES is non-empty and modulo guarantees a valid index
+  const hashTheme = HASH_THEMES[hashCode(firstWord(secret.name)) % HASH_THEMES.length];
+  if (!hashTheme) return HASH_THEMES[0]?.key ?? "default";
+  return hashTheme.key;
 }
 
 // ── Types ────────────────────────────────────────────────────────────────
@@ -86,7 +89,9 @@ export function SecretCard({ secret, otp, onEdit, onDelete }: SecretCardProps) {
       const userTheme = getThemeByKey(secret.color);
       if (userTheme) return userTheme;
     }
-    return HASH_THEMES[hashCode(firstWord(secret.name)) % HASH_THEMES.length];
+    // HASH_THEMES is non-empty and modulo guarantees a valid index
+    const fallback = HASH_THEMES[hashCode(firstWord(secret.name)) % HASH_THEMES.length];
+    return fallback ?? HASH_THEMES[0];
   }, [secret.color, secret.name]);
 
   const handleCopy = useCallback(async () => {

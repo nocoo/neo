@@ -118,11 +118,11 @@ export function validateSecretData(data: {
 // ── OTP Parameter Validation ────────────────────────────────────────────────
 
 export interface OTPParamsInput {
-  type?: string;
-  digits?: number;
-  period?: number;
-  algorithm?: string;
-  counter?: number;
+  type?: string | undefined;
+  digits?: number | undefined;
+  period?: number | undefined;
+  algorithm?: string | undefined;
+  counter?: number | undefined;
 }
 
 const VALID_PERIODS = [30, 60, 120];

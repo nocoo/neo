@@ -101,7 +101,7 @@ describe("encryptData / decryptData", () => {
   it("detects tampered ciphertext (integrity check)", async () => {
     const encrypted = await encryptData({ secret: "sensitive" }, TEST_KEY);
     const parts = encrypted.split(":");
-    const tampered = `${parts[0]}:${parts[1]}:${parts[2].slice(0, -5)}XXXXX`;
+    const tampered = `${parts[0]}:${parts[1]}:${parts[2]!.slice(0, -5)}XXXXX`;
     await expect(decryptData(tampered, TEST_KEY)).rejects.toThrow();
   });
 
