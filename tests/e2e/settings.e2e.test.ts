@@ -69,8 +69,8 @@ describe("Settings — HTTP E2E", () => {
   });
 
   describe("updateUserSettings", () => {
-    it("creates settings with defaults", async () => {
-      const result = await updateSettings({ theme: "dark" });
+    it("creates settings with specified values", async () => {
+      const result = await updateSettings({ theme: "dark", language: "en" });
       expect(result.success).toBe(true);
       expect(result.data.theme).toBe("dark");
       expect(result.data.language).toBe("en");
