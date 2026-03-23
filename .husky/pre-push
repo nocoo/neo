@@ -1,2 +1,5 @@
 # L2: API E2E tests (pre-push)
 bun run test:api
+
+# G2: Security gate (osv-scanner + gitleaks)
+bun run test:security
