@@ -1,2 +1,6 @@
 bun run test:unit:coverage
+
+# G1: Type check (strict: true)
+bun run typecheck
+
 bunx lint-staged
