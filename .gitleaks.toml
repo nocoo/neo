@@ -1,0 +1,10 @@
+# Gitleaks configuration
+# Allow known test vectors (RFC 4226 / RFC 6238 base32 TOTP secrets)
+
+[allowlist]
+  description = "Test TOTP secrets (RFC 4226 test vectors)"
+  regexTarget = "match"
+  regexes = [
+    '''GEZDGNBVGY3TQOJQ''',
+    '''JBSWY3DPEHPK3PXP''',
+  ]
