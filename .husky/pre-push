@@ -1,5 +1,5 @@
-# L2: API E2E tests (pre-push)
-bun run test:api
+# L2: API E2E tests — real HTTP requests (pre-push)
+bun run test:e2e
 
 # G2: Security gate (osv-scanner + gitleaks)
 bun run test:security
