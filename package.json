@@ -18,6 +18,7 @@
     "test:coverage": "vitest run --coverage",
     "typecheck": "tsc --noEmit",
     "test:security": "bun scripts/run-security.ts",
+    "verify:test-bindings": "bun scripts/verify-test-bindings.ts",
     "prepare": "husky"
   },
   "dependencies": {
