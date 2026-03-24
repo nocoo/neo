@@ -13,6 +13,10 @@ const {
   mockUpdateSecret,
   mockDeleteSecret,
   mockGetSecretCount,
+  mockGetDeletedSecrets,
+  mockRestoreSecret,
+  mockPermanentDeleteSecret,
+  mockEmptyRecycleBin,
   mockScopedDB,
 } = vi.hoisted(() => {
   const mockGetSecrets = vi.fn();
@@ -21,6 +25,10 @@ const {
   const mockUpdateSecret = vi.fn();
   const mockDeleteSecret = vi.fn();
   const mockGetSecretCount = vi.fn();
+  const mockGetDeletedSecrets = vi.fn();
+  const mockRestoreSecret = vi.fn();
+  const mockPermanentDeleteSecret = vi.fn();
+  const mockEmptyRecycleBin = vi.fn();
 
   return {
     mockGetSecrets,
@@ -29,6 +37,10 @@ const {
     mockUpdateSecret,
     mockDeleteSecret,
     mockGetSecretCount,
+    mockGetDeletedSecrets,
+    mockRestoreSecret,
+    mockPermanentDeleteSecret,
+    mockEmptyRecycleBin,
     mockScopedDB: {
       getSecrets: mockGetSecrets,
       getSecretById: mockGetSecretById,
@@ -36,6 +48,10 @@ const {
       updateSecret: mockUpdateSecret,
       deleteSecret: mockDeleteSecret,
       getSecretCount: mockGetSecretCount,
+      getDeletedSecrets: mockGetDeletedSecrets,
+      restoreSecret: mockRestoreSecret,
+      permanentDeleteSecret: mockPermanentDeleteSecret,
+      emptyRecycleBin: mockEmptyRecycleBin,
     },
   };
 });
@@ -55,6 +71,10 @@ import {
   deleteSecret,
   getSecretCount,
   batchImportSecrets,
+  getDeletedSecrets,
+  restoreSecret,
+  permanentDeleteSecret,
+  emptyRecycleBin,
 } from "@/actions/secrets";
 import { getScopedDB } from "@/lib/auth-context";
 
@@ -72,6 +92,7 @@ const sampleSecret = {
   algorithm: "SHA-1" as const,
   counter: 0,
   color: null,
+  deletedAt: null,
   createdAt: new Date(),
   updatedAt: new Date(),
 };
@@ -408,5 +429,118 @@ describe("batchImportSecrets", () => {
     ]);
     expect(result.success).toBe(false);
     if (!result.success) expect(result.error).toBe("Failed to import secrets");
+  });
+});
+
+// ── Recycle Bin Actions ────────────────────────────────────────────────────
+
+describe("getDeletedSecrets", () => {
+  it("returns deleted secrets for authenticated user", async () => {
+    const deletedSecret = { ...sampleSecret, deletedAt: new Date() };
+    mockGetDeletedSecrets.mockResolvedValue([deletedSecret]);
+    const result = await getDeletedSecrets();
+    expect(result.success).toBe(true);
+    if (result.success) {
+      expect(result.data).toHaveLength(1);
+    }
+  });
+
+  it("returns unauthorized when not authenticated", async () => {
+    vi.mocked(getScopedDB).mockResolvedValue(null);
+    const result = await getDeletedSecrets();
+    expect(result.success).toBe(false);
+    if (!result.success) expect(result.error).toBe("Unauthorized");
+  });
+
+  it("handles database errors gracefully", async () => {
+    mockGetDeletedSecrets.mockRejectedValue(new Error("DB error"));
+    const result = await getDeletedSecrets();
+    expect(result.success).toBe(false);
+    if (!result.success) expect(result.error).toBe("Failed to load deleted secrets");
+  });
+});
+
+describe("restoreSecret", () => {
+  it("restores secret successfully", async () => {
+    mockRestoreSecret.mockResolvedValue(sampleSecret);
+    const result = await restoreSecret("s_test_123");
+    expect(result.success).toBe(true);
+    if (result.success) expect(result.data.name).toBe("GitHub");
+  });
+
+  it("rejects empty ID", async () => {
+    const result = await restoreSecret("");
+    expect(result.success).toBe(false);
+    if (!result.success) expect(result.error).toBe("Secret ID is required");
+  });
+
+  it("returns error when not found in recycle bin", async () => {
+    mockRestoreSecret.mockResolvedValue(null);
+    const result = await restoreSecret("nonexistent");
+    expect(result.success).toBe(false);
+    if (!result.success) expect(result.error).toBe("Secret not found in recycle bin");
+  });
+
+  it("returns unauthorized when not authenticated", async () => {
+    vi.mocked(getScopedDB).mockResolvedValue(null);
+    const result = await restoreSecret("s_test_123");
+    expect(result.success).toBe(false);
+  });
+
+  it("handles database errors gracefully", async () => {
+    mockRestoreSecret.mockRejectedValue(new Error("DB error"));
+    const result = await restoreSecret("s_test_123");
+    expect(result.success).toBe(false);
+    if (!result.success) expect(result.error).toBe("Failed to restore secret");
+  });
+});
+
+describe("permanentDeleteSecret", () => {
+  it("permanently deletes secret", async () => {
+    mockPermanentDeleteSecret.mockResolvedValue(true);
+    const result = await permanentDeleteSecret("s_test_123");
+    expect(result.success).toBe(true);
+    expect(mockPermanentDeleteSecret).toHaveBeenCalledWith("s_test_123");
+  });
+
+  it("rejects empty ID", async () => {
+    const result = await permanentDeleteSecret("");
+    expect(result.success).toBe(false);
+    if (!result.success) expect(result.error).toBe("Secret ID is required");
+  });
+
+  it("returns unauthorized when not authenticated", async () => {
+    vi.mocked(getScopedDB).mockResolvedValue(null);
+    const result = await permanentDeleteSecret("s_test_123");
+    expect(result.success).toBe(false);
+  });
+
+  it("handles database errors gracefully", async () => {
+    mockPermanentDeleteSecret.mockRejectedValue(new Error("DB error"));
+    const result = await permanentDeleteSecret("s_test_123");
+    expect(result.success).toBe(false);
+    if (!result.success) expect(result.error).toBe("Failed to permanently delete secret");
+  });
+});
+
+describe("emptyRecycleBin", () => {
+  it("empties recycle bin and returns count", async () => {
+    mockEmptyRecycleBin.mockResolvedValue(5);
+    const result = await emptyRecycleBin();
+    expect(result.success).toBe(true);
+    if (result.success) expect(result.data).toBe(5);
+  });
+
+  it("returns unauthorized when not authenticated", async () => {
+    vi.mocked(getScopedDB).mockResolvedValue(null);
+    const result = await emptyRecycleBin();
+    expect(result.success).toBe(false);
+  });
+
+  it("handles database errors gracefully", async () => {
+    mockEmptyRecycleBin.mockRejectedValue(new Error("DB error"));
+    const result = await emptyRecycleBin();
+    expect(result.success).toBe(false);
+    if (!result.success) expect(result.error).toBe("Failed to empty recycle bin");
   });
 });

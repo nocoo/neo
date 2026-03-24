@@ -31,6 +31,7 @@ interface MockSecretRow {
   algorithm: string;
   counter: number;
   color?: string | null;
+  deleted_at?: number | null;
   created_at: number;
   updated_at: number;
 }
@@ -201,6 +202,7 @@ export class MockScopedDB {
       algorithm: row.algorithm as OtpAlgorithm,
       counter: row.counter,
       color: row.color ?? null,
+      deletedAt: row.deleted_at ? new Date(row.deleted_at * 1000) : null,
       createdAt: new Date(row.created_at * 1000),
       updatedAt: new Date(row.updated_at * 1000),
     };

@@ -150,13 +150,13 @@ describe("ScopedDB", () => {
   });
 
   describe("deleteSecret", () => {
-    it("deletes and returns true", async () => {
+    it("soft-deletes and returns true", async () => {
       mockExecuteD1Query.mockResolvedValue([]);
       const result = await db.deleteSecret("s1");
       expect(result).toBe(true);
       expect(mockExecuteD1Query).toHaveBeenCalledWith(
-        expect.stringContaining("DELETE FROM secrets WHERE id = ? AND user_id = ?"),
-        ["s1", userId]
+        expect.stringContaining("UPDATE secrets SET deleted_at = ?"),
+        expect.arrayContaining(["s1", userId])
       );
     });
   });
@@ -171,6 +171,81 @@ describe("ScopedDB", () => {
     it("returns 0 when no rows", async () => {
       mockExecuteD1Query.mockResolvedValue([]);
       const result = await db.getSecretCount();
+      expect(result).toBe(0);
+    });
+
+    it("filters out soft-deleted secrets", async () => {
+      mockExecuteD1Query.mockResolvedValue([{ count: 3 }]);
+      await db.getSecretCount();
+      expect(mockExecuteD1Query).toHaveBeenCalledWith(
+        expect.stringContaining("deleted_at IS NULL"),
+        [userId]
+      );
+    });
+  });
+
+  // ── Recycle Bin ──────────────────────────────────────────────────────────
+
+  describe("getDeletedSecrets", () => {
+    it("returns soft-deleted secrets", async () => {
+      mockExecuteD1Query.mockResolvedValue([{ id: "s1" }]);
+      const result = await db.getDeletedSecrets();
+      expect(result).toHaveLength(1);
+      expect(mockExecuteD1Query).toHaveBeenCalledWith(
+        expect.stringContaining("deleted_at IS NOT NULL"),
+        [userId]
+      );
+    });
+  });
+
+  describe("restoreSecret", () => {
+    it("restores and returns the secret", async () => {
+      mockExecuteD1Query.mockResolvedValue([{ id: "s1" }]);
+      const result = await db.restoreSecret("s1");
+      expect(result).toHaveProperty("_mapped", "secret");
+      expect(mockExecuteD1Query).toHaveBeenCalledWith(
+        expect.stringContaining("SET deleted_at = NULL"),
+        expect.arrayContaining(["s1", userId])
+      );
+    });
+
+    it("returns null when not found", async () => {
+      mockExecuteD1Query.mockResolvedValue([]);
+      const result = await db.restoreSecret("nonexistent");
+      expect(result).toBeNull();
+    });
+  });
+
+  describe("permanentDeleteSecret", () => {
+    it("permanently deletes from recycle bin", async () => {
+      mockExecuteD1Query.mockResolvedValue([]);
+      const result = await db.permanentDeleteSecret("s1");
+      expect(result).toBe(true);
+      expect(mockExecuteD1Query).toHaveBeenCalledWith(
+        expect.stringContaining("DELETE FROM secrets"),
+        ["s1", userId]
+      );
+      expect(mockExecuteD1Query).toHaveBeenCalledWith(
+        expect.stringContaining("deleted_at IS NOT NULL"),
+        ["s1", userId]
+      );
+    });
+  });
+
+  describe("emptyRecycleBin", () => {
+    it("deletes all soft-deleted secrets and returns count", async () => {
+      mockExecuteD1Query
+        .mockResolvedValueOnce([{ count: 3 }])
+        .mockResolvedValueOnce([]);
+      const result = await db.emptyRecycleBin();
+      expect(result).toBe(3);
+    });
+
+    it("returns 0 when bin is empty", async () => {
+      mockExecuteD1Query
+        .mockResolvedValueOnce([{ count: 0 }])
+        .mockResolvedValueOnce([]);
+      const result = await db.emptyRecycleBin();
       expect(result).toBe(0);
     });
   });

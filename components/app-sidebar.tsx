@@ -11,6 +11,7 @@ import {
   LogOut,
   PanelLeft,
   ChevronUp,
+  Trash2,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { VERSION } from "@/lib/version";
@@ -40,6 +41,7 @@ const NAV_GROUPS: NavGroup[] = [
     defaultOpen: true,
     items: [
       { href: "/dashboard", label: "Secrets", icon: Key },
+      { href: "/dashboard/recycle", label: "Recycle Bin", icon: Trash2 },
     ],
   },
   {

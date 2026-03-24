@@ -13,6 +13,7 @@ export type { SidebarUser };
 /** Route-to-title mapping for the dashboard header */
 const PAGE_TITLES: Record<string, string> = {
   "/dashboard": "Secrets",
+  "/dashboard/recycle": "Recycle Bin",
   "/dashboard/backup": "Backup",
   "/dashboard/tools": "Tools",
   "/dashboard/settings": "Settings",

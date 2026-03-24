@@ -73,6 +73,7 @@ export const secrets = sqliteTable("secrets", {
   algorithm: text("algorithm").notNull().default("SHA-1"),
   counter: integer("counter").notNull().default(0),
   color: text("color"),
+  deletedAt: integer("deleted_at", { mode: "timestamp" }),
   createdAt: integer("created_at", { mode: "timestamp" }).notNull(),
   updatedAt: integer("updated_at", { mode: "timestamp" }).notNull(),
 });

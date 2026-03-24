@@ -27,6 +27,7 @@ export interface Secret {
   algorithm: OtpAlgorithm;
   counter: number;
   color: string | null;
+  deletedAt: Date | null;
   createdAt: Date;
   updatedAt: Date;
 }

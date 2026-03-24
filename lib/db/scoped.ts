@@ -15,7 +15,7 @@ export class ScopedDB {
 
   async getSecrets(): Promise<Secret[]> {
     const rows = await executeD1Query<Record<string, unknown>>(
-      "SELECT * FROM secrets WHERE user_id = ? ORDER BY created_at DESC",
+      "SELECT * FROM secrets WHERE user_id = ? AND deleted_at IS NULL ORDER BY created_at DESC",
       [this.userId]
     );
     return rows.map(rowToSecret);
@@ -23,7 +23,7 @@ export class ScopedDB {
 
   async getSecretById(id: string): Promise<Secret | null> {
     const rows = await executeD1Query<Record<string, unknown>>(
-      "SELECT * FROM secrets WHERE id = ? AND user_id = ?",
+      "SELECT * FROM secrets WHERE id = ? AND user_id = ? AND deleted_at IS NULL",
       [id, this.userId]
     );
     return rows[0] ? rowToSecret(rows[0]) : null;
@@ -105,16 +105,55 @@ export class ScopedDB {
   }
 
   async deleteSecret(id: string): Promise<boolean> {
+    const now = Math.floor(Date.now() / 1000);
     await executeD1Query(
-      "DELETE FROM secrets WHERE id = ? AND user_id = ?",
+      "UPDATE secrets SET deleted_at = ?, updated_at = ? WHERE id = ? AND user_id = ? AND deleted_at IS NULL",
+      [now, now, id, this.userId]
+    );
+    return true;
+  }
+
+  async getDeletedSecrets(): Promise<Secret[]> {
+    const rows = await executeD1Query<Record<string, unknown>>(
+      "SELECT * FROM secrets WHERE user_id = ? AND deleted_at IS NOT NULL ORDER BY deleted_at DESC",
+      [this.userId]
+    );
+    return rows.map(rowToSecret);
+  }
+
+  async restoreSecret(id: string): Promise<Secret | null> {
+    const now = Math.floor(Date.now() / 1000);
+    const rows = await executeD1Query<Record<string, unknown>>(
+      "UPDATE secrets SET deleted_at = NULL, updated_at = ? WHERE id = ? AND user_id = ? AND deleted_at IS NOT NULL RETURNING *",
+      [now, id, this.userId]
+    );
+    return rows[0] ? rowToSecret(rows[0]) : null;
+  }
+
+  async permanentDeleteSecret(id: string): Promise<boolean> {
+    await executeD1Query(
+      "DELETE FROM secrets WHERE id = ? AND user_id = ? AND deleted_at IS NOT NULL",
       [id, this.userId]
     );
     return true;
   }
 
+  async emptyRecycleBin(): Promise<number> {
+    const countRows = await executeD1Query<{ count: number }>(
+      "SELECT COUNT(*) as count FROM secrets WHERE user_id = ? AND deleted_at IS NOT NULL",
+      [this.userId]
+    );
+    const count = countRows[0]?.count ?? 0;
+    await executeD1Query(
+      "DELETE FROM secrets WHERE user_id = ? AND deleted_at IS NOT NULL",
+      [this.userId]
+    );
+    return count;
+  }
+
   async getSecretCount(): Promise<number> {
     const rows = await executeD1Query<{ count: number }>(
-      "SELECT COUNT(*) as count FROM secrets WHERE user_id = ?",
+      "SELECT COUNT(*) as count FROM secrets WHERE user_id = ? AND deleted_at IS NULL",
       [this.userId]
     );
     return rows[0]?.count ?? 0;

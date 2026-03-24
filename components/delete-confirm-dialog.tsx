@@ -48,7 +48,7 @@ export function DeleteConfirmDialog({
           </div>
           <div>
             <h2 className="text-lg font-semibold">Delete Secret</h2>
-            <p className="text-sm text-muted-foreground">This action cannot be undone.</p>
+            <p className="text-sm text-muted-foreground">The secret will be moved to Recycle Bin.</p>
           </div>
         </div>
 

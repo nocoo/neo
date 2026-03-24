@@ -196,6 +196,80 @@ export async function deleteSecret(
 }
 
 /**
+ * List all soft-deleted secrets for the authenticated user (recycle bin).
+ */
+export async function getDeletedSecrets(): Promise<ActionResult<Secret[]>> {
+  try {
+    const db = await getScopedDB();
+    if (!db) return { success: false, error: "Unauthorized" };
+
+    const secrets = await db.getDeletedSecrets();
+    return { success: true, data: secrets };
+  } catch (error) {
+    console.error("Failed to get deleted secrets:", error);
+    return { success: false, error: "Failed to load deleted secrets" };
+  }
+}
+
+/**
+ * Restore a secret from the recycle bin.
+ */
+export async function restoreSecret(
+  id: string
+): Promise<ActionResult<Secret>> {
+  try {
+    const db = await getScopedDB();
+    if (!db) return { success: false, error: "Unauthorized" };
+
+    if (!id) return { success: false, error: "Secret ID is required" };
+
+    const secret = await db.restoreSecret(id);
+    if (!secret) return { success: false, error: "Secret not found in recycle bin" };
+
+    return { success: true, data: secret };
+  } catch (error) {
+    console.error("Failed to restore secret:", error);
+    return { success: false, error: "Failed to restore secret" };
+  }
+}
+
+/**
+ * Permanently delete a secret from the recycle bin.
+ */
+export async function permanentDeleteSecret(
+  id: string
+): Promise<ActionResult<void>> {
+  try {
+    const db = await getScopedDB();
+    if (!db) return { success: false, error: "Unauthorized" };
+
+    if (!id) return { success: false, error: "Secret ID is required" };
+
+    await db.permanentDeleteSecret(id);
+    return { success: true, data: undefined };
+  } catch (error) {
+    console.error("Failed to permanently delete secret:", error);
+    return { success: false, error: "Failed to permanently delete secret" };
+  }
+}
+
+/**
+ * Empty the recycle bin (permanently delete all soft-deleted secrets).
+ */
+export async function emptyRecycleBin(): Promise<ActionResult<number>> {
+  try {
+    const db = await getScopedDB();
+    if (!db) return { success: false, error: "Unauthorized" };
+
+    const count = await db.emptyRecycleBin();
+    return { success: true, data: count };
+  } catch (error) {
+    console.error("Failed to empty recycle bin:", error);
+    return { success: false, error: "Failed to empty recycle bin" };
+  }
+}
+
+/**
  * Get the total count of secrets.
  */
 export async function getSecretCount(): Promise<ActionResult<number>> {

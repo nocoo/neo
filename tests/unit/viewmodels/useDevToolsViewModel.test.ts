@@ -64,6 +64,7 @@ const sampleSecret: Secret = {
   algorithm: "SHA-1",
   counter: 0,
   color: null,
+  deletedAt: null,
   createdAt: new Date(),
   updatedAt: new Date(),
 };
