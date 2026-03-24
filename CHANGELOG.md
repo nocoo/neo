@@ -2,6 +2,31 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.2.3] - 2026-03-24
+
+Recycle bin for soft-deleted secrets and Cmd+K search focus.
+
+### Added
+
+- **Recycle Bin** — soft-delete secrets instead of hard-delete; new `/dashboard/recycle` page with restore and permanent-delete actions
+- **Cmd+K shortcut** — global keyboard shortcut to focus the search input on Secrets page, with visual `⌘K` badge
+- **`useHotkey` hook** — reusable lightweight keyboard shortcut hook supporting Cmd (Mac) / Ctrl
+- Database migration `0002_recycle_bin.sql` adding `deleted_at` column to secrets table
+- Recycle Bin nav entry in sidebar under "Secret" group
+- `useRecycleBinViewModel` following existing MVVM pattern
+- Server actions: `getDeletedSecrets`, `restoreSecret`, `permanentDeleteSecret`, `emptyRecycleBin`
+
+### Changed
+
+- Delete confirmation dialog text updated from "This action cannot be undone" to "The secret will be moved to Recycle Bin"
+- `ScopedDB.deleteSecret()` now performs soft-delete (`UPDATE SET deleted_at`) instead of hard `DELETE`
+- All existing secret queries filter `deleted_at IS NULL` automatically
+
+### Test Coverage
+
+- **50 test files**, **976 Vitest tests** passing
+- Added recycle bin viewmodel tests, server action tests, and ScopedDB recycle bin method tests
+
 ## [0.2.2] - 2026-03-23
 
 Quality system upgrade to six-dimension architecture (L1/L2/L3 + G1/G2 + D1).
