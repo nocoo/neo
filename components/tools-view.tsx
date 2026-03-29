@@ -53,7 +53,7 @@ export function ToolsView() {
       {/* Tool cards */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
         {/* Import */}
-        <div className="rounded-lg border border-border bg-card p-6 space-y-3">
+        <div className="rounded-card bg-secondary p-6 space-y-3">
           <div className="flex items-center gap-2">
             <Upload className="h-5 w-5 text-primary" />
             <h2 className="text-lg font-medium">Import</h2>
@@ -67,7 +67,7 @@ export function ToolsView() {
         </div>
 
         {/* Export */}
-        <div className="rounded-lg border border-border bg-card p-6 space-y-3">
+        <div className="rounded-card bg-secondary p-6 space-y-3">
           <div className="flex items-center gap-2">
             <Download className="h-5 w-5 text-primary" />
             <h2 className="text-lg font-medium">Export</h2>
@@ -81,7 +81,7 @@ export function ToolsView() {
         </div>
 
         {/* OTP Tester */}
-        <div className="rounded-lg border border-border bg-card p-6 space-y-3">
+        <div className="rounded-card bg-secondary p-6 space-y-3">
           <div className="flex items-center gap-2">
             <TestTube className="h-5 w-5 text-primary" />
             <h2 className="text-lg font-medium">OTP Tester</h2>
@@ -125,7 +125,7 @@ export function ToolsView() {
             </Button>
             {devTools.otpTestResult && (
               <div className="text-center">
-                <span className="font-mono text-2xl font-bold tracking-widest" data-testid="otp-test-result">
+                <span className="font-display font-mono text-2xl font-bold tracking-widest" data-testid="otp-test-result">
                   {devTools.otpTestResult}
                 </span>
               </div>

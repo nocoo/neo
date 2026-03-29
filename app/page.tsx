@@ -69,7 +69,7 @@ export default async function Home({
         }}
       />
 
-      <div className="flex flex-col items-center">
+      <div className="flex flex-col items-center animate-fade-up">
         {/* Badge card — bank card flipped vertical: 54/86 */}
         <div
           className="relative aspect-[54/86] w-72 overflow-hidden rounded-2xl bg-card flex flex-col ring-1 ring-black/[0.08] dark:ring-white/[0.06]"

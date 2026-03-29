@@ -152,7 +152,7 @@ export function SecretCard({ secret, otp, onEdit, onDelete }: SecretCardProps) {
           {/* Bottom: large OTP code */}
           {otp && (
             <div className="mt-auto pt-2">
-              <div className="font-mono text-2xl font-bold tracking-widest tabular-nums leading-tight">
+              <div className="font-display font-mono text-2xl font-bold tracking-widest tabular-nums leading-tight">
                 {otp.otp}
               </div>
               {/* Timer bar */}

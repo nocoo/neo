@@ -59,7 +59,7 @@ export function PwaInstallPrompt() {
 
   return (
     <div
-      className="fixed bottom-4 left-4 right-4 z-50 mx-auto max-w-md rounded-lg border border-border bg-card p-4 shadow-lg"
+      className="fixed bottom-4 left-4 right-4 z-50 mx-auto max-w-md rounded-card bg-secondary p-4"
       role="banner"
       data-testid="pwa-install-prompt"
     >

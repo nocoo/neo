@@ -85,7 +85,7 @@ export function SettingsView() {
       )}
 
       {/* Encryption Key Management */}
-      <div className="rounded-lg border border-border bg-card p-6">
+      <div className="rounded-card bg-secondary p-6">
         <div className="flex items-center gap-2 mb-4">
           <Shield className="h-5 w-5 text-primary" />
           <h2 className="text-lg font-medium">Encryption Key</h2>
@@ -181,7 +181,7 @@ export function SettingsView() {
       </div>
 
       {/* Backy Configuration */}
-      <div className="rounded-lg border border-border bg-card p-6">
+      <div className="rounded-card bg-secondary p-6">
         <div className="flex items-center gap-2 mb-4">
           <Link className="h-5 w-5 text-primary" />
           <h2 className="text-lg font-medium">Backy Integration</h2>

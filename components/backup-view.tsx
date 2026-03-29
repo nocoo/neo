@@ -117,7 +117,7 @@ export function BackupView() {
       )}
 
       {/* Create & Download */}
-      <div className="rounded-lg border border-border bg-card p-6">
+      <div className="rounded-card bg-secondary p-6">
         <div className="flex items-center gap-2 mb-4">
           <Archive className="h-5 w-5 text-primary" />
           <h2 className="text-lg font-medium">Create & Download</h2>
@@ -137,7 +137,7 @@ export function BackupView() {
       </div>
 
       {/* Push to Backy */}
-      <div className="rounded-lg border border-border bg-card p-6">
+      <div className="rounded-card bg-secondary p-6">
         <div className="flex items-center gap-2 mb-4">
           <Send className="h-5 w-5 text-primary" />
           <h2 className="text-lg font-medium">Push to Backy</h2>
@@ -216,7 +216,7 @@ export function BackupView() {
       </div>
 
       {/* Restore */}
-      <div className="rounded-lg border border-border bg-card p-6">
+      <div className="rounded-card bg-secondary p-6">
         <div className="flex items-center gap-2 mb-4">
           <Upload className="h-5 w-5 text-primary" />
           <h2 className="text-lg font-medium">Restore from Backup</h2>

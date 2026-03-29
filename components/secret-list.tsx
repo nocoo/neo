@@ -42,10 +42,15 @@ export function SecretList({
           role="list"
           aria-label="Secrets list"
         >
-          {secrets.map((secret) => {
+          {secrets.map((secret, index) => {
             const otp = otpMap.get(secret.id);
             return (
-              <div key={secret.id} role="listitem">
+              <div
+                key={secret.id}
+                role="listitem"
+                className="animate-fade-up"
+                style={{ animationDelay: `${index * 50}ms` }}
+              >
                 <SecretCard
                   secret={secret}
                   {...(otp ? { otp } : {})}
