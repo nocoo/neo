@@ -1,12 +1,13 @@
 "use client";
 
 import { usePathname } from "next/navigation";
-import { AppSidebar } from "@/components/app-sidebar";
+import { Sidebar } from "@/components/sidebar";
+import { Breadcrumbs, type BreadcrumbItem } from "@/components/breadcrumbs";
 import { ThemeToggle } from "@/components/theme-toggle";
-import { useDashboardLayoutViewModel } from "@/viewmodels/useDashboardLayoutViewModel";
+import { SidebarProvider, useSidebar } from "@/components/sidebar-context";
 import { Menu, Github } from "lucide-react";
 import { cn } from "@/lib/utils";
-import type { SidebarUser } from "@/components/app-sidebar";
+import type { SidebarUser } from "@/components/sidebar";
 
 export type { SidebarUser };
 
@@ -19,46 +20,46 @@ const PAGE_TITLES: Record<string, string> = {
   "/dashboard/settings": "Settings",
 };
 
-function usePageTitle(): string {
+function usePageBreadcrumbs(): BreadcrumbItem[] {
   const pathname = usePathname();
-  return PAGE_TITLES[pathname] ?? "Secrets";
+  const title = PAGE_TITLES[pathname] ?? "Secrets";
+
+  // Root dashboard page — single breadcrumb
+  if (pathname === "/dashboard") {
+    return [{ label: title }];
+  }
+
+  // Sub-pages — Home → Current
+  return [
+    { label: "Home", href: "/dashboard" },
+    { label: title },
+  ];
 }
 
-export function DashboardShell({
+function AppShellInner({
   children,
   user,
 }: {
   children: React.ReactNode;
   user: SidebarUser;
 }) {
-  const { collapsed, isMobile, mobileOpen, toggleSidebar, closeMobileSidebar } =
-    useDashboardLayoutViewModel();
-  const pageTitle = usePageTitle();
+  const { isMobile, mobileOpen, toggle, setMobileOpen } = useSidebar();
+  const breadcrumbs = usePageBreadcrumbs();
 
   return (
     <div className="flex min-h-screen w-full bg-background">
       {/* Desktop sidebar */}
-      {!isMobile && (
-        <AppSidebar
-          collapsed={collapsed}
-          onToggle={toggleSidebar}
-          user={user}
-        />
-      )}
+      {!isMobile && <Sidebar user={user} />}
 
       {/* Mobile overlay + sidebar */}
       {isMobile && mobileOpen && (
         <>
           <div
             className="fixed inset-0 z-40 bg-black/50 backdrop-blur-xs"
-            onClick={closeMobileSidebar}
+            onClick={() => setMobileOpen(false)}
           />
           <div className="fixed inset-y-0 left-0 z-50 w-[260px]">
-            <AppSidebar
-              collapsed={false}
-              onToggle={closeMobileSidebar}
-              user={user}
-            />
+            <Sidebar user={user} />
           </div>
         </>
       )}
@@ -69,16 +70,14 @@ export function DashboardShell({
           <div className="flex items-center gap-3">
             {isMobile && (
               <button
-                onClick={toggleSidebar}
+                onClick={toggle}
                 aria-label="Open menu"
                 className="flex h-8 w-8 items-center justify-center rounded-lg text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"
               >
                 <Menu className="h-5 w-5" strokeWidth={1.5} />
               </button>
             )}
-            <h1 className="text-lg md:text-xl font-semibold text-foreground">
-              {pageTitle}
-            </h1>
+            <Breadcrumbs items={breadcrumbs} />
           </div>
           <div className="flex items-center gap-1">
             <a
@@ -86,7 +85,7 @@ export function DashboardShell({
               target="_blank"
               rel="noopener noreferrer"
               className="flex h-8 w-8 items-center justify-center rounded-lg text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"
-              title="GitHub"
+              aria-label="GitHub repository"
             >
               <Github className="h-[18px] w-[18px]" strokeWidth={1.5} />
             </a>
@@ -94,13 +93,27 @@ export function DashboardShell({
           </div>
         </header>
 
-        {/* Content panel — rounded island */}
+        {/* Content panel */}
         <div className={cn("flex-1 px-2 pb-2 md:px-3 md:pb-3")}>
-          <div className="h-full rounded-island bg-card p-3 md:p-5 overflow-y-auto">
+          <div className="h-full rounded-[16px] md:rounded-[20px] bg-card p-3 md:p-5 overflow-y-auto">
             {children}
           </div>
         </div>
       </main>
     </div>
+  );
+}
+
+export function AppShell({
+  children,
+  user,
+}: {
+  children: React.ReactNode;
+  user: SidebarUser;
+}) {
+  return (
+    <SidebarProvider>
+      <AppShellInner user={user}>{children}</AppShellInner>
+    </SidebarProvider>
   );
 }

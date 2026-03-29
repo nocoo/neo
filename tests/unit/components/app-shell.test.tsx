@@ -1,5 +1,5 @@
 /**
- * DashboardShell component tests.
+ * AppShell component tests.
  */
 
 import { describe, it, expect, vi, beforeEach } from "vitest";
@@ -50,7 +50,7 @@ beforeEach(() => {
   Object.defineProperty(window, "innerWidth", { writable: true, value: 1024 });
 });
 
-import { DashboardShell } from "@/components/dashboard-shell";
+import { AppShell } from "@/components/app-shell";
 
 const defaultUser = {
   name: "Test User",
@@ -60,41 +60,43 @@ const defaultUser = {
 
 // ── Tests ────────────────────────────────────────────────────────────────
 
-describe("DashboardShell", () => {
-  it("renders header with page title", () => {
-    render(<DashboardShell user={defaultUser}><div>content</div></DashboardShell>);
-    const heading = screen.getByRole("heading", { level: 1 });
-    expect(heading.textContent).toBe("Secrets");
+describe("AppShell", () => {
+  it("renders breadcrumb with page title", () => {
+    render(<AppShell user={defaultUser}><div>content</div></AppShell>);
+    const breadcrumbNav = screen.getByLabelText("Breadcrumb");
+    expect(breadcrumbNav).toBeDefined();
+    expect(breadcrumbNav.textContent).toContain("Secrets");
   });
 
-  it("renders correct title for backup page", () => {
+  it("renders breadcrumbs with Home link for sub-pages", () => {
     mockPathname.mockReturnValue("/dashboard/backup");
-    render(<DashboardShell user={defaultUser}><div>content</div></DashboardShell>);
-    const heading = screen.getByRole("heading", { level: 1 });
-    expect(heading.textContent).toBe("Backup");
+    render(<AppShell user={defaultUser}><div>content</div></AppShell>);
+    const breadcrumbNav = screen.getByLabelText("Breadcrumb");
+    expect(breadcrumbNav.textContent).toContain("Home");
+    expect(breadcrumbNav.textContent).toContain("Backup");
   });
 
-  it("renders GitHub link in header", () => {
-    render(<DashboardShell user={defaultUser}><div>content</div></DashboardShell>);
-    const githubLink = screen.getByTitle("GitHub");
+  it("renders GitHub link with aria-label", () => {
+    render(<AppShell user={defaultUser}><div>content</div></AppShell>);
+    const githubLink = screen.getByLabelText("GitHub repository");
     expect(githubLink).toBeDefined();
     expect(githubLink.getAttribute("href")).toBe("https://github.com/nocoo/neo");
     expect(githubLink.getAttribute("target")).toBe("_blank");
   });
 
   it("renders ThemeToggle in header", () => {
-    render(<DashboardShell user={defaultUser}><div>content</div></DashboardShell>);
+    render(<AppShell user={defaultUser}><div>content</div></AppShell>);
     expect(screen.getByLabelText("Toggle theme")).toBeDefined();
   });
 
   it("renders children in content area", () => {
-    render(<DashboardShell user={defaultUser}><div data-testid="child">hello</div></DashboardShell>);
+    render(<AppShell user={defaultUser}><div data-testid="child">hello</div></AppShell>);
     expect(screen.getByTestId("child")).toBeDefined();
     expect(screen.getByText("hello")).toBeDefined();
   });
 
   it("renders sidebar with user info", () => {
-    render(<DashboardShell user={defaultUser}><div>content</div></DashboardShell>);
+    render(<AppShell user={defaultUser}><div>content</div></AppShell>);
     expect(screen.getByText("Test User")).toBeDefined();
     expect(screen.getByText("test@example.com")).toBeDefined();
   });

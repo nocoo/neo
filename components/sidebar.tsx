@@ -1,0 +1,291 @@
+"use client";
+
+import { useState } from "react";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
+import {
+  Key,
+  Archive,
+  Wrench,
+  Settings,
+  LogOut,
+  PanelLeft,
+  ChevronUp,
+  Trash2,
+} from "lucide-react";
+import { cn } from "@/lib/utils";
+import { VERSION } from "@/lib/version";
+import { handleSignOut } from "@/actions/auth";
+import { useSidebar } from "@/components/sidebar-context";
+import {
+  Collapsible,
+  CollapsibleTrigger,
+} from "@/components/ui/collapsible";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
+
+// ── Navigation data model ──
+
+interface NavItem {
+  href: string;
+  label: string;
+  icon: React.ElementType;
+}
+
+interface NavGroup {
+  label: string;
+  items: NavItem[];
+  defaultOpen?: boolean;
+}
+
+const NAV_GROUPS: NavGroup[] = [
+  {
+    label: "Secret",
+    defaultOpen: true,
+    items: [
+      { href: "/dashboard", label: "Secrets", icon: Key },
+      { href: "/dashboard/recycle", label: "Recycle Bin", icon: Trash2 },
+    ],
+  },
+  {
+    label: "Backup",
+    defaultOpen: true,
+    items: [
+      { href: "/dashboard/backup", label: "Backup", icon: Archive },
+    ],
+  },
+  {
+    label: "Settings",
+    defaultOpen: true,
+    items: [
+      { href: "/dashboard/tools", label: "Tools", icon: Wrench },
+      { href: "/dashboard/settings", label: "Settings", icon: Settings },
+    ],
+  },
+];
+
+const ALL_NAV_ITEMS = NAV_GROUPS.flatMap((g) => g.items);
+
+export interface SidebarUser {
+  name: string | null;
+  email: string | null;
+  image: string | null;
+}
+
+// ── Sub-components ──
+
+function NavGroupSection({
+  group,
+  isActive,
+}: {
+  group: NavGroup;
+  isActive: (href: string) => boolean;
+}) {
+  const [open, setOpen] = useState(group.defaultOpen ?? true);
+
+  return (
+    <Collapsible open={open} onOpenChange={setOpen}>
+      <div className="px-3 mt-2">
+        <CollapsibleTrigger className="flex w-full items-center justify-between px-3 py-2.5 cursor-pointer">
+          <span className="text-xs font-medium uppercase tracking-wider text-muted-foreground/70">
+            {group.label}
+          </span>
+          <span className="flex h-7 w-7 shrink-0 items-center justify-center">
+            <ChevronUp
+              className={cn(
+                "h-4 w-4 text-muted-foreground transition-transform duration-200",
+                !open && "rotate-180",
+              )}
+              strokeWidth={1.5}
+            />
+          </span>
+        </CollapsibleTrigger>
+      </div>
+      <div
+        className="grid overflow-hidden"
+        style={{
+          gridTemplateRows: open ? "1fr" : "0fr",
+          transition: "grid-template-rows 200ms ease-out",
+        }}
+      >
+        <div className="min-h-0 overflow-hidden">
+          <div className="flex flex-col gap-0.5 px-3">
+            {group.items.map((item) => (
+              <Link
+                key={item.href}
+                href={item.href}
+                className={cn(
+                  "flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-normal transition-colors",
+                  isActive(item.href)
+                    ? "bg-accent text-foreground"
+                    : "text-muted-foreground hover:bg-accent hover:text-foreground",
+                )}
+              >
+                <item.icon className="h-4 w-4 shrink-0" strokeWidth={1.5} />
+                <span className="flex-1 text-left">{item.label}</span>
+              </Link>
+            ))}
+          </div>
+        </div>
+      </div>
+    </Collapsible>
+  );
+}
+
+// ── Main sidebar component ──
+
+export function Sidebar({ user }: { user: SidebarUser }) {
+  const { collapsed, toggle } = useSidebar();
+  const pathname = usePathname();
+
+  const initials = user.name
+    ? user.name
+        .split(" ")
+        .map((n) => n[0])
+        .join("")
+        .toUpperCase()
+        .slice(0, 2)
+    : "U";
+
+  function isActive(href: string): boolean {
+    return href === "/dashboard"
+      ? pathname === "/dashboard"
+      : pathname.startsWith(href);
+  }
+
+  // ── Avatar (shared between collapsed/expanded) ──
+  const userAvatar = (
+    <Avatar className="h-9 w-9">
+      {user.image && <AvatarImage src={user.image} alt={user.name ?? "User"} />}
+      <AvatarFallback className="bg-accent text-xs font-medium text-accent-foreground">
+        {initials}
+      </AvatarFallback>
+    </Avatar>
+  );
+
+  return (
+    <TooltipProvider delayDuration={0}>
+      <aside
+        className={`sticky top-0 flex h-screen shrink-0 flex-col bg-background overflow-hidden transition-[width] duration-300 ease-in-out ${collapsed ? "w-[68px]" : "w-[260px]"}`}
+      >
+        {/* ── Header / Logo ── */}
+        <div className="h-14 flex items-center pl-[22px] pr-3 shrink-0">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/logo-24.png" alt="Neo" className="h-6 w-6 shrink-0" />
+          {!collapsed && (
+            <div className="flex items-center justify-between flex-1 min-w-0 ml-3">
+              <div className="flex items-center gap-3">
+                <span className="text-lg font-semibold text-foreground whitespace-nowrap">
+                  neo.
+                </span>
+                <span className="rounded-md bg-secondary px-1.5 py-0.5 text-[10px] font-medium text-muted-foreground leading-none whitespace-nowrap">
+                  v{VERSION}
+                </span>
+              </div>
+              <button
+                onClick={toggle}
+                aria-label="Collapse sidebar"
+                className="flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground hover:text-foreground transition-colors shrink-0"
+              >
+                <PanelLeft className="h-4 w-4" strokeWidth={1.5} />
+              </button>
+            </div>
+          )}
+        </div>
+
+        {/* ── Expand toggle (collapsed only) ── */}
+        {collapsed && (
+          <div className="flex justify-center shrink-0 mb-2">
+            <button
+              onClick={toggle}
+              aria-label="Expand sidebar"
+              className="flex h-10 w-10 items-center justify-center rounded-lg text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"
+            >
+              <PanelLeft className="h-4 w-4" strokeWidth={1.5} />
+            </button>
+          </div>
+        )}
+
+        {/* ── Navigation ── */}
+        <nav className="flex-1 overflow-y-auto pt-1">
+          {collapsed ? (
+            <div className="flex flex-col items-center gap-1">
+              {ALL_NAV_ITEMS.map((item) => (
+                <Tooltip key={item.href}>
+                  <TooltipTrigger asChild>
+                    <Link
+                      href={item.href}
+                      className={cn(
+                        "relative flex h-10 w-10 items-center justify-center rounded-lg transition-colors",
+                        isActive(item.href)
+                          ? "bg-accent text-foreground"
+                          : "text-muted-foreground hover:bg-accent hover:text-foreground",
+                      )}
+                    >
+                      <item.icon className="h-4 w-4" strokeWidth={1.5} />
+                    </Link>
+                  </TooltipTrigger>
+                  <TooltipContent side="right" sideOffset={8}>
+                    {item.label}
+                  </TooltipContent>
+                </Tooltip>
+              ))}
+            </div>
+          ) : (
+            NAV_GROUPS.map((group) => (
+              <NavGroupSection
+                key={group.label}
+                group={group}
+                isActive={isActive}
+              />
+            ))
+          )}
+        </nav>
+
+        {/* ── User section ── */}
+        <div
+          className={cn(
+            "py-3 shrink-0",
+            collapsed ? "px-0" : "px-4",
+          )}
+        >
+          <div
+            className={cn(
+              "flex items-center",
+              collapsed ? "justify-center" : "gap-3",
+            )}
+          >
+            {userAvatar}
+            {!collapsed && (
+              <>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium text-foreground truncate">
+                    {user.name ?? "User"}
+                  </p>
+                  <p className="text-xs text-muted-foreground truncate">
+                    {user.email ?? ""}
+                  </p>
+                </div>
+                <form action={handleSignOut}>
+                  <button
+                    type="submit"
+                    aria-label="Sign out"
+                    className="flex h-8 w-8 items-center justify-center rounded-lg text-muted-foreground hover:text-foreground hover:bg-accent transition-colors shrink-0 cursor-pointer"
+                    title="Sign out"
+                  >
+                    <LogOut className="h-4 w-4" strokeWidth={1.5} />
+                  </button>
+                </form>
+              </>
+            )}
+          </div>
+        </div>
+      </aside>
+    </TooltipProvider>
+  );
+}

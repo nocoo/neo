@@ -1,4 +1,4 @@
-import { DashboardShell } from "@/components/dashboard-shell";
+import { AppShell } from "@/components/app-shell";
 import { auth } from "@/auth";
 import { redirect } from "next/navigation";
 
@@ -18,5 +18,5 @@ export default async function DashboardLayout({
     image: session.user.image ?? null,
   };
 
-  return <DashboardShell user={user}>{children}</DashboardShell>;
+  return <AppShell user={user}>{children}</AppShell>;
 }
