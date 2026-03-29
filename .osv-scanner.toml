@@ -1,3 +1,7 @@
 [[IgnoredVulns]]
 id = "GHSA-5f7q-jpqc-wp7h"
 reason = "Requires next@canary (15.6.0-canary.61+), not suitable for production. Medium severity (5.9). Will fix when stable release is available."
+
+[[IgnoredVulns]]
+id = "GHSA-f886-m6hf-6m8v"
+reason = "brace-expansion ReDoS via zero-step (Medium 6.5). Transitive dep of minimatch/glob, no untrusted input passed. Fixed versions (1.1.13/2.0.3) unavailable via override without breaking ESM compat. Will resolve when parent packages update."
