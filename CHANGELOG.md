@@ -2,6 +2,51 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.2.6] - 2026-03-30
+
+Playwright auth fix and full six-dimension quality verification.
+
+### Fixed
+
+- **Playwright auth setup** — previous setup silently skipped login because the custom sign-in page (`/`) only renders the Google OAuth button; now POSTs directly to the NextAuth credentials callback endpoint to obtain the JWT session cookie
+
+### Test Coverage
+
+- **49 test files**, **939 Vitest tests** passing
+- **34 API E2E tests**, **40 Playwright E2E tests** — all passing
+- Six-dimension quality gate: L1 ✅ L2 ✅ L3 ✅ G1 ✅ G2 ✅ D1 ✅ (**Tier S**)
+
+## [0.2.5] - 2026-03-29
+
+Bug fixes, dependency security patches, and UI polish.
+
+### Fixed
+
+- **ESM build breakage** — reverted `brace-expansion` override that caused `ERR_PACKAGE_PATH_NOT_EXPORTED` at build time
+- **8 dependency CVEs** — resolved via targeted `overrides` in package.json (cookie, esbuild, picomatch, yaml)
+- **Content page UI violations** — fixed B-4 spec issues across 13 files (page layouts, component consistency)
+
+### Changed
+
+- Removed dead `rounded-island` CSS variable and unused Tailwind `extend` entry
+
+## [0.2.4] - 2026-03-29
+
+Dashboard architecture overhaul and test isolation infrastructure.
+
+### Added
+
+- **D1 test isolation guards** — `d1-test-guard.ts` with `_test_marker` table validation, URL inequality check, and `verify-test-bindings.ts` pre-flight script (5 files, 390 lines)
+- **README rewrite** — aligned with personal project documentation standard
+
+### Changed
+
+- **Gen 2 context architecture** — upgraded dashboard from prop-drilling to React Context pattern (B-2 spec); 13 files refactored, 662 insertions / 404 deletions
+
+### Test Coverage
+
+- **49 test files**, **939 Vitest tests** passing
+
 ## [0.2.3] - 2026-03-24
 
 Recycle bin for soft-deleted secrets and Cmd+K search focus.
