@@ -2,6 +2,18 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.2.7] - 2026-03-30
+
+Keyboard navigation for secret cards.
+
+### Added
+
+- **Keyboard navigation for secret cards** — Arrow keys navigate the card grid from the search input (`⌘K`), Enter/Space copies OTP with flip animation, Escape returns to search. Column count adapts to responsive layout via ResizeObserver.
+
+### Fixed
+
+- **Selected card ring color** — keyboard-selected cards now use the theme purple ring (`ring-ring`) consistent with search input focus style, instead of white
+
 ## [0.2.6] - 2026-03-30
 
 Playwright auth fix and full six-dimension quality verification.
