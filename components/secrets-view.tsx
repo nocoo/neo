@@ -5,7 +5,7 @@
  * with all the presentation components.
  */
 
-import { useState, useCallback, useRef } from "react";
+import { useState, useCallback, useRef, useEffect } from "react";
 import { Plus, Upload, Download, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { SecretList } from "@/components/secret-list";
@@ -34,6 +34,35 @@ export function SecretsView() {
   const [deletingSecret, setDeletingSecret] = useState<Secret | null>(null);
   const [showImport, setShowImport] = useState(false);
   const [showExport, setShowExport] = useState(false);
+
+  // Keyboard navigation state
+  const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
+
+  // Reset selection when search query changes
+  useEffect(() => {
+    setSelectedIndex(null);
+  }, [vm.searchQuery]);
+
+  const handleFocusSearch = useCallback(() => {
+    searchRef.current?.focus();
+  }, []);
+
+  const handleSearchKeyDown = useCallback(
+    (e: React.KeyboardEvent<HTMLInputElement>) => {
+      if (e.key === "ArrowDown") {
+        e.preventDefault();
+        if (vm.filteredSecrets.length > 0) {
+          setSelectedIndex(0);
+          searchRef.current?.blur();
+        }
+      } else if (e.key === "Escape") {
+        e.preventDefault();
+        vm.setSearchQuery("");
+        searchRef.current?.blur();
+      }
+    },
+    [vm],
+  );
 
   // ── Handlers ──────────────────────────────────────────────────────────
 
@@ -67,6 +96,7 @@ export function SecretsView() {
             placeholder="Search secrets..."
             value={vm.searchQuery}
             onChange={(e) => vm.setSearchQuery(e.target.value)}
+            onKeyDown={handleSearchKeyDown}
             className="w-full rounded-lg border border-input bg-background py-2 pl-10 pr-14 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
             aria-label="Search secrets"
           />
@@ -105,6 +135,9 @@ export function SecretsView() {
         otpMap={vm.otpMap}
         onEdit={handleEdit}
         onDelete={handleDeleteRequest}
+        selectedIndex={selectedIndex}
+        onSelectedIndexChange={setSelectedIndex}
+        onFocusSearch={handleFocusSearch}
       />
 
       {/* Dialogs */}

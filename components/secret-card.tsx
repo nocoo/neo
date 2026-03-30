@@ -7,7 +7,7 @@
  * Supports colored backgrounds via user-defined color or deterministic hash.
  */
 
-import { useState, useCallback, useMemo } from "react";
+import { useState, useCallback, useMemo, useEffect, useRef } from "react";
 import { Pencil, Trash2, ClipboardCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -77,12 +77,17 @@ export interface SecretCardProps {
   otp?: OtpResult;
   onEdit?: (secret: Secret) => void;
   onDelete?: (id: string) => void;
+  /** Whether this card is keyboard-selected (shows ring highlight). */
+  selected?: boolean;
+  /** Incrementing number — each change triggers the copy/flip animation. */
+  copyTrigger?: number;
 }
 
 // ── Component ────────────────────────────────────────────────────────────
 
-export function SecretCard({ secret, otp, onEdit, onDelete }: SecretCardProps) {
+export function SecretCard({ secret, otp, onEdit, onDelete, selected, copyTrigger }: SecretCardProps) {
   const [flipped, setFlipped] = useState(false);
+  const prevCopyTrigger = useRef(copyTrigger ?? 0);
 
   const theme = useMemo(() => {
     if (secret.color) {
@@ -105,13 +110,24 @@ export function SecretCard({ secret, otp, onEdit, onDelete }: SecretCardProps) {
     }
   }, [otp?.otp, flipped]);
 
+  // Programmatic copy via copyTrigger prop
+  useEffect(() => {
+    if (copyTrigger !== undefined && copyTrigger !== prevCopyTrigger.current) {
+      prevCopyTrigger.current = copyTrigger;
+      handleCopy();
+    }
+  }, [copyTrigger, handleCopy]);
+
   const progressPercent = otp
     ? ((otp.period - otp.remainingSeconds) / otp.period) * 100
     : 0;
 
   return (
     <div
-      className="cursor-pointer"
+      className={cn(
+        "cursor-pointer rounded-2xl transition-shadow",
+        selected && "ring-2 ring-white/80 ring-offset-2 ring-offset-background",
+      )}
       style={{ perspective: "800px" }}
       data-testid={`secret-card-${secret.id}`}
       onClick={handleCopy}
