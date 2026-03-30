@@ -12,7 +12,7 @@
 import { $ } from "bun";
 import { rmSync } from "fs";
 
-const E2E_PORT = 17024;
+const E2E_PORT = 17026;
 const BASE_URL = `http://localhost:${E2E_PORT}`;
 const NEXT_DIST_DIR = ".next-e2e";
 const MAX_WAIT_MS = 30_000;

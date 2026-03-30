@@ -10,7 +10,7 @@ export default defineConfig({
   outputDir: "test-results",
 
   use: {
-    baseURL: "http://localhost:27042",
+    baseURL: "http://localhost:27026",
     trace: "on-first-retry",
     screenshot: "only-on-failure",
   },
@@ -31,8 +31,8 @@ export default defineConfig({
   ],
 
   webServer: {
-    command: "PLAYWRIGHT=1 ALLOWED_EMAILS=e2e@test.local bun run dev -- -p 27042",
-    url: "http://localhost:27042",
+    command: "PLAYWRIGHT=1 ALLOWED_EMAILS=e2e@test.local bun run dev -- -p 27026",
+    url: "http://localhost:27026",
     reuseExistingServer: !process.env.CI,
     timeout: 120000,
   },

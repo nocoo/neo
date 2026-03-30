@@ -177,7 +177,7 @@ Encrypted backup system overhaul, UI polish, and deployment hardening.
 - Sidebar footer aligned with basalt design pattern
 - Login page aligned with basalt badge card design
 - ThemeToggle converted to 3-state cycling (system/light/dark)
-- Dev port changed from 7021 to 7042
+- Dev port changed from 7021 to 7042, then to 7026
 
 ### Fixed
 

@@ -7,7 +7,7 @@
 
 import { describe, it, expect, beforeEach } from "bun:test";
 
-const BASE = process.env.E2E_BASE_URL ?? "http://localhost:17024";
+const BASE = process.env.E2E_BASE_URL ?? "http://localhost:17026";
 const SETTINGS_URL = `${BASE}/api/e2e/settings`;
 const DASHBOARD_URL = `${BASE}/api/e2e/dashboard`;
 const SECRETS_URL = `${BASE}/api/e2e/secrets`;

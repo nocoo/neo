@@ -147,7 +147,7 @@ export default async function Home({
                 const host =
                   h.get("x-forwarded-host") ||
                   h.get("host") ||
-                  "localhost:7042";
+                  "localhost:7026";
                 const path =
                   callbackUrl && callbackUrl.startsWith("/")
                     ? callbackUrl

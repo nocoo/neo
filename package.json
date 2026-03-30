@@ -3,9 +3,9 @@
   "version": "0.2.7",
   "private": true,
   "scripts": {
-    "dev": "next dev --turbopack -p 7042",
+    "dev": "next dev --turbopack -p 7026",
     "build": "next build",
-    "start": "next start -p 7042",
+    "start": "next start -p 7026",
     "lint": "eslint . --max-warnings=0",
     "test": "vitest",
     "test:run": "vitest run",

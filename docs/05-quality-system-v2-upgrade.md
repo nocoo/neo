@@ -37,7 +37,7 @@ vitest process
 **Target architecture** (spec-compliant):
 ```
 vitest process
-  └─ fetch("http://localhost:13042/api/...")    ← real HTTP
+  └─ fetch("http://localhost:17026/api/...")    ← real HTTP
        └─ Next.js dev server (auto-started)
             └─ Server Action / Route Handler
                  └─ ScopedDB → D1-test (or mock D1 for HTTP-only validation)
@@ -47,12 +47,12 @@ vitest process
 
 | # | Gap | Resolution |
 |---|-----|------------|
-| 1 | No `run-e2e.ts` script | Create `scripts/run-e2e.ts` — auto-start dev server on port 13042, wait for ready, run tests, auto-stop |
-| 2 | No real HTTP test client | Use `fetch()` or lightweight HTTP client in tests against `http://localhost:13042` |
+| 1 | No `run-e2e.ts` script | Create `scripts/run-e2e.ts` — auto-start dev server on port 17026, wait for ready, run tests, auto-stop |
+| 2 | No real HTTP test client | Use `fetch()` or lightweight HTTP client in tests against `http://localhost:17026` |
 | 3 | Auth in test mode | Reuse Playwright's Credentials provider approach — POST to `/api/auth/callback/e2e-credentials` (provider id is `e2e-credentials`, not `credentials`) to get session cookie |
 | 4 | 0/8 Route Handlers tested | All route handlers (`/api/backup/*`, `/api/backy/pull`, `/api/health`, `/api/live`) need HTTP-level tests |
 | 5 | 0/7 Backy actions tested | Backy actions need integration coverage via their HTTP trigger paths |
-| 6 | Port convention | Spec: dev=7042, API E2E=13042, BDD E2E=27042 (current Playwright uses 27042 ✅) |
+| 6 | Port convention | Spec: dev=7026, API E2E=17026, BDD E2E=27026 (current Playwright uses 27026 ✅) |
 
 ### D1: Config-only → Three-Layer Verification
 
@@ -97,12 +97,12 @@ vitest process
 #!/usr/bin/env bun
 /**
  * L2: API E2E test runner — auto-start dev server, run tests, auto-stop.
- * Port 13042 per quality system convention (dev=7042, API E2E=13042, BDD E2E=27042).
+ * Port 17026 per quality system convention (dev=7026, API E2E=17026, BDD E2E=27026).
  */
 
 import { $ } from "bun";
 
-const PORT = 13042;
+const PORT = 17026;
 const BASE_URL = `http://localhost:${PORT}`;
 const HEALTH_ENDPOINT = `${BASE_URL}/api/health`;
 const MAX_WAIT_MS = 30_000;
@@ -193,7 +193,7 @@ try {
  * Same mechanism as Playwright auth setup, but headless via fetch().
  */
 
-const BASE_URL = process.env.E2E_API_BASE_URL || "http://localhost:13042";
+const BASE_URL = process.env.E2E_API_BASE_URL || "http://localhost:17026";
 
 export async function getSessionCookie(): Promise<string> {
   // 1. Get CSRF token from signin page
@@ -521,7 +521,7 @@ if (!testDbId) {
  *
  * No auth required — /api/health/db calls executeD1Query directly (no user scoping).
  */
-const BASE_URL = process.env.E2E_API_BASE_URL || "http://localhost:13042";
+const BASE_URL = process.env.E2E_API_BASE_URL || "http://localhost:17026";
 
 export async function verifyTestDatabase(): Promise<void> {
   const res = await fetch(`${BASE_URL}/api/health/db`);

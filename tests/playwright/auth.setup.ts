@@ -14,7 +14,7 @@ import { test as setup, expect } from "@playwright/test";
 const AUTH_FILE = "tests/playwright/.auth/user.json";
 
 setup("authenticate", async ({ page, baseURL }) => {
-  const base = baseURL ?? "http://localhost:27042";
+  const base = baseURL ?? "http://localhost:27026";
 
   // 1. Fetch CSRF token from NextAuth
   const csrfRes = await page.request.get(`${base}/api/auth/csrf`);

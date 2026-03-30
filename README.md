@@ -69,7 +69,7 @@ bun install
 # 配置环境变量
 cp .env.example .env.local
 
-# 启动开发服务器（端口 7042）
+# 启动开发服务器（端口 7026）
 bun run dev
 ```
 
@@ -77,7 +77,7 @@ bun run dev
 
 | 命令 | 说明 |
 |------|------|
-| `bun run dev` | 启动开发服务器（Turbopack，端口 7042） |
+| `bun run dev` | 启动开发服务器（Turbopack，端口 7026） |
 | `bun run build` | 生产构建 |
 | `bun run start` | 启动生产服务器 |
 | `bun run lint` | ESLint 检查（`--max-warnings=0`） |
@@ -158,7 +158,7 @@ bun run dev
 
 ```bash
 docker build -t neo .
-docker run -p 7042:7042 --env-file .env neo
+docker run -p 7026:7026 --env-file .env neo
 ```
 
 ### Cloudflare Worker
