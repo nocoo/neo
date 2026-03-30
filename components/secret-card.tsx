@@ -126,7 +126,7 @@ export function SecretCard({ secret, otp, onEdit, onDelete, selected, copyTrigge
     <div
       className={cn(
         "cursor-pointer rounded-2xl transition-shadow",
-        selected && "ring-2 ring-white/80 ring-offset-2 ring-offset-background",
+        selected && "ring-2 ring-ring ring-offset-2 ring-offset-background",
       )}
       style={{ perspective: "800px" }}
       data-testid={`secret-card-${secret.id}`}
