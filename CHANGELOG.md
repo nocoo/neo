@@ -2,6 +2,18 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.2.8] - 2026-04-04
+
+Port migration and Basalt spec alignment.
+
+### Changed
+
+- **Port migration** — dev server ports migrated from 7042/17024/27042 to 7026/17026/27026 for consistency
+
+### Fixed
+
+- **B-5 color spec compliance** — dark mode `--input` luminance corrected from 12% to 18% per L3 interactive controls specification
+
 ## [0.2.7] - 2026-03-30
 
 Keyboard navigation for secret cards.
