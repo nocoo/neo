@@ -2,6 +2,24 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.0.0] - 2026-04-04
+
+First stable release. Full-featured 2FA authenticator with end-to-end encryption, PWA support, and comprehensive quality infrastructure.
+
+### Added
+
+- **Per-page loading skeletons** — all dashboard routes now show Basalt B-4 compliant skeleton UI during SSR loading
+
+### Highlights (since 0.x series)
+
+- **End-to-end encryption** — AES-GCM 256-bit encryption for all secrets
+- **TOTP/HOTP support** — compatible with Google Authenticator, Authy, and other standard 2FA apps
+- **PWA with offline support** — installable app with service worker and offline queue
+- **Keyboard navigation** — full keyboard support with `⌘K` search and arrow key navigation
+- **Import/Export** — support for Google Authenticator, Authy, and standard OTP URI formats
+- **Backy integration** — encrypted cloud backup via Backy service
+- **Six-dimension quality** — L1/L2/L3 + G1/G2 + D1 all passing (Tier S)
+
 ## [0.2.8] - 2026-04-04
 
 Port migration and Basalt spec alignment.

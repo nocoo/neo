@@ -8,6 +8,6 @@ describe("version", () => {
   });
 
   it("matches package.json version", () => {
-    expect(VERSION).toBe("0.2.8");
+    expect(VERSION).toBe("1.0.0");
   });
 });
