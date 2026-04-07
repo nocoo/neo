@@ -24,9 +24,9 @@ describe("isValidWebhookUrl", () => {
     );
   });
 
-  it("accepts http URL", () => {
-    expect(isValidWebhookUrl("http://localhost:3000/api/webhook/123")).toBe(
-      true,
+  it("rejects http URL (requires HTTPS)", () => {
+    expect(isValidWebhookUrl("http://backy.example.com/api/webhook/123")).toBe(
+      false,
     );
   });
 
@@ -44,6 +44,40 @@ describe("isValidWebhookUrl", () => {
 
   it("rejects javascript protocol", () => {
     expect(isValidWebhookUrl("javascript:alert(1)")).toBe(false);
+  });
+
+  describe("private/reserved address blocking", () => {
+    it("rejects localhost", () => {
+      expect(isValidWebhookUrl("https://localhost/webhook")).toBe(false);
+      expect(isValidWebhookUrl("https://localhost:3000/webhook")).toBe(false);
+    });
+
+    it("rejects 127.0.0.1", () => {
+      expect(isValidWebhookUrl("https://127.0.0.1/webhook")).toBe(false);
+    });
+
+    it("rejects 10.x.x.x (private)", () => {
+      expect(isValidWebhookUrl("https://10.0.0.1/webhook")).toBe(false);
+      expect(isValidWebhookUrl("https://10.255.255.255/webhook")).toBe(false);
+    });
+
+    it("rejects 172.16-31.x.x (private)", () => {
+      expect(isValidWebhookUrl("https://172.16.0.1/webhook")).toBe(false);
+      expect(isValidWebhookUrl("https://172.31.255.255/webhook")).toBe(false);
+    });
+
+    it("rejects 192.168.x.x (private)", () => {
+      expect(isValidWebhookUrl("https://192.168.1.1/webhook")).toBe(false);
+    });
+
+    it("rejects 169.254.x.x (link-local)", () => {
+      expect(isValidWebhookUrl("https://169.254.169.254/webhook")).toBe(false);
+    });
+
+    it("allows public IP addresses over HTTPS", () => {
+      expect(isValidWebhookUrl("https://8.8.8.8/webhook")).toBe(true);
+      expect(isValidWebhookUrl("https://142.250.80.46/webhook")).toBe(true);
+    });
   });
 });
 

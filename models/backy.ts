@@ -59,11 +59,43 @@ export interface BackyPushDetail {
 
 // ── Validation ───────────────────────────────────────────────────────────────
 
+/**
+ * Patterns that match private, reserved, or special-use IP addresses.
+ * These should never be used as webhook targets.
+ */
+const PRIVATE_IP_PATTERNS = [
+  /^10\./,                           // 10.0.0.0/8 (private)
+  /^172\.(1[6-9]|2[0-9]|3[01])\./,   // 172.16.0.0/12 (private)
+  /^192\.168\./,                     // 192.168.0.0/16 (private)
+  /^127\./,                          // 127.0.0.0/8 (loopback)
+  /^169\.254\./,                     // 169.254.0.0/16 (link-local)
+  /^0\./,                            // 0.0.0.0/8 (current network)
+  /^100\.(6[4-9]|[7-9][0-9]|1[01][0-9]|12[0-7])\./, // 100.64.0.0/10 (CGNAT)
+];
+
+/**
+ * Reserved hostnames that should not be used as webhook targets.
+ */
+const RESERVED_HOSTNAMES = ["localhost", "127.0.0.1", "::1", "0.0.0.0"];
+
+/**
+ * Check if a hostname is private, reserved, or loopback.
+ */
+function isPrivateOrReservedHost(hostname: string): boolean {
+  const lower = hostname.toLowerCase();
+  if (RESERVED_HOSTNAMES.includes(lower)) return true;
+  return PRIVATE_IP_PATTERNS.some((pattern) => pattern.test(hostname));
+}
+
 /** Check whether a string looks like a valid webhook URL */
 export function isValidWebhookUrl(url: string): boolean {
   try {
     const parsed = new URL(url);
-    return parsed.protocol === "https:" || parsed.protocol === "http:";
+    // Enforce HTTPS only (no plaintext HTTP for sensitive backup data)
+    if (parsed.protocol !== "https:") return false;
+    // Block private/reserved addresses
+    if (isPrivateOrReservedHost(parsed.hostname)) return false;
+    return true;
   } catch {
     return false;
   }
