@@ -4,7 +4,7 @@
  */
 
 import type { Env } from "./types";
-import { handleOtp } from "./otp";
+import { handleOtp, type OtpRequest } from "./otp";
 import { handleFavicon } from "./favicon";
 import { createJsonResponse } from "./utils/response";
 import { getSecurityHeaders, createPreflightResponse } from "./security";
@@ -33,7 +33,7 @@ export async function handleRequest(
   // Apply rate limiting (skip health check)
   if (path !== "/health") {
     const clientId = getClientIdentifier(request);
-    const preset = path.startsWith("/otp/")
+    const preset = path === "/otp"
       ? RATE_LIMIT_PRESETS.otp
       : RATE_LIMIT_PRESETS.api;
     const rateLimitResult = await checkRateLimit(env.DB, clientId, preset);
@@ -45,11 +45,18 @@ export async function handleRequest(
     }
   }
 
-  // GET /otp/:secret
-  const otpMatch = path.match(/^\/otp\/(.+)$/);
-  if (otpMatch && request.method === "GET") {
-    const response = await handleOtp(otpMatch[1], url.searchParams, env);
-    return withSecurityHeaders(request, response);
+  // POST /otp — OTP generation (secret in body, not URL)
+  if (path === "/otp" && request.method === "POST") {
+    try {
+      const body = await request.json() as OtpRequest;
+      const response = await handleOtp(body, env);
+      return withSecurityHeaders(request, response);
+    } catch {
+      return withSecurityHeaders(
+        request,
+        createJsonResponse({ error: "Invalid JSON body" }, 400)
+      );
+    }
   }
 
   // GET /favicon/:domain

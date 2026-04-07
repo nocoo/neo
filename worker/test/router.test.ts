@@ -86,11 +86,19 @@ function createMockD1(): D1Database {
 let mockDB: D1Database;
 let mockEnv: Env;
 
-function makeRequest(path: string, method = "GET", host = "localhost:8787"): Request {
-  return new Request(`http://${host}${path}`, {
+function makeRequest(
+  path: string,
+  options: { method?: string; body?: unknown; host?: string } = {}
+): Request {
+  const { method = "GET", body, host = "localhost:8787" } = options;
+  const init: RequestInit = {
     method,
-    headers: { host },
-  });
+    headers: { host, "Content-Type": "application/json" },
+  };
+  if (body !== undefined) {
+    init.body = JSON.stringify(body);
+  }
+  return new Request(`http://${host}${path}`, init);
 }
 
 beforeEach(async () => {
@@ -102,12 +110,33 @@ beforeEach(async () => {
 // ── Tests ────────────────────────────────────────────────────────────────────
 
 describe("handleRequest", () => {
-  it("routes /otp/:secret to OTP handler", async () => {
-    const req = makeRequest("/otp/JBSWY3DPEHPK3PXP?format=json");
+  it("routes POST /otp to OTP handler", async () => {
+    const req = makeRequest("/otp", {
+      method: "POST",
+      body: { secret: "JBSWY3DPEHPK3PXP", format: "json" },
+    });
     const res = await handleRequest(req, mockEnv);
     expect(res.status).toBe(200);
-    const data = await res.json() as Record<string, unknown>;
+    const data = (await res.json()) as Record<string, unknown>;
     expect(data.otp).toBeDefined();
+  });
+
+  it("returns 400 for invalid JSON body on POST /otp", async () => {
+    const req = new Request("http://localhost:8787/otp", {
+      method: "POST",
+      headers: { host: "localhost:8787", "Content-Type": "application/json" },
+      body: "not valid json",
+    });
+    const res = await handleRequest(req, mockEnv);
+    expect(res.status).toBe(400);
+    const data = (await res.json()) as Record<string, unknown>;
+    expect(data.error).toBe("Invalid JSON body");
+  });
+
+  it("returns 404 for GET /otp/:secret (deprecated path)", async () => {
+    const req = makeRequest("/otp/JBSWY3DPEHPK3PXP");
+    const res = await handleRequest(req, mockEnv);
+    expect(res.status).toBe(404);
   });
 
   it("returns 404 for unknown paths", async () => {
@@ -120,12 +149,12 @@ describe("handleRequest", () => {
     const req = makeRequest("/health");
     const res = await handleRequest(req, mockEnv);
     expect(res.status).toBe(200);
-    const data = await res.json() as Record<string, unknown>;
+    const data = (await res.json()) as Record<string, unknown>;
     expect(data.status).toBe("ok");
   });
 
   it("handles OPTIONS preflight", async () => {
-    const req = new Request("http://localhost:8787/otp/test", {
+    const req = new Request("http://localhost:8787/otp", {
       method: "OPTIONS",
       headers: {
         host: "localhost:8787",
@@ -145,7 +174,10 @@ describe("handleRequest", () => {
   });
 
   it("returns 400 for invalid OTP secret", async () => {
-    const req = makeRequest("/otp/INVALID!@#");
+    const req = makeRequest("/otp", {
+      method: "POST",
+      body: { secret: "INVALID!@#" },
+    });
     const res = await handleRequest(req, mockEnv);
     expect(res.status).toBe(400);
   });
@@ -153,10 +185,16 @@ describe("handleRequest", () => {
   it("rate limits excessive requests", async () => {
     // OTP preset allows 60 per minute — send 61
     for (let i = 0; i < 60; i++) {
-      const req = makeRequest("/otp/JBSWY3DPEHPK3PXP?format=json");
+      const req = makeRequest("/otp", {
+        method: "POST",
+        body: { secret: "JBSWY3DPEHPK3PXP", format: "json" },
+      });
       await handleRequest(req, mockEnv);
     }
-    const req = makeRequest("/otp/JBSWY3DPEHPK3PXP?format=json");
+    const req = makeRequest("/otp", {
+      method: "POST",
+      body: { secret: "JBSWY3DPEHPK3PXP", format: "json" },
+    });
     const res = await handleRequest(req, mockEnv);
     expect(res.status).toBe(429);
   });

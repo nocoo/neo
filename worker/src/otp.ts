@@ -2,7 +2,11 @@
  * Quick OTP generation endpoint.
  * Public API — no authentication required.
  *
- * GET /otp/:secret?type=TOTP&digits=6&period=30&algorithm=SHA1&format=json
+ * POST /otp
+ * Body: { secret, type?, digits?, period?, algorithm?, counter?, format? }
+ *
+ * Security: Secret is passed in POST body, never in URL path,
+ * to avoid exposure in browser history, logs, and referer headers.
  */
 
 import type { Env } from "./types";
@@ -105,26 +109,38 @@ function isValidBase32(secret: string): boolean {
   return clean.length >= 8 && /^[A-Z2-7]+$/.test(clean);
 }
 
+// ── Types ───────────────────────────────────────────────────────────────────
+
+export interface OtpRequest {
+  secret: string;
+  type?: string;
+  digits?: number;
+  period?: number;
+  algorithm?: string;
+  counter?: number;
+  format?: string;
+}
+
 // ── Handler ─────────────────────────────────────────────────────────────────
 
 export async function handleOtp(
-  secret: string,
-  params: URLSearchParams,
+  body: OtpRequest,
   _env: Env
 ): Promise<Response> {
+  const secret = body.secret;
   if (!secret || !isValidBase32(secret)) {
     return createJsonResponse(
-      { error: "Invalid Base32 secret", hint: "GET /otp/YOUR_SECRET?format=json" },
+      { error: "Invalid Base32 secret", hint: "POST /otp with { secret: 'YOUR_SECRET' }" },
       400
     );
   }
 
-  const type = (params.get("type") || "TOTP").toUpperCase();
-  const digits = parseInt(params.get("digits") || "6", 10);
-  const period = parseInt(params.get("period") || "30", 10);
-  const algorithm = (params.get("algorithm") || "SHA1").toUpperCase();
-  const counter = parseInt(params.get("counter") || "0", 10);
-  const format = params.get("format") || "json";
+  const type = (body.type || "TOTP").toUpperCase();
+  const digits = body.digits ?? 6;
+  const period = body.period ?? 30;
+  const algorithm = (body.algorithm || "SHA1").toUpperCase();
+  const counter = body.counter ?? 0;
+  const format = body.format || "json";
 
   // Validate parameters
   if (!["TOTP", "HOTP"].includes(type)) {

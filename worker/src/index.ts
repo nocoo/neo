@@ -2,7 +2,7 @@
  * Neo Worker — Cloudflare Worker entry point.
  *
  * Endpoints:
- *   GET /otp/:secret  — Quick OTP generation (public)
+ *   POST /otp — Quick OTP generation (public, secret in body)
  *   GET /favicon/:domain — Favicon proxy with waterfall sources
  */
 
