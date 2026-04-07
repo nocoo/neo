@@ -3,13 +3,17 @@ import { auth } from "@/auth";
 import { ScopedDB } from "@/lib/db/scoped";
 
 // ── E2E auth bypass ─────────────────────────────────────────────────────────
-// When E2E_SKIP_AUTH=true, all auth functions return a hardcoded test user.
-// Same pattern as pew, backy, otter, raven.
+// When E2E_SKIP_AUTH=true AND not in production, all auth functions return
+// a hardcoded test user. Same pattern as pew, backy, otter, raven.
+// Production guard prevents accidental auth bypass if env var leaks.
 
 const E2E_TEST_USER_ID = "e2e-test-user";
 
 function isE2EMode(): boolean {
-  return process.env.E2E_SKIP_AUTH === "true";
+  return (
+    process.env.NODE_ENV !== "production" &&
+    process.env.E2E_SKIP_AUTH === "true"
+  );
 }
 
 /**
