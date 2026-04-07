@@ -1,10 +1,11 @@
 /**
  * E2E-only API routes for secrets.
- * Only active when E2E_SKIP_AUTH=true.
+ * Only active when E2E_SKIP_AUTH=true AND NODE_ENV !== "production".
  * Thin wrappers around Server Actions for real HTTP testing.
  */
 
 import { NextRequest, NextResponse } from "next/server";
+import { isE2EMode } from "@/lib/auth-context";
 import {
   getSecrets,
   getSecretById,
@@ -16,7 +17,7 @@ import {
 } from "@/actions/secrets";
 
 function guardE2E(): NextResponse | null {
-  if (process.env.E2E_SKIP_AUTH !== "true") {
+  if (!isE2EMode()) {
     return NextResponse.json({ error: "E2E routes disabled" }, { status: 404 });
   }
   return null;

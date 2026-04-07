@@ -9,7 +9,12 @@ import { ScopedDB } from "@/lib/db/scoped";
 
 const E2E_TEST_USER_ID = "e2e-test-user";
 
-function isE2EMode(): boolean {
+/**
+ * Check if E2E mode is active.
+ * Returns true only when E2E_SKIP_AUTH=true AND NODE_ENV !== "production".
+ * Exported so E2E API routes can use the same guard logic.
+ */
+export function isE2EMode(): boolean {
   return (
     process.env.NODE_ENV !== "production" &&
     process.env.E2E_SKIP_AUTH === "true"

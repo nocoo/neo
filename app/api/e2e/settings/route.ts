@@ -1,9 +1,10 @@
 /**
  * E2E-only API routes for settings + encryption key.
- * Only active when E2E_SKIP_AUTH=true.
+ * Only active when E2E_SKIP_AUTH=true AND NODE_ENV !== "production".
  */
 
 import { NextRequest, NextResponse } from "next/server";
+import { isE2EMode } from "@/lib/auth-context";
 import {
   getUserSettings,
   updateUserSettings,
@@ -11,7 +12,7 @@ import {
 } from "@/actions/settings";
 
 function guardE2E(): NextResponse | null {
-  if (process.env.E2E_SKIP_AUTH !== "true") {
+  if (!isE2EMode()) {
     return NextResponse.json({ error: "E2E routes disabled" }, { status: 404 });
   }
   return null;
