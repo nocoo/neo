@@ -136,9 +136,12 @@ export async function generateOTP(
   const secretBytes = base32toByteArray(secret);
   const hashAlgorithm = getHashAlgorithm(algorithm);
 
+  // Create a proper ArrayBuffer copy to avoid byteOffset issues in some runtimes
+  const secretBuffer = new Uint8Array(secretBytes).buffer;
+
   const key = await crypto.subtle.importKey(
     "raw",
-    secretBytes.buffer as ArrayBuffer,
+    secretBuffer,
     { name: "HMAC", hash: { name: hashAlgorithm } },
     false,
     ["sign"]
@@ -186,9 +189,12 @@ export async function generateTOTP(
 
     const hashAlgorithm = getHashAlgorithm(algorithm);
 
+    // Create a proper ArrayBuffer copy to avoid byteOffset issues in some runtimes
+    const keyBuffer = new Uint8Array(key).buffer;
+
     const cryptoKey = await crypto.subtle.importKey(
       "raw",
-      key.buffer as ArrayBuffer,
+      keyBuffer,
       { name: "HMAC", hash: hashAlgorithm },
       false,
       ["sign"]
