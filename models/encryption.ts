@@ -50,9 +50,11 @@ async function importKey(keyBase64: string): Promise<CryptoKey> {
     );
   }
 
+  // Ensure Uint8Array (not ArrayBuffer via .buffer) for cross-runtime SubtleCrypto compatibility
+  const keyUint8 = new Uint8Array(keyData);
   return crypto.subtle.importKey(
     "raw",
-    keyData.buffer as ArrayBuffer,
+    keyUint8,
     { name: "AES-GCM", length: AES_KEY_LENGTH },
     false,
     ["encrypt", "decrypt"]
@@ -119,10 +121,14 @@ export async function decryptData<T>(encrypted: string, keyBase64: string): Prom
   const iv = base64ToArrayBuffer(ivBase64);
   const ciphertext = base64ToArrayBuffer(ciphertextBase64);
 
+  // Ensure Uint8Array (not ArrayBuffer via .buffer) for cross-runtime SubtleCrypto compatibility
+  const ivUint8 = new Uint8Array(iv);
+  const ciphertextUint8 = new Uint8Array(ciphertext);
+
   const plaintext = await crypto.subtle.decrypt(
-    { name: "AES-GCM", iv: iv.buffer as ArrayBuffer, tagLength: 128 },
+    { name: "AES-GCM", iv: ivUint8, tagLength: 128 },
     key,
-    ciphertext.buffer as ArrayBuffer
+    ciphertextUint8
   );
 
   const decoder = new TextDecoder();
