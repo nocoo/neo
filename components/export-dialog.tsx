@@ -97,7 +97,7 @@ export function ExportDialog({
               id="export-format"
               value={selectedFormat}
               onChange={(e) => setSelectedFormat(e.target.value as ExportFormat)}
-              className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+              className="w-full rounded-md border border-border bg-secondary px-3 py-2 text-sm"
             >
               {EXPORT_FORMATS.map((f) => (
                 <option key={f.value} value={f.value}>

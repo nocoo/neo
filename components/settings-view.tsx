@@ -65,7 +65,7 @@ export function SettingsView() {
   };
 
   const inputClass =
-    "w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring";
+    "w-full rounded-md border border-border bg-secondary px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring";
 
   return (
     <div className="space-y-6">
@@ -107,7 +107,7 @@ export function SettingsView() {
               <label className="block text-sm font-medium">Your Encryption Key</label>
               <div className="flex items-center gap-2">
                 <code
-                  className="flex-1 rounded-md border border-input bg-muted px-3 py-2 text-sm font-mono break-all"
+                  className="flex-1 rounded-md border border-border bg-muted px-3 py-2 text-sm font-mono break-all"
                   data-testid="encryption-key-display"
                 >
                   {vm.keyRevealed ? vm.encryptionKey : "••••••••••••••••••••••••"}
@@ -214,7 +214,7 @@ export function SettingsView() {
             </label>
             {vm.backyMaskedApiKey && !backyApiKey ? (
               <div className="flex items-center gap-2">
-                <code className="flex-1 rounded-md border border-input bg-muted px-3 py-2 text-sm font-mono">
+                <code className="flex-1 rounded-md border border-border bg-muted px-3 py-2 text-sm font-mono">
                   {vm.backyMaskedApiKey}
                 </code>
                 <Button
@@ -276,7 +276,7 @@ export function SettingsView() {
           {vm.backyPullKey ? (
             <div className="space-y-2">
               <code
-                className="block rounded-md border border-input bg-muted px-3 py-2 text-sm font-mono break-all"
+                className="block rounded-md border border-border bg-muted px-3 py-2 text-sm font-mono break-all"
                 data-testid="pull-key-display"
               >
                 {vm.backyPullKey}

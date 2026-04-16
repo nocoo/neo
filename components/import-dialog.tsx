@@ -119,7 +119,7 @@ export function ImportDialog({
               onChange={(e) => setContent(e.target.value)}
               placeholder="Paste otpauth:// URIs, JSON, or CSV..."
               rows={4}
-              className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm font-mono"
+              className="w-full rounded-md border border-border bg-secondary px-3 py-2 text-sm font-mono"
             />
             <Button
               variant="outline"
