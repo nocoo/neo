@@ -67,3 +67,4 @@ worker/wrangler.toml
 # Autoresearch
 autoresearch.jsonl
 autoresearch.ideas.md
+.superset/
