@@ -93,7 +93,7 @@ function DeletedSecretRow({
     : "—";
 
   return (
-    <div className="group flex items-center gap-3 rounded-lg border border-input px-4 py-3 transition-colors hover:bg-accent/50">
+    <div className="group flex items-center gap-3 rounded-lg border border-border px-4 py-3 transition-colors hover:bg-accent/50">
       {/* Color dot */}
       <div className={cn("h-3 w-3 shrink-0 rounded-full", theme.bg)} />
 
@@ -177,10 +177,10 @@ export function RecycleBinView({
             placeholder="Search deleted secrets..."
             value={vm.searchQuery}
             onChange={(e) => vm.setSearchQuery(e.target.value)}
-            className="w-full rounded-lg border border-input bg-background py-2 pl-10 pr-14 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+            className="w-full rounded-lg border border-border bg-secondary py-2 pl-10 pr-14 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
             aria-label="Search secrets"
           />
-          <kbd className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 hidden sm:inline-flex h-5 items-center gap-0.5 rounded border border-input bg-muted px-1.5 text-[10px] font-medium text-muted-foreground">
+          <kbd className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 hidden sm:inline-flex h-5 items-center gap-0.5 rounded border border-border bg-muted px-1.5 text-[10px] font-medium text-muted-foreground">
             ⌘K
           </kbd>
         </div>

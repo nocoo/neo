@@ -154,7 +154,7 @@ export function SecretFormDialog({
               value={name}
               onChange={(e) => setName(e.target.value)}
               placeholder="e.g., GitHub"
-              className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+              className="w-full rounded-md border border-border bg-secondary px-3 py-2 text-sm"
             />
           </div>
 
@@ -168,7 +168,7 @@ export function SecretFormDialog({
               value={account}
               onChange={(e) => setAccount(e.target.value)}
               placeholder="e.g., user@example.com"
-              className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+              className="w-full rounded-md border border-border bg-secondary px-3 py-2 text-sm"
             />
           </div>
 
@@ -183,7 +183,7 @@ export function SecretFormDialog({
                 value={secretValue}
                 onChange={(e) => setSecretValue(e.target.value)}
                 placeholder="Base32 encoded key"
-                className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm font-mono"
+                className="w-full rounded-md border border-border bg-secondary px-3 py-2 text-sm font-mono"
               />
             </div>
           )}

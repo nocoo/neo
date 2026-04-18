@@ -126,19 +126,24 @@ export async function generateOTP(
   }
 
   // Convert counter to 8-byte big-endian array (full 64-bit write — fixes P1)
-  const counterBytes = new ArrayBuffer(8);
-  const counterView = new DataView(counterBytes);
+  const counterBuffer = new ArrayBuffer(8);
+  const counterView = new DataView(counterBuffer);
   const highBits = Math.floor(counter / 0x100000000);
   const lowBits = counter >>> 0;
   counterView.setUint32(0, highBits, false);
   counterView.setUint32(4, lowBits, false);
+  // Ensure Uint8Array for cross-runtime SubtleCrypto compatibility
+  const counterBytes = new Uint8Array(counterBuffer);
 
   const secretBytes = base32toByteArray(secret);
   const hashAlgorithm = getHashAlgorithm(algorithm);
 
+  // Ensure Uint8Array (not ArrayBuffer) for cross-runtime SubtleCrypto compatibility
+  const secretUint8 = new Uint8Array(secretBytes);
+
   const key = await crypto.subtle.importKey(
     "raw",
-    secretBytes.buffer as ArrayBuffer,
+    secretUint8,
     { name: "HMAC", hash: { name: hashAlgorithm } },
     false,
     ["sign"]
@@ -177,18 +182,23 @@ export async function generateTOTP(
     const key = base32toByteArray(secret);
 
     // Full 64-bit counter write (fixes P1 inconsistency with generateOTP)
-    const counterBytes = new ArrayBuffer(8);
-    const counterView = new DataView(counterBytes);
+    const counterBuffer = new ArrayBuffer(8);
+    const counterView = new DataView(counterBuffer);
     const highBits = Math.floor(counter / 0x100000000);
     const lowBits = counter >>> 0;
     counterView.setUint32(0, highBits, false);
     counterView.setUint32(4, lowBits, false);
+    // Ensure Uint8Array for cross-runtime SubtleCrypto compatibility
+    const counterBytes = new Uint8Array(counterBuffer);
 
     const hashAlgorithm = getHashAlgorithm(algorithm);
 
+    // Ensure Uint8Array (not ArrayBuffer) for cross-runtime SubtleCrypto compatibility
+    const keyUint8 = new Uint8Array(key);
+
     const cryptoKey = await crypto.subtle.importKey(
       "raw",
-      key.buffer as ArrayBuffer,
+      keyUint8,
       { name: "HMAC", hash: hashAlgorithm },
       false,
       ["sign"]

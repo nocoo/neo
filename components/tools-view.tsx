@@ -92,7 +92,7 @@ export function ToolsView() {
               value={testSecret}
               onChange={(e) => setTestSecret(e.target.value)}
               placeholder="Base32 secret key"
-              className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm font-mono"
+              className="w-full rounded-md border border-border bg-secondary px-3 py-2 text-sm font-mono"
               aria-label="Test secret key"
             />
             <div className="flex gap-2">
@@ -100,7 +100,7 @@ export function ToolsView() {
                 type="number"
                 value={testDigits}
                 onChange={(e) => setTestDigits(e.target.value)}
-                className="w-20 rounded-md border border-input bg-background px-2 py-1 text-sm"
+                className="w-20 rounded-md border border-border bg-secondary px-2 py-1 text-sm"
                 aria-label="Digits"
                 min="4"
                 max="8"
@@ -109,7 +109,7 @@ export function ToolsView() {
                 type="number"
                 value={testPeriod}
                 onChange={(e) => setTestPeriod(e.target.value)}
-                className="w-20 rounded-md border border-input bg-background px-2 py-1 text-sm"
+                className="w-20 rounded-md border border-border bg-secondary px-2 py-1 text-sm"
                 aria-label="Period"
                 min="15"
                 max="120"
