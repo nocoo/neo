@@ -3,11 +3,50 @@ import react from "@vitejs/plugin-react";
 import path from "path";
 
 export default defineConfig({
-  plugins: [react()],
+  plugins: [
+    react({
+      // Disable fast refresh in tests for faster transform
+      fastRefresh: false,
+    }),
+  ],
+  esbuild: {
+    // Optimize esbuild for faster transforms
+    target: "esnext",
+    minify: false,
+  },
+  optimizeDeps: {
+    // Pre-bundle common dependencies
+    include: ["react", "react-dom", "@testing-library/react"],
+  },
   test: {
-    environment: "jsdom",
+    environment: "happy-dom",
     globals: true,
     setupFiles: ["./tests/setup.ts"],
+    // Disable console interception for faster output
+    disableConsoleIntercept: true,
+    // Optimize dependencies for faster imports
+    deps: {
+      optimizer: {
+        web: {
+          enabled: true,
+        },
+      },
+    },
+    // Use node environment for pure logic tests (faster, no jsdom overhead)
+    environmentMatchGlobs: [
+      ["tests/unit/models/**", "node"],
+      ["tests/unit/lib/auth-*.test.ts", "node"],
+      ["tests/unit/lib/d1-client.test.ts", "node"],
+      ["tests/unit/lib/logger.test.ts", "node"],
+      ["tests/unit/lib/mappers.test.ts", "node"],
+      ["tests/unit/lib/db/scoped.test.ts", "node"],
+      ["tests/unit/lib/utils.test.ts", "node"],
+      ["tests/unit/lib/version.test.ts", "node"],
+      ["tests/unit/lib/protocol-handler.test.ts", "node"],
+      ["tests/unit/actions/**", "node"],
+      ["tests/unit/middleware.test.ts", "node"],
+      ["tests/unit/scripts/**", "node"],
+    ],
     include: ["tests/**/*.{test,spec}.{ts,tsx}"],
     exclude: ["tests/playwright/**", "tests/e2e/**", "node_modules/**"],
     coverage: {
