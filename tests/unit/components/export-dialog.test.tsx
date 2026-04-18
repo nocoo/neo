@@ -87,7 +87,7 @@ describe("ExportDialog", () => {
 
   it("copies output to clipboard", async () => {
     const writeText = vi.fn().mockResolvedValue(undefined);
-    Object.assign(navigator, { clipboard: { writeText } });
+    vi.stubGlobal("navigator", { clipboard: { writeText } });
 
     render(
       <ExportDialog

@@ -98,7 +98,7 @@ describe("SecretCard", () => {
 
   it("copies OTP to clipboard when card is clicked", async () => {
     const writeText = vi.fn().mockResolvedValue(undefined);
-    Object.assign(navigator, { clipboard: { writeText } });
+    vi.stubGlobal("navigator", { clipboard: { writeText } });
 
     render(<SecretCard secret={sampleSecret} otp={sampleOtp} />);
 
@@ -108,7 +108,7 @@ describe("SecretCard", () => {
 
   it("shows 3D flip with Copied! back face after clicking", async () => {
     const writeText = vi.fn().mockResolvedValue(undefined);
-    Object.assign(navigator, { clipboard: { writeText } });
+    vi.stubGlobal("navigator", { clipboard: { writeText } });
 
     render(<SecretCard secret={sampleSecret} otp={sampleOtp} />);
 

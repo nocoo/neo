@@ -255,7 +255,7 @@ describe("useSettingsViewModel", () => {
 
       // Mock clipboard
       const writeText = vi.fn().mockResolvedValue(undefined);
-      Object.assign(navigator, { clipboard: { writeText } });
+      vi.stubGlobal("navigator", { clipboard: { writeText } });
 
       const { result } = renderHook(() => useSettingsViewModel());
       await act(async () => {});
