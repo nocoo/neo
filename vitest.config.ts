@@ -4,10 +4,7 @@ import path from "path";
 
 export default defineConfig({
   plugins: [
-    react({
-      // Disable fast refresh in tests for faster transform
-      fastRefresh: false,
-    }),
+    react(),
   ],
   esbuild: {
     // Optimize esbuild for faster transforms
