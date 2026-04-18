@@ -63,3 +63,7 @@ worker/wrangler.toml
 **/public/sw.js
 **/public/workbox-*.js
 **/public/swe-worker-*.js
+
+# Autoresearch
+autoresearch.jsonl
+autoresearch.ideas.md
