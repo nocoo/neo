@@ -1,0 +1,121 @@
+# Neo CD — triggered after CI succeeds on main.
+# Builds Docker image, pushes to GHCR, then SSHs into jp2.nocoo.cloud
+# to pull the new image and restart the app container.
+name: Release
+
+on:
+  workflow_run:
+    workflows: ["CI"]
+    types: [completed]
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-neo-production
+  cancel-in-progress: false
+
+jobs:
+  build-and-deploy:
+    name: Build image & deploy to jp2
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    if: >
+      github.event_name == 'workflow_dispatch' ||
+      (github.event.workflow_run.conclusion == 'success' &&
+       github.event.workflow_run.head_branch == 'main')
+    permissions:
+      contents: read
+      packages: write
+    environment: neo / production
+
+    steps:
+      - name: Checkout (matching CI commit)
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.workflow_run.head_sha || github.sha }}
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Compute image metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ghcr.io/${{ github.repository_owner }}/neo
+          tags: |
+            type=raw,value=latest
+            type=sha,format=long,prefix=
+
+      - name: Build & push image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Deploy to jp2.nocoo.cloud
+        uses: appleboy/ssh-action@v1
+        env:
+          IMAGE_SHA: ${{ github.event.workflow_run.head_sha || github.sha }}
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          key: ${{ secrets.VPS_SSH_KEY }}
+          envs: IMAGE_SHA
+          script: |
+            set -euo pipefail
+            cd /opt/neo
+            echo "${{ secrets.GHCR_PULL_TOKEN }}" | docker login ghcr.io \
+              -u "${{ secrets.GHCR_PULL_USER }}" --password-stdin
+            docker compose pull app
+            docker compose up -d --no-deps app
+            for i in 1 2 3 4 5 6 7 8 9 10; do
+              if docker exec neo-app bun -e 'fetch("http://127.0.0.1:7026/").then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))' 2>/dev/null; then
+                echo "✅ app responding on :7026"
+                break
+              fi
+              echo "attempt $i: app not ready yet"
+              sleep 3
+              if [ "$i" = "10" ]; then
+                echo "❌ app failed to come up"
+                docker logs --tail 80 neo-app
+                exit 1
+              fi
+            done
+            docker image prune -f
+
+      - name: External smoke test (via Cloudflare edge)
+        run: |
+          set -e
+          for i in 1 2 3 4 5; do
+            CODE=$(curl -sS -o /dev/null -w "%{http_code}" https://neo.hexly.ai/ || true)
+            echo "attempt $i: HTTP $CODE"
+            if [ "$CODE" = "200" ] || [ "$CODE" = "302" ] || [ "$CODE" = "307" ]; then
+              echo "✅ edge serving deployed build"
+              exit 0
+            fi
+            sleep 5
+          done
+          echo "❌ edge smoke test failed"
+          exit 1
+
+      - name: Summary
+        if: always()
+        run: |
+          {
+            echo "### Neo CD"
+            echo ""
+            echo "- Image: \`ghcr.io/${{ github.repository_owner }}/neo:${{ github.event.workflow_run.head_sha || github.sha }}\`"
+            echo "- Host: jp2.nocoo.cloud"
+            echo "- URL: https://neo.hexly.ai/"
+          } >> "$GITHUB_STEP_SUMMARY"
