@@ -65,7 +65,7 @@
     "husky": "^9.1.7",
     "jsdom": "^26.1.0",
     "lint-staged": "^16.4.0",
-    "postcss": "^8.5.9",
+    "postcss": "^8.5.12",
     "serwist": "^9.5.7",
     "tailwindcss": "^3.4.19",
     "typescript": "^5.9.3",
@@ -87,6 +87,7 @@
     "cookie": "^0.7.0",
     "esbuild": "^0.25.0",
     "picomatch": "^4.0.4",
+    "postcss": "^8.5.10",
     "yaml": "^2.8.3"
   }
 }
