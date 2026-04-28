@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.1.0] - 2026-04-28
+
+Next.js 16 upgrade.
+
+### Changed
+
+- **Next.js 16.2.4** — bump `next` and `eslint-config-next` from 15.5.15 to 16.2.4 (`--webpack` flag retained for jose warning suppression and `@serwist/next` plugin compatibility)
+- **proxy convention** — rename `middleware.ts` → `proxy.ts` and `middleware()` → `proxy()` per Next 16 deprecation
+- **ESLint flat config** — drop `FlatCompat` shim and `@eslint/eslintrc`, wire `@next/eslint-plugin-next` directly with recommended + core-web-vitals rules
+
 ## [1.0.0] - 2026-04-04
 
 First stable release. Full-featured 2FA authenticator with end-to-end encryption, PWA support, and comprehensive quality infrastructure.
