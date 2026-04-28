@@ -36,7 +36,7 @@ async function ensurePortFree(): Promise<void> {
 
 function startServer(): ReturnType<typeof Bun.spawn> {
   console.log(`🚀 Starting Next.js dev server on port ${E2E_PORT}...`);
-  return Bun.spawn(["bun", "next", "dev", "-p", String(E2E_PORT)], {
+  return Bun.spawn(["bun", "next", "dev", "--webpack", "-p", String(E2E_PORT)], {
     cwd: import.meta.dir + "/..",
     env: {
       ...process.env,
