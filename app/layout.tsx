@@ -17,10 +17,10 @@ const dmSans = DM_Sans({
 
 export const metadata: Metadata = {
   metadataBase: new URL(process.env.AUTH_URL || "http://localhost:7026"),
-  title: "Neo - 2FA Manager",
+  title: "neo - 2FA Manager",
   description: "A modern two-factor authentication manager",
   openGraph: {
-    title: "Neo - 2FA Manager",
+    title: "neo - 2FA Manager",
     description: "A modern two-factor authentication manager",
     type: "website",
   },
