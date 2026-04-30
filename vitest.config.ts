@@ -48,6 +48,7 @@ export default defineConfig({
     exclude: ["tests/playwright/**", "tests/e2e/**", "node_modules/**"],
     coverage: {
       provider: "v8",
+      // AST-aware remapping is built into vitest v4+; no opt-in needed.
       reporter: ["text", "json", "html"],
       include: [
         "lib/**/*.ts",
@@ -65,10 +66,15 @@ export default defineConfig({
         "app/**/page.tsx",
       ],
       exclude: [
+        // Third-party deps — not our code to cover
         "node_modules/",
+        // Test files themselves — measured as source coverage, not target
         "tests/",
+        // Build/tool config — no runtime logic worth measuring
         "**/*.config.*",
+        // Type declarations — no executable code
         "**/*.d.ts",
+        // Next.js build output — generated artifacts
         ".next/",
         // Config/schema/type-only files
         "lib/db/schema.ts",
