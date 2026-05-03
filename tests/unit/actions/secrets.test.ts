@@ -278,6 +278,58 @@ describe("updateSecret", () => {
     const result = await updateSecret({ id: "s_test_123", name: "Updated" });
     expect(result.success).toBe(false);
   });
+
+  it("updates all fields when provided", async () => {
+    mockUpdateSecret.mockResolvedValue(sampleSecret);
+    const result = await updateSecret({
+      id: "s_test_123",
+      name: " Renamed ",
+      account: " user@x ",
+      secret: "jbswy3dpehpk3pxp",
+      type: "totp",
+      digits: 8,
+      period: 60,
+      algorithm: "SHA-256",
+      counter: 5,
+      color: "#abcdef",
+    });
+    expect(result.success).toBe(true);
+    expect(mockUpdateSecret).toHaveBeenCalledWith(
+      "s_test_123",
+      expect.objectContaining({
+        name: "Renamed",
+        account: "user@x",
+        secret: "JBSWY3DPEHPK3PXP",
+        type: "totp",
+        digits: 8,
+        period: 60,
+        algorithm: "SHA-256",
+        counter: 5,
+        color: "#abcdef",
+      }),
+    );
+  });
+
+  it("clears account and color when empty strings provided", async () => {
+    mockUpdateSecret.mockResolvedValue(sampleSecret);
+    await updateSecret({ id: "s_test_123", account: "", color: "" });
+    expect(mockUpdateSecret).toHaveBeenCalledWith(
+      "s_test_123",
+      expect.objectContaining({ account: null, color: null }),
+    );
+  });
+
+  it("rejects invalid OTP params on update", async () => {
+    const result = await updateSecret({ id: "s_test_123", digits: 99 });
+    expect(result.success).toBe(false);
+    if (!result.success) expect(result.error).toContain("digit");
+  });
+
+  it("handles database errors gracefully", async () => {
+    mockUpdateSecret.mockRejectedValue(new Error("DB error"));
+    const result = await updateSecret({ id: "s_test_123", name: "X" });
+    expect(result.success).toBe(false);
+  });
 });
 
 describe("deleteSecret", () => {

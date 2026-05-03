@@ -196,3 +196,28 @@ describe("Sidebar — collapsed", () => {
     expect(screen.queryByText(/^v\d/)).toBeNull();
   });
 });
+
+// ── Branch coverage: nullish-coalescing fallbacks for user fields ──────────
+describe("Sidebar — user field fallbacks", () => {
+  beforeEach(() => {
+    mockCollapsed = false;
+  });
+
+  it("uses 'User' fallback and renders empty email when both are null", () => {
+    render(<Sidebar user={{ name: null, email: null, image: null }} />);
+    // user.name ?? "User"
+    expect(screen.getAllByText("User").length).toBeGreaterThanOrEqual(1);
+    // user.email ?? "" — should not crash; no test@example.com text
+    expect(screen.queryByText("test@example.com")).toBeNull();
+  });
+
+  it("renders AvatarImage when user.image is provided (truthy branch)", () => {
+    render(
+      <Sidebar
+        user={{ name: "X", email: "x@y.z", image: "https://example.com/a.png" }}
+      />,
+    );
+    // truthy branch of `user.image && <AvatarImage>` is exercised by render
+    expect(screen.getByText("x@y.z")).toBeDefined();
+  });
+});

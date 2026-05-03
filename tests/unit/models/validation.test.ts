@@ -313,6 +313,17 @@ describe("createSecretObject", () => {
     expect(obj.counter).toBe(42);
   });
 
+  it("defaults HOTP counter to 0 when missing", () => {
+    // Exercises `parseInt(String(data.counter || 0), 10)` falsy branch
+    const obj = createSecretObject({
+      name: "Service",
+      secret: "JBSWY3DPEHPK3PXP",
+      type: "HOTP",
+    });
+    expect(obj.type).toBe("hotp");
+    expect(obj.counter).toBe(0);
+  });
+
   it("sets counter to 0 for TOTP", () => {
     const obj = createSecretObject({
       name: "Service",
@@ -491,6 +502,13 @@ describe("checkDuplicateSecret", () => {
     expect(
       checkDuplicateSecret(secrets, "GitHub", "user@example.com", "JBSWY3DPEHPK3PXP", 999)
     ).toBe(true);
+  });
+
+  it("treats missing secret as empty string", () => {
+    // Exercises `(s.secret || "")` fallback — entry without secret field.
+    const partial = [{ name: "Empty", account: "u@e.com" }];
+    expect(checkDuplicateSecret(partial, "Empty", "u@e.com", "")).toBe(true);
+    expect(checkDuplicateSecret(partial, "Empty", "u@e.com", "ABCD")).toBe(false);
   });
 });
 

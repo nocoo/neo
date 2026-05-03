@@ -96,6 +96,11 @@ describe("encryptData / decryptData", () => {
     await expect(decryptData("v1:invalid-base64", TEST_KEY)).rejects.toThrow();
     await expect(decryptData("v1:", TEST_KEY)).rejects.toThrow();
     await expect(decryptData("invalid-format", TEST_KEY)).rejects.toThrow();
+    // Three parts but trailing empty ciphertext — exercises the
+    // `!ciphertextBase64` half of the format guard.
+    await expect(decryptData("v1:abc:", TEST_KEY)).rejects.toThrow(/missing IV or ciphertext/);
+    // Empty IV with non-empty ciphertext — exercises `!ivBase64` half.
+    await expect(decryptData("v1::abc", TEST_KEY)).rejects.toThrow(/missing IV or ciphertext/);
   });
 
   it("detects tampered ciphertext (integrity check)", async () => {

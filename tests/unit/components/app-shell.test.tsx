@@ -3,7 +3,7 @@
  */
 
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { render, screen } from "@testing-library/react";
+import { render, screen, fireEvent } from "@testing-library/react";
 
 // ── Hoisted mocks ────────────────────────────────────────────────────────
 
@@ -99,5 +99,38 @@ describe("AppShell", () => {
     render(<AppShell user={defaultUser}><div>content</div></AppShell>);
     expect(screen.getByText("Test User")).toBeDefined();
     expect(screen.getByText("test@example.com")).toBeDefined();
+  });
+});
+
+describe("AppShell — mobile mode", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    mockPathname.mockReturnValue("/dashboard");
+    Object.defineProperty(window, "matchMedia", {
+      writable: true,
+      value: vi.fn().mockImplementation((query: string) => ({
+        matches: true,
+        media: query,
+        onchange: null,
+        addListener: vi.fn(),
+        removeListener: vi.fn(),
+        addEventListener: vi.fn(),
+        removeEventListener: vi.fn(),
+        dispatchEvent: vi.fn(),
+      })),
+    });
+    Object.defineProperty(window, "innerWidth", { writable: true, value: 500 });
+  });
+
+  it("renders the mobile menu button and toggles the drawer", () => {
+    render(<AppShell user={defaultUser}><div>content</div></AppShell>);
+    const menuBtn = screen.getByLabelText("Open menu");
+    expect(menuBtn).toBeDefined();
+
+    // Initially the mobile sidebar is closed — toggling opens it.
+    fireEvent.click(menuBtn);
+    // After opening, the user name should still be present (rendered inside the
+    // mobile sidebar drawer).
+    expect(screen.getAllByText("Test User").length).toBeGreaterThanOrEqual(1);
   });
 });

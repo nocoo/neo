@@ -200,6 +200,12 @@ describe("PerformanceTimer", () => {
     expect(() => timer.cancel()).not.toThrow();
   });
 
+  it("falls back to getLogger() when no logger passed", () => {
+    const timer = new PerformanceTimer("test-op");
+    const result = timer.end();
+    expect(result.name).toBe("test-op");
+  });
+
   it("end accepts null data (P5 fix)", () => {
     const logger = new Logger({ minLevel: LogLevel.DEBUG });
     const timer = new PerformanceTimer("test-op", logger);

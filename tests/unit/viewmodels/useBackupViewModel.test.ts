@@ -131,6 +131,46 @@ describe("useBackupViewModel", () => {
 
       expect(result.current.error).toBe("No encryption key");
     });
+
+    it("falls back to status code message when response has no error field", async () => {
+      vi.mocked(fetch).mockResolvedValue({
+        ok: false,
+        status: 503,
+        json: () => Promise.resolve({}),
+      } as Response);
+
+      const { result } = renderHook(() => useBackupViewModel());
+      await act(async () => {});
+
+      await act(async () => {
+        await result.current.handleDownloadArchive();
+      });
+
+      expect(result.current.error).toBe("Download failed (503)");
+    });
+
+    it("uses default filename when Content-Disposition missing", async () => {
+      const mockBlob = new Blob(["zip"], { type: "application/zip" });
+      const mockCreateObjectURL = vi.fn().mockReturnValue("blob:mock");
+      const mockRevokeObjectURL = vi.fn();
+      globalThis.URL.createObjectURL = mockCreateObjectURL;
+      globalThis.URL.revokeObjectURL = mockRevokeObjectURL;
+
+      vi.mocked(fetch).mockResolvedValue({
+        ok: true,
+        blob: () => Promise.resolve(mockBlob),
+        headers: new Headers(),
+      } as Response);
+
+      const { result } = renderHook(() => useBackupViewModel());
+      await act(async () => {});
+
+      await act(async () => {
+        await result.current.handleDownloadArchive();
+      });
+
+      expect(result.current.error).toBeNull();
+    });
   });
 
   describe("handlePushToBacky", () => {
@@ -170,6 +210,28 @@ describe("useBackupViewModel", () => {
 
       expect(success!).toBe(false);
       expect(result.current.error).toBe("Backy not configured");
+    });
+
+    it("succeeds when push result has no history field", async () => {
+      const pushDetail = {
+        ok: true,
+        message: "Push successful",
+        durationMs: 50,
+        request: { tag: "neo/1.0", fileName: "backup.zip", fileSizeBytes: 1024, secretCount: 5 },
+        // history omitted — exercises the false branch of `if (result.data.history)`
+      };
+      mockPushToBacky.mockResolvedValue({ success: true, data: pushDetail });
+
+      const { result } = renderHook(() => useBackupViewModel());
+      await act(async () => {});
+
+      let success: boolean;
+      await act(async () => {
+        success = await result.current.handlePushToBacky();
+      });
+
+      expect(success!).toBe(true);
+      expect(result.current.lastPushResult).toEqual(pushDetail);
     });
 
     it("handles exception during push", async () => {
@@ -235,6 +297,25 @@ describe("useBackupViewModel", () => {
       expect(success!).toBe(false);
       expect(result.current.error).toBe("Decryption failed");
       expect(mockRefresh).not.toHaveBeenCalled();
+    });
+
+    it("falls back to status code when restore response has no error field", async () => {
+      vi.mocked(fetch).mockResolvedValue({
+        ok: false,
+        status: 503,
+        json: () => Promise.resolve({}),
+      } as Response);
+
+      const file = new File(["zip"], "backup.zip");
+
+      const { result } = renderHook(() => useBackupViewModel());
+      await act(async () => {});
+
+      await act(async () => {
+        await result.current.handleRestore(file, "k");
+      });
+
+      expect(result.current.error).toBe("Restore failed (503)");
     });
 
     it("handles exception during restore", async () => {

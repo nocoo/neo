@@ -307,3 +307,119 @@ describe("exportSecrets", () => {
     expect(JSON.parse(result).secrets).toHaveLength(0);
   });
 });
+
+// ── Fallback branches for missing/zero fields ───────────────────────────────
+
+const EMPTY_SECRET: ParsedSecret = {
+  name: "Service",
+  account: "",
+  secret: "JBSWY3DPEHPK3PXP",
+  type: "totp",
+  digits: 0,
+  period: 0,
+  algorithm: "SHA-1",
+  counter: 0,
+};
+
+const HOTP_NO_DEFAULTS: ParsedSecret = {
+  ...EMPTY_SECRET,
+  type: "hotp",
+};
+
+const UNKNOWN_ALG: ParsedSecret = {
+  ...EMPTY_SECRET,
+  algorithm: "MD5" as ParsedSecret["algorithm"],
+};
+
+describe("export formatters — fallback branches", () => {
+  it("toOtpauthUri uses defaults and omits account label when empty", () => {
+    const uri = toOtpauthUri(EMPTY_SECRET);
+    expect(uri).toContain("otpauth://totp/Service?");
+    expect(uri).toContain("digits=6");
+    expect(uri).toContain("period=30");
+  });
+
+  it("toOtpauthUri HOTP uses default counter", () => {
+    const uri = toOtpauthUri(HOTP_NO_DEFAULTS);
+    expect(uri).toContain("otpauth://hotp/");
+    expect(uri).toContain("counter=0");
+  });
+
+  it("exportAsAegis uses name when account empty and falls back on digits/period", () => {
+    const out = JSON.parse(exportAsAegis([EMPTY_SECRET]));
+    expect(out.db.entries[0].name).toBe("Service");
+    expect(out.db.entries[0].info.digits).toBe(6);
+    expect(out.db.entries[0].info.period).toBe(30);
+  });
+
+  it("exportAsAegis HOTP includes counter fallback", () => {
+    const out = JSON.parse(exportAsAegis([HOTP_NO_DEFAULTS]));
+    expect(out.db.entries[0].info.counter).toBe(0);
+  });
+
+  it("exportAs2FAS uses fallbacks for missing values", () => {
+    const out = JSON.parse(exportAs2FAS([EMPTY_SECRET]));
+    expect(out.services[0].otp.digits).toBe(6);
+    expect(out.services[0].otp.period).toBe(30);
+    expect(out.services[0].otp.counter).toBe(0);
+    expect(out.services[0].otp.account).toBe("");
+  });
+
+  it("exportAsAndOTP HOTP includes counter fallback", () => {
+    const out = JSON.parse(exportAsAndOTP([HOTP_NO_DEFAULTS]));
+    expect(out[0].counter).toBe(0);
+    expect(out[0].label).toBe("Service");
+  });
+
+  it("exportAsBitwarden defaults username when account empty", () => {
+    const out = JSON.parse(exportAsBitwarden([EMPTY_SECRET]));
+    expect(out.items[0].login.username).toBe("");
+  });
+
+  it("exportAsLastPass uses defaults for digits/period", () => {
+    const out = JSON.parse(exportAsLastPass([EMPTY_SECRET]));
+    expect(out.accounts[0].digits).toBe(6);
+    expect(out.accounts[0].timeStep).toBe(30);
+    expect(out.accounts[0].userName).toBe("");
+  });
+
+  it("exportAsAuthenticatorPro HOTP uses Type=2 and falls back on counter", () => {
+    const out = JSON.parse(exportAsAuthenticatorPro([HOTP_NO_DEFAULTS]));
+    expect(out.Authenticators[0].Type).toBe(2);
+    expect(out.Authenticators[0].Counter).toBe(0);
+    expect(out.Authenticators[0].Digits).toBe(6);
+    expect(out.Authenticators[0].Period).toBe(30);
+  });
+
+  it("exportAsAuthenticatorPro uses 0 for unknown algorithm", () => {
+    const out = JSON.parse(exportAsAuthenticatorPro([UNKNOWN_ALG]));
+    expect(out.Authenticators[0].Algorithm).toBe(0);
+  });
+
+  it("exportAsFreeOTPPlus uses defaults", () => {
+    const out = JSON.parse(exportAsFreeOTPPlus([EMPTY_SECRET]));
+    expect(out.tokens[0].digits).toBe(6);
+    expect(out.tokens[0].period).toBe(30);
+    expect(out.tokens[0].counter).toBe(0);
+    expect(out.tokens[0].label).toBe("Service");
+  });
+
+  it("exportAsCSV uses defaults for missing numeric fields", () => {
+    const csv = exportAsCSV([EMPTY_SECRET]);
+    const fields = csv.split("\n")[1]!.split(",");
+    expect(fields[4]).toBe("6");
+    expect(fields[5]).toBe("30");
+    expect(fields[7]).toBe("0");
+  });
+
+  it("exportAsCSV escapes embedded quotes and newlines", () => {
+    const csv = exportAsCSV([{ ...EMPTY_SECRET, name: 'A"B', account: "x\ny" }]);
+    expect(csv).toContain('"A""B"');
+    expect(csv).toContain('"x\ny"');
+  });
+
+  it("denormalizeAlgorithm falls back to SHA1 for unknown algorithms", () => {
+    const uri = toOtpauthUri(UNKNOWN_ALG);
+    expect(uri).toContain("algorithm=SHA1");
+  });
+});

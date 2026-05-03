@@ -165,6 +165,12 @@ describe("ErrorFactory", () => {
     expect(err.message).toBe("IP blocked");
   });
 
+  it("forbidden uses default reason when none given", () => {
+    const err = ErrorFactory.forbidden();
+    expect(err).toBeInstanceOf(AuthorizationError);
+    expect(err.message).toBe("Access denied");
+  });
+
   it("rateLimited creates RateLimitError", () => {
     const err = ErrorFactory.rateLimited(60000);
     expect(err).toBeInstanceOf(RateLimitError);

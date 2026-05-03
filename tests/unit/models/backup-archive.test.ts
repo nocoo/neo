@@ -5,6 +5,7 @@
  */
 
 import { describe, it, expect } from "vitest";
+import { zipSync } from "fflate";
 import {
   createEncryptedZip,
   openEncryptedZip,
@@ -14,8 +15,23 @@ import {
   MAX_ARCHIVE_SECRETS,
 } from "@/models/backup-archive";
 import type { BackupManifest } from "@/models/backup-archive";
-import { generateEncryptionKey } from "@/models/encryption";
+import { encryptData, generateEncryptionKey } from "@/models/encryption";
 import type { ParsedSecret } from "@/models/types";
+
+function makeManifestBytes(): Uint8Array {
+  const manifest: BackupManifest = {
+    version: 2,
+    format: "neo-encrypted-backup",
+    createdAt: new Date().toISOString(),
+    secretCount: 0,
+    encryption: {
+      algorithm: "AES-GCM-256",
+      ivEncoding: "base64",
+      tagLength: 128,
+    },
+  };
+  return Uint8Array.from(new TextEncoder().encode(JSON.stringify(manifest)));
+}
 
 // ── Test Data ────────────────────────────────────────────────────────────────
 
@@ -258,5 +274,72 @@ describe("safety limits", () => {
 
   it("exports MAX_ARCHIVE_SECRETS constant", () => {
     expect(MAX_ARCHIVE_SECRETS).toBe(10_000);
+  });
+
+  it("rejects ZIP with too many entries", async () => {
+    const key = await generateEncryptionKey();
+    const entries: Record<string, Uint8Array> = {};
+    for (let i = 0; i < 11; i++) {
+      entries[`file-${i}.txt`] = Uint8Array.from([0x61]);
+    }
+    const zipBytes = zipSync(entries);
+    await expect(openEncryptedZip(zipBytes, key)).rejects.toThrow(
+      /too many entries/,
+    );
+  });
+
+  it("rejects ZIP missing manifest", async () => {
+    const key = await generateEncryptionKey();
+    const zipBytes = zipSync({
+      "backup.json.enc": Uint8Array.from([0x61]),
+    });
+    await expect(openEncryptedZip(zipBytes, key)).rejects.toThrow(
+      /missing manifest\.json/,
+    );
+  });
+
+  it("rejects ZIP missing payload", async () => {
+    const key = await generateEncryptionKey();
+    const zipBytes = zipSync({
+      "manifest.json": makeManifestBytes(),
+    });
+    await expect(openEncryptedZip(zipBytes, key)).rejects.toThrow(
+      /missing backup\.json\.enc/,
+    );
+  });
+
+  it("rejects payload that decrypts to non-array secrets", async () => {
+    const key = await generateEncryptionKey();
+    const encrypted = await encryptData({ secrets: null }, key);
+    const zipBytes = zipSync({
+      "manifest.json": makeManifestBytes(),
+      "backup.json.enc": Uint8Array.from(new TextEncoder().encode(encrypted)),
+    });
+    await expect(openEncryptedZip(zipBytes, key)).rejects.toThrow(
+      /no secrets array/,
+    );
+  });
+
+  it("rejects payload exceeding MAX_ARCHIVE_SECRETS", async () => {
+    const key = await generateEncryptionKey();
+    // Encrypt a payload claiming 10001 secrets
+    const tooMany = Array.from({ length: MAX_ARCHIVE_SECRETS + 1 }, () => ({
+      name: "x",
+      account: "",
+      secret: "JBSWY3DPEHPK3PXP",
+      type: "totp" as const,
+      digits: 6,
+      period: 30,
+      algorithm: "SHA-1" as const,
+      counter: 0,
+    }));
+    const encrypted = await encryptData({ secrets: tooMany }, key);
+    const zipBytes = zipSync({
+      "manifest.json": makeManifestBytes(),
+      "backup.json.enc": Uint8Array.from(new TextEncoder().encode(encrypted)),
+    });
+    await expect(openEncryptedZip(zipBytes, key)).rejects.toThrow(
+      /too many secrets/,
+    );
   });
 });

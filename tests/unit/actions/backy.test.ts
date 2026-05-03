@@ -278,3 +278,148 @@ describe("pull webhook key CRUD", () => {
     if (!result.success) expect(result.error).toBe("Failed to revoke pull webhook");
   });
 });
+
+// ── Additional error-path coverage ────────────────────────────────────────
+
+describe("pushBackupToBacky — error paths", () => {
+  it("succeeds when history fetch fails (catch branch)", async () => {
+    mockGetBackySettings.mockResolvedValue({ webhookUrl: "https://backy.test/webhook/p1", apiKey: "key123" });
+    mockGetEncryptionKey.mockResolvedValue("dGVzdGtleQ==");
+    mockGetSecrets.mockResolvedValue([]);
+
+    const mockFetch = vi.fn()
+      .mockResolvedValueOnce({ ok: true, json: () => Promise.resolve({ ok: true }) })
+      .mockRejectedValueOnce(new Error("network"));
+    vi.stubGlobal("fetch", mockFetch);
+
+    const result = await pushBackupToBacky();
+    expect(result.success).toBe(true);
+    if (result.success) expect(result.data.history).toBeUndefined();
+  });
+
+  it("succeeds without history when GET returns non-ok", async () => {
+    mockGetBackySettings.mockResolvedValue({ webhookUrl: "https://backy.test/webhook/p1", apiKey: "key123" });
+    mockGetEncryptionKey.mockResolvedValue("dGVzdGtleQ==");
+    mockGetSecrets.mockResolvedValue([]);
+
+    const mockFetch = vi.fn()
+      .mockResolvedValueOnce({ ok: true, json: () => Promise.resolve({ ok: true }) })
+      .mockResolvedValueOnce({ ok: false, status: 500, json: () => Promise.resolve({}) });
+    vi.stubGlobal("fetch", mockFetch);
+
+    const result = await pushBackupToBacky();
+    expect(result.success).toBe(true);
+    if (result.success) expect(result.data.history).toBeUndefined();
+  });
+
+  it("returns failure when an unexpected error is thrown", async () => {
+    vi.mocked(getScopedDB).mockRejectedValue(new Error("boom"));
+    const result = await pushBackupToBacky();
+    expect(result.success).toBe(false);
+    if (!result.success) expect(result.error).toBe("Failed to push backup");
+  });
+});
+
+describe("getBackyConfig — error paths", () => {
+  it("returns unauthorized when no db", async () => {
+    vi.mocked(getScopedDB).mockResolvedValue(null);
+    const result = await getBackyConfig();
+    expect(result.success).toBe(false);
+    if (!result.success) expect(result.error).toBe("Unauthorized");
+  });
+
+  it("returns failure when getBackySettings throws", async () => {
+    mockGetBackySettings.mockRejectedValue(new Error("DB error"));
+    const result = await getBackyConfig();
+    expect(result.success).toBe(false);
+    if (!result.success) expect(result.error).toBe("Failed to load Backy config");
+  });
+});
+
+describe("saveBackyConfig — error paths", () => {
+  it("returns unauthorized when no db", async () => {
+    vi.mocked(getScopedDB).mockResolvedValue(null);
+    const result = await saveBackyConfig({ webhookUrl: "https://backy.test/api/webhook/p1", apiKey: "abcdefghijklmnopqrstuvwxyz123456789012345678" });
+    expect(result.success).toBe(false);
+    if (!result.success) expect(result.error).toBe("Unauthorized");
+  });
+
+  it("returns failure when upsertBackySettings throws", async () => {
+    mockUpsertBackySettings.mockRejectedValue(new Error("DB error"));
+    const result = await saveBackyConfig({
+      webhookUrl: "https://backy.test/api/webhook/p1",
+      apiKey: "abcdefghijklmnopqrstuvwxyz123456789012345678",
+    });
+    expect(result.success).toBe(false);
+    if (!result.success) expect(result.error).toBe("Failed to save Backy config");
+  });
+});
+
+describe("testBackyConnection — error paths", () => {
+  it("returns unauthorized when no db", async () => {
+    vi.mocked(getScopedDB).mockResolvedValue(null);
+    const result = await testBackyConnection();
+    expect(result.success).toBe(false);
+    if (!result.success) expect(result.error).toBe("Unauthorized");
+  });
+
+  it("returns failure when fetch rejects", async () => {
+    mockGetBackySettings.mockResolvedValue({ webhookUrl: "https://backy.test/webhook/p1", apiKey: "key123" });
+    vi.stubGlobal("fetch", vi.fn().mockRejectedValue(new Error("network")));
+    const result = await testBackyConnection();
+    expect(result.success).toBe(false);
+    if (!result.success) expect(result.error).toContain("Connection failed");
+  });
+});
+
+describe("fetchBackyHistory — error paths", () => {
+  it("returns unauthorized when no db", async () => {
+    vi.mocked(getScopedDB).mockResolvedValue(null);
+    const result = await fetchBackyHistory();
+    expect(result.success).toBe(false);
+    if (!result.success) expect(result.error).toBe("Unauthorized");
+  });
+
+  it("returns failure when GET returns non-ok", async () => {
+    mockGetBackySettings.mockResolvedValue({ webhookUrl: "https://backy.test/webhook/p1", apiKey: "key123" });
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue({ ok: false, status: 502 }));
+    const result = await fetchBackyHistory();
+    expect(result.success).toBe(false);
+    if (!result.success) expect(result.error).toContain("502");
+  });
+
+  it("returns failure when fetch rejects", async () => {
+    mockGetBackySettings.mockResolvedValue({ webhookUrl: "https://backy.test/webhook/p1", apiKey: "key123" });
+    vi.stubGlobal("fetch", vi.fn().mockRejectedValue(new Error("network")));
+    const result = await fetchBackyHistory();
+    expect(result.success).toBe(false);
+    if (!result.success) expect(result.error).toBe("Failed to fetch backup history");
+  });
+});
+
+describe("pull webhook — auth & error paths", () => {
+  it("getBackyPullWebhook unauthorized", async () => {
+    vi.mocked(getScopedDB).mockResolvedValue(null);
+    const result = await getBackyPullWebhook();
+    expect(result.success).toBe(false);
+  });
+
+  it("getBackyPullWebhook fails when db throws", async () => {
+    mockGetBackyPullWebhook.mockRejectedValue(new Error("DB error"));
+    const result = await getBackyPullWebhook();
+    expect(result.success).toBe(false);
+    if (!result.success) expect(result.error).toBe("Failed to load pull webhook");
+  });
+
+  it("generateBackyPullWebhook unauthorized", async () => {
+    vi.mocked(getScopedDB).mockResolvedValue(null);
+    const result = await generateBackyPullWebhook();
+    expect(result.success).toBe(false);
+  });
+
+  it("revokeBackyPullWebhook unauthorized", async () => {
+    vi.mocked(getScopedDB).mockResolvedValue(null);
+    const result = await revokeBackyPullWebhook();
+    expect(result.success).toBe(false);
+  });
+});

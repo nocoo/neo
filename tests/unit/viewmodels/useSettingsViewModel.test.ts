@@ -150,6 +150,22 @@ describe("useSettingsViewModel", () => {
 
       expect(result.current.error).toBe("Failed to load settings");
     });
+
+    it("ignores partial action failures during load", async () => {
+      mockGetUserSettings.mockResolvedValue({ success: false, error: "no settings" });
+      mockGetEncryptionKey.mockResolvedValue({ success: false, error: "no key" });
+      mockGetBackyConfig.mockResolvedValue({ success: false, error: "no backy" });
+      mockGetPullWebhook.mockResolvedValue({ success: false, error: "no pull" });
+
+      const { result } = renderHook(() => useSettingsViewModel());
+      await act(async () => {});
+
+      // Failures shouldn't surface a load error and shouldn't populate state.
+      expect(result.current.error).toBeNull();
+      expect(result.current.encryptionKey).toBeNull();
+      expect(result.current.backyWebhookUrl).toBeNull();
+      expect(result.current.backyPullKey).toBeNull();
+    });
   });
 
   describe("handleUpdateTheme", () => {

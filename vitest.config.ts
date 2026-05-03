@@ -85,7 +85,9 @@ export default defineConfig({
         "components/ui/",
         // Thin page wrappers (SSR data fetch → context → view, no testable logic)
         "app/page.tsx",
-        "app/(dashboard)/**/page.tsx",
+        // Parens (route group syntax) are picomatch metachars — match the
+        // dashboard page wrappers via a glob that ignores the (dashboard) segment.
+        "**/dashboard/**/page.tsx",
         // Single-line auth delegation
         "actions/auth.ts",
         // Pure barrel re-export
@@ -93,32 +95,12 @@ export default defineConfig({
         // Auth.js adapter (pure D1 delegation, same pattern as scoped.ts)
         "lib/auth-adapter.ts",
       ],
-      // Coverage thresholds per quality system L1 dimension
+      // Global thresholds — All files must remain ≥95% on every metric.
       thresholds: {
-        "models/**": {
-          lines: 90,
-          functions: 90,
-          branches: 80,
-          statements: 90,
-        },
-        "viewmodels/**": {
-          lines: 90,
-          functions: 90,
-          branches: 80,
-          statements: 90,
-        },
-        "actions/**": {
-          lines: 85,
-          functions: 85,
-          branches: 75,
-          statements: 85,
-        },
-        "lib/**": {
-          lines: 80,
-          functions: 80,
-          branches: 70,
-          statements: 80,
-        },
+        lines: 95,
+        functions: 95,
+        branches: 95,
+        statements: 95,
       },
     },
   },
