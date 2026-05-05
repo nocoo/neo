@@ -12,6 +12,7 @@ jobs:
     uses: nocoo/base-ci/.github/workflows/bun-quality.yml@v2026.1
     with:
       pre-command: "bun run build"
+      test-command: "bun run test:coverage"
       typecheck-command: "bun run typecheck"
       enable-l2: "false"
     secrets: inherit
