@@ -179,7 +179,7 @@ bun run deploy   # 部署到 Cloudflare
 | 维度 | 工具 | Hook | 状态 |
 |------|------|------|------|
 | **L1** 单元/组件 | Vitest（925 tests，95%+ 覆盖率） | pre-commit | ✅ |
-| **L2** 集成/API | Vitest（51 API E2E tests） | pre-push | ✅ |
+| **L2** 集成/API | Vitest（51 tests）+ HTTP E2E（34 tests，in-memory DB） | pre-push | ✅ |
 | **L3** 系统/E2E | Playwright（40 specs） | manual/CI | ✅ |
 | **G1** 静态分析 | `tsc --noEmit` + ESLint `--max-warnings=0` | pre-commit | ✅ |
 | **G2** 安全 | osv-scanner + gitleaks | pre-push | ✅ |

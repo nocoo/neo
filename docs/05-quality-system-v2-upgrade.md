@@ -1,5 +1,11 @@
 # Quality System V2 Upgrade: True L2 + D1 Verification
 
+> **⚠️ Superseded (2026-05):** The D1 three-layer verification mechanism described in
+> this document (`verify-test-bindings.ts`, `_test_marker` table, `neo-db-test` remote
+> database, `[env.test]` wrangler config) has been fully removed. L2 HTTP E2E testing
+> now uses a process-local in-memory ScopedDB (`lib/e2e/scoped-db.ts`) injected via
+> `lib/auth-context.ts` when `E2E_SKIP_AUTH=true`. No cloud test resources are needed.
+
 Re-evaluate Neo against the canonical six-dimension quality system specification (memory `af0daa0f`).
 The previous upgrade (doc 04) declared Tier S, but an honest audit reveals **L2 is non-compliant** —
 the "API E2E" tests import Server Actions directly in vitest with `MockScopedDB`, making zero real

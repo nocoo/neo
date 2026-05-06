@@ -1,5 +1,10 @@
 # Quality System Upgrade: L1+L2+L3+G1+G2
 
+> **⚠️ Superseded (2026-05):** The "D1 Test Isolation" dimension described in this
+> document (`[env.test]`, `neo-db-test`, `verify-test-bindings.ts`) has been removed.
+> L2 HTTP E2E now uses a process-local in-memory ScopedDB (`lib/e2e/scoped-db.ts`)
+> that requires zero cloud resources. See commit history for details.
+
 Upgrade neo from the legacy four-layer testing architecture to the six-dimension quality system (L1/L2/L3 + G1/G2 + D1).
 
 ## Current State Assessment

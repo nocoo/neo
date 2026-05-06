@@ -92,6 +92,8 @@ export default defineConfig({
         "actions/auth.ts",
         // Pure barrel re-export
         "lib/db/index.ts",
+        // E2E-only in-memory adapter (exercised by HTTP E2E, not unit tests)
+        "lib/e2e/",
         // Auth.js adapter (pure D1 delegation, same pattern as scoped.ts)
         "lib/auth-adapter.ts",
       ],

@@ -37,11 +37,20 @@ export const getSession = cache(async () => {
 /**
  * Get a ScopedDB instance for the current authenticated user.
  * Returns null if not authenticated.
+ * In E2E mode, returns an in-memory implementation that never touches D1.
  */
 export async function getScopedDB(): Promise<ScopedDB | null> {
   const session = await getSession();
   const userId = session?.user?.id;
   if (!userId) return null;
+
+  /* v8 ignore start -- E2E branch exercised by HTTP E2E, not unit tests */
+  if (isE2EMode()) {
+    const { E2eScopedDB } = await import("@/lib/e2e/scoped-db");
+    return new E2eScopedDB(userId) as unknown as ScopedDB;
+  }
+  /* v8 ignore stop */
+
   return new ScopedDB(userId);
 }
 
@@ -56,6 +65,14 @@ export async function getAuthContext(): Promise<{
   const session = await getSession();
   const userId = session?.user?.id;
   if (!userId) return null;
+
+  /* v8 ignore start -- E2E branch exercised by HTTP E2E, not unit tests */
+  if (isE2EMode()) {
+    const { E2eScopedDB } = await import("@/lib/e2e/scoped-db");
+    return { db: new E2eScopedDB(userId) as unknown as ScopedDB, userId };
+  }
+  /* v8 ignore stop */
+
   return { db: new ScopedDB(userId), userId };
 }
 
