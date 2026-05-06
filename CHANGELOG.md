@@ -2,6 +2,27 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.1.1] - 2026-05-06
+
+Test infrastructure cleanup — remove dead remote D1 test isolation code and wire in-memory ScopedDB for HTTP E2E.
+
+### Changed
+
+- **Remove remote D1 test isolation** — delete `d1-test-guard.ts`, `verify-test-bindings.ts`, `[env.test]` config, `_test_marker` migration, and all associated unit tests (408 lines removed)
+- **In-memory E2E ScopedDB** — `getScopedDB()` returns process-local `E2eScopedDB` when `E2E_SKIP_AUTH=true`, eliminating all Cloudflare D1 dependencies for local testing
+- **`/api/e2e/reset` endpoint** — clears in-memory storage between test runs (guarded by `isE2EMode()`)
+
+### Fixed
+
+- **L1 coverage gate** — enforce coverage thresholds in CI
+- **Husky hooks** — make hook scripts executable
+
+### Infrastructure
+
+- **Coverage raised to 95%** across all metrics
+- **Coverage config** aligned with pew best practices
+- **HTML title** unified to "neo - 2FA Manager"
+
 ## [1.1.0] - 2026-04-28
 
 Next.js 16 upgrade.
