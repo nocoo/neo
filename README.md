@@ -183,9 +183,8 @@ bun run deploy   # 部署到 Cloudflare
 | **L3** 系统/E2E | Playwright（40 specs） | manual/CI | ✅ |
 | **G1** 静态分析 | `tsc --noEmit` + ESLint `--max-warnings=0` | pre-commit | ✅ |
 | **G2** 安全 | osv-scanner + gitleaks | pre-push | ✅ |
-| **D1** 测试隔离 | `neo-db-test`（Cloudflare D1） | — | N/A |
 
-**Tier: S** — 全维度绿灯（N/A 视为绿灯）。
+**Tier: S** — 全维度绿灯。
 
 ```bash
 bun run test:run            # L1 + L2 全部测试
