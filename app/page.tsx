@@ -1,4 +1,4 @@
-import { Github } from "lucide-react";
+import { Github } from "@/components/icons/github";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { signIn, auth } from "@/auth";
 import { redirect } from "next/navigation";

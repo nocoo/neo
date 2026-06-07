@@ -5,7 +5,8 @@ import { Sidebar } from "@/components/sidebar";
 import { Breadcrumbs, type BreadcrumbItem } from "@/components/breadcrumbs";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { SidebarProvider, useSidebar } from "@/components/sidebar-context";
-import { Menu, Github } from "lucide-react";
+import { Menu } from "lucide-react";
+import { Github } from "@/components/icons/github";
 import { cn } from "@/lib/utils";
 import type { SidebarUser } from "@/components/sidebar";
 
