@@ -2,6 +2,21 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.1.2] - 2026-06-08
+
+Dependency maintenance — sweep all 18 outdated dependencies (7 major + 12 patch/minor).
+
+### Changed
+
+- **tailwindcss 3 → 4** — migrate to `@tailwindcss/postcss`, drop `autoprefixer`, replace `tailwindcss-animate` with `tw-animate-css`; theme tokens moved from `tailwind.config.ts` to `app/globals.css` via `@theme inline`; custom utilities rewritten as `@utility` blocks
+- **lucide-react 0.x → 1.x** — brand icons removed in v1; extract `Github` via `createLucideIcon` into `components/icons/github.tsx`
+- **typescript 5 → 6** (major)
+- **eslint 9 → 10** (major)
+- **lint-staged 16 → 17** (major)
+- **@vitejs/plugin-react 5 → 6** (major)
+- **@types/node 22 → 25** (major)
+- 12 patch/minor bumps: `@radix-ui/react-*` (avatar/collapsible/slot/tooltip), `react` 19.2.6 → 19.2.7, `react-dom`, `@types/react`, `vitest` 4.1.6 → 4.1.8, `@vitest/coverage-v8`, `happy-dom`, `typescript-eslint`
+
 ## [1.1.1] - 2026-05-06
 
 Test infrastructure cleanup — remove dead remote D1 test isolation code and wire in-memory ScopedDB for HTTP E2E.
