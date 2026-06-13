@@ -18,4 +18,6 @@ jobs:
       enable-security: "true"
       enable-l2: "true"
       l2-command: "bun run test:api"
+      enable-l3: "true"
+      l3-command: "bun run test:e2e:pw"
     secrets: inherit
