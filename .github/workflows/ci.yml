@@ -9,7 +9,7 @@ on:
 
 jobs:
   quality:
-    uses: nocoo/base-ci/.github/workflows/bun-quality.yml@v2026.2
+    uses: nocoo/base-ci/.github/workflows/bun-quality.yml@v2026.4
     with:
       ignore-scripts: true
       pre-command: "bun run build"
@@ -18,4 +18,7 @@ jobs:
       enable-security: "true"
       enable-l2: "true"
       l2-command: "bun run test:api"
+      enable-l3: "true"
+      l3-command: "bun run test:e2e:bdd"
+      l3-browser: "chromium"
     secrets: inherit
