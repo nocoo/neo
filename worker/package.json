@@ -9,11 +9,12 @@
     "test:watch": "vitest"
   },
   "devDependencies": {
-    "@cloudflare/workers-types": "^4.20260611.1",
+    "@cloudflare/workers-types": "^4.20260612.1",
     "vitest": "^4.1.8",
     "wrangler": "^4.100.0"
   },
   "overrides": {
+    "esbuild": "^0.28.1",
     "picomatch": "^4.0.4",
     "postcss": "^8.5.12",
     "vite": "^8.0.13"
