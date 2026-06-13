@@ -1,39 +1,24 @@
-import { defineConfig, devices } from "@playwright/test";
+import { defineConfig } from "@playwright/test";
 
 export default defineConfig({
-  testDir: "./tests/playwright",
+  testDir: "./e2e/bdd",
   fullyParallel: true,
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 2 : 0,
-  ...(process.env.CI ? { workers: 1 } : {}),
+  workers: process.env.CI ? 1 : 2,
   reporter: "html",
   outputDir: "test-results",
 
   use: {
     baseURL: "http://localhost:27026",
     trace: "on-first-retry",
-    screenshot: "only-on-failure",
+    headless: true,
   },
 
-  projects: [
-    {
-      name: "setup",
-      testMatch: /.*\.setup\.ts/,
-    },
-    {
-      name: "chromium",
-      use: {
-        ...devices["Desktop Chrome"],
-        storageState: "tests/playwright/.auth/user.json",
-      },
-      dependencies: ["setup"],
-    },
-  ],
-
   webServer: {
-    command: "PLAYWRIGHT=1 ALLOWED_EMAILS=e2e@test.local bun run dev -- -p 27026",
-    url: "http://localhost:27026",
+    command: "bun run dev -- -p 27026",
+    port: 27026,
     reuseExistingServer: !process.env.CI,
-    timeout: 120000,
+    timeout: 60_000,
   },
 });
