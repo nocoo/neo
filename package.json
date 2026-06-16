@@ -79,6 +79,7 @@
     "edge >= 96"
   ],
   "overrides": {
+    "@babel/core": "^7.29.6",
     "cookie": "^0.7.0",
     "esbuild": "^0.28.1",
     "picomatch": "^4.0.4",
