@@ -64,12 +64,12 @@ jobs:
           cache-to: type=gha,mode=max
 
       - name: Deploy to jp2.nocoo.cloud
-        uses: appleboy/ssh-action@v1
+        uses: nocoo/base-ci/.github/actions/ssh-deploy@aec4adc1a817c56790d1698329ef9398a15a754a  # v2026.5
         env:
           IMAGE_SHA: ${{ github.event.workflow_run.head_sha || github.sha }}
         with:
           host: ${{ secrets.VPS_HOST }}
-          username: ${{ secrets.VPS_USER }}
+          user: ${{ secrets.VPS_USER }}
           key: ${{ secrets.VPS_SSH_KEY }}
           port: ${{ secrets.VPS_PORT }}
           envs: IMAGE_SHA
