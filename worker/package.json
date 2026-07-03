@@ -9,7 +9,7 @@
     "test:watch": "vitest"
   },
   "devDependencies": {
-    "@cloudflare/workers-types": "^4.20260630.1",
+    "@cloudflare/workers-types": "^4.20260702.1",
     "vitest": "^4.1.9",
     "wrangler": "^4.106.0"
   },
