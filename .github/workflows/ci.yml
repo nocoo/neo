@@ -12,6 +12,7 @@ jobs:
     uses: nocoo/base-ci/.github/workflows/bun-quality.yml@aec4adc1a817c56790d1698329ef9398a15a754a  # v2026.5
     with:
       ignore-scripts: true
+      extra-install-dirs: "worker"
       pre-command: "bun run build"
       test-command: "bun run test:coverage"
       typecheck-command: "bun run typecheck"
@@ -21,6 +22,7 @@ jobs:
       enable-l3: "true"
       l3-command: "bun run test:e2e:bdd"
       l3-browser: "chromium"
+      enable-worker: "true"
     secrets: inherit
 
   release-smoke:
