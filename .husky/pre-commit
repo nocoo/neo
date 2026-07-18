@@ -6,11 +6,23 @@
 STAGED_FILES=$(git diff --cached --name-only)
 
 # G0: Verify lockfile in sync with package.json when either changes.
-PKG_CHANGES=$(echo "$STAGED_FILES" | grep -E "package\.json|bun\.lock" || true)
-if [ -n "$PKG_CHANGES" ]; then
+# Root and worker each have their own package.json + bun.lock; run the
+# frozen install in whichever tree the staged change touches.
+ROOT_PKG_CHANGES=$(echo "$STAGED_FILES" | grep -E "^(package\.json|bun\.lock)$" || true)
+WORKER_PKG_CHANGES=$(echo "$STAGED_FILES" | grep -E "^worker/(package\.json|bun\.lock)$" || true)
+
+if [ -n "$ROOT_PKG_CHANGES" ]; then
   bun install --frozen-lockfile 2>&1
   if [ $? -ne 0 ]; then
-    echo "❌ pre-commit FAILED: Lockfile out of sync. Run 'bun install' and commit bun.lock."
+    echo "❌ pre-commit FAILED: Root lockfile out of sync. Run 'bun install' and commit bun.lock."
+    exit 1
+  fi
+fi
+
+if [ -n "$WORKER_PKG_CHANGES" ]; then
+  bun install --cwd worker --frozen-lockfile 2>&1
+  if [ $? -ne 0 ]; then
+    echo "❌ pre-commit FAILED: Worker lockfile out of sync. Run 'bun install --cwd worker' and commit worker/bun.lock."
     exit 1
   fi
 fi
