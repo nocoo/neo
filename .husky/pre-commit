@@ -2,16 +2,22 @@
 
 # pre-commit: L1 Unit Tests (with coverage) + G1 Static Analysis (Biome + TypeScript)
 #
-# Ordering rationale
-# ──────────────────
-# lint-staged stashes and rewrites files as it runs `biome check --write`.
-# If tsc / vitest ran in parallel, they could observe the working tree
-# mid-rewrite and produce results that don't match what actually gets
-# committed. Run lint-staged FIRST so it finishes its stash/apply dance
-# before the read-only gates fire.
+# What is actually validated
+# ──────────────────────────
+# The gates run against a materialised snapshot of the git INDEX, not the
+# working tree. That means a file that is fixed in the working copy but
+# broken in the staged snapshot still fails — the commit only records the
+# index, so the index is what must pass. `git checkout-index --prefix=…`
+# writes every tracked file at its staged version into a temp directory,
+# node_modules are symlinked in so bun/tsc/vitest resolve dependencies,
+# and the read-only gates cd into that snapshot to run.
 #
-# After lint-staged: TypeScript and Vitest are both read-only and can
-# safely run in parallel to save wall-clock.
+# Ordering
+# ────────
+# lint-staged is a writer (biome check --write mutates the working tree
+# via git stash/restore). Run it FIRST, in the working tree, so it
+# finishes before the snapshot is taken. Then take the snapshot from
+# the fresh index and run the read-only gates in parallel.
 
 STAGED_FILES=$(git diff --cached --name-only)
 
@@ -49,8 +55,9 @@ if [ -z "$CODE_CHANGES" ]; then
   exit 0
 fi
 
-# G1b (sequential — mutates the working tree): Biome strict on staged files
-# only, via lint-staged. Must finish before parallel readers run.
+# G1b (mutates the working tree): Biome strict on staged files only, via
+# lint-staged. Runs against the working tree so autofixes can be re-staged.
+# Must finish before we snapshot the index.
 if [ -n "$BIOME_STAGED" ]; then
   bunx lint-staged 2>&1
   if [ $? -ne 0 ]; then
@@ -59,13 +66,35 @@ if [ -n "$BIOME_STAGED" ]; then
   fi
 fi
 
+# Materialise the INDEX (post-lint-staged) into a temp dir. Read-only gates
+# operate against this snapshot, not the working tree — so uncommitted
+# edits in the working copy can never sneak past a broken staged file.
+SNAP_ROOT=$(mktemp -d -t neo-precommit-snap.XXXXXXXX)
+if [ -z "$SNAP_ROOT" ] || [ ! -d "$SNAP_ROOT" ]; then
+  echo "❌ pre-commit FAILED: could not create snapshot dir."
+  exit 1
+fi
+trap 'rm -rf "$SNAP_ROOT"' EXIT INT TERM
+# --prefix requires the trailing slash; -a materialises every tracked file.
+git checkout-index --prefix="$SNAP_ROOT/" -a
+if [ $? -ne 0 ]; then
+  echo "❌ pre-commit FAILED: git checkout-index for snapshot."
+  exit 1
+fi
+# Reuse the working tree's installed dependencies inside the snapshot;
+# a fresh bun install per commit would be prohibitively slow.
+ln -s "$(pwd)/node_modules" "$SNAP_ROOT/node_modules"
+if [ -d worker/node_modules ]; then
+  ln -s "$(pwd)/worker/node_modules" "$SNAP_ROOT/worker/node_modules"
+fi
+
 TMP_DIR=$(mktemp -d)
 TEST_EXIT_FILE="$TMP_DIR/test_exit"
 TSC_EXIT_FILE="$TMP_DIR/tsc_exit"
 
 # L1 Unit Tests + coverage (thresholds enforced by vitest.config.ts) — read-only.
 (
-  bun run test:unit:coverage 2>&1
+  cd "$SNAP_ROOT" && bun run test:unit:coverage 2>&1
   echo $? > "$TEST_EXIT_FILE"
 ) &
 TEST_PID=$!
@@ -73,7 +102,7 @@ TEST_PID=$!
 if [ -n "$TSC_AFFECTING" ]; then
   (
     # G1a: TypeScript strict (whole project — tsc needs complete context) — read-only.
-    bun run typecheck 2>&1
+    cd "$SNAP_ROOT" && bun run typecheck 2>&1
     echo $? > "$TSC_EXIT_FILE"
   ) &
   TSC_PID=$!
@@ -90,12 +119,12 @@ TSC_EXIT=$(cat "$TSC_EXIT_FILE")
 rm -rf "$TMP_DIR"
 
 if [ "$TEST_EXIT" -ne 0 ]; then
-  echo "❌ pre-commit FAILED: Unit tests or coverage threshold not met."
+  echo "❌ pre-commit FAILED: Unit tests or coverage threshold not met (index snapshot)."
   exit 1
 fi
 if [ "$TSC_EXIT" -ne 0 ]; then
-  echo "❌ pre-commit FAILED: TypeScript type check errors."
+  echo "❌ pre-commit FAILED: TypeScript type check errors (index snapshot)."
   exit 1
 fi
 
-echo "✅ pre-commit passed: G0 Lockfile + L1 Unit + G1 Static Analysis (Biome + TSC)"
+echo "✅ pre-commit passed: G0 Lockfile + L1 Unit + G1 Static Analysis (Biome + TSC, index snapshot)"
