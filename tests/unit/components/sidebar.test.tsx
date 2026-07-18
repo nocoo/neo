@@ -5,9 +5,9 @@
  * in a SidebarProvider for every render.
  */
 
-import { describe, it, expect, vi, beforeEach } from "vitest";
-import React from "react";
 import { render, screen } from "@testing-library/react";
+import React from "react";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
 // ── Hoisted mocks ────────────────────────────────────────────────────────
 
@@ -25,18 +25,11 @@ vi.mock("@/actions/auth", () => ({
 }));
 
 vi.mock("@/components/ui/collapsible", () => ({
-  Collapsible: ({ children }: { children: React.ReactNode }) => (
-    <div>{children}</div>
+  Collapsible: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
+  CollapsibleTrigger: ({ children, ...props }: { children: React.ReactNode }) => (
+    <button {...props}>{children}</button>
   ),
-  CollapsibleTrigger: ({
-    children,
-    ...props
-  }: {
-    children: React.ReactNode;
-  }) => <button {...props}>{children}</button>,
-  CollapsibleContent: ({ children }: { children: React.ReactNode }) => (
-    <div>{children}</div>
-  ),
+  CollapsibleContent: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
 }));
 
 // Mock sidebar context to control collapsed state
@@ -53,9 +46,7 @@ vi.mock("@/components/sidebar-context", () => ({
     mobileOpen: false,
     setMobileOpen: mockSetMobileOpen,
   }),
-  SidebarProvider: ({ children }: { children: React.ReactNode }) => (
-    <>{children}</>
-  ),
+  SidebarProvider: ({ children }: { children: React.ReactNode }) => <>{children}</>,
 }));
 
 import { Sidebar } from "@/components/sidebar";
@@ -122,9 +113,7 @@ describe("Sidebar — expanded", () => {
     mockPathname.mockReturnValue("/dashboard/backup");
     render(<Sidebar user={defaultUser} />);
     const backupElements = screen.getAllByText("Backup");
-    const backupLink = backupElements
-      .map((el) => el.closest("a"))
-      .find((a) => a !== null);
+    const backupLink = backupElements.map((el) => el.closest("a")).find((a) => a !== null);
     expect(backupLink?.className).toContain("bg-accent");
   });
 
@@ -140,11 +129,7 @@ describe("Sidebar — expanded", () => {
   });
 
   it("shows avatar image when provided", () => {
-    render(
-      <Sidebar
-        user={{ ...defaultUser, image: "https://example.com/avatar.jpg" }}
-      />,
-    );
+    render(<Sidebar user={{ ...defaultUser, image: "https://example.com/avatar.jpg" }} />);
     // Radix Avatar renders AvatarImage with role="img" and the alt text.
     // In jsdom AvatarImage may not mount the <img> until loaded, but the
     // fallback ("TU") won't appear because src is set. Verify the Avatar
@@ -154,11 +139,7 @@ describe("Sidebar — expanded", () => {
   });
 
   it("shows fallback for missing name", () => {
-    render(
-      <Sidebar
-        user={{ name: null, email: "a@b.com", image: null }}
-      />,
-    );
+    render(<Sidebar user={{ name: null, email: "a@b.com", image: null }} />);
     expect(screen.getByText("User")).toBeDefined();
     expect(screen.getByText("U")).toBeDefined();
   });
@@ -212,11 +193,7 @@ describe("Sidebar — user field fallbacks", () => {
   });
 
   it("renders AvatarImage when user.image is provided (truthy branch)", () => {
-    render(
-      <Sidebar
-        user={{ name: "X", email: "x@y.z", image: "https://example.com/a.png" }}
-      />,
-    );
+    render(<Sidebar user={{ name: "X", email: "x@y.z", image: "https://example.com/a.png" }} />);
     // truthy branch of `user.image && <AvatarImage>` is exercised by render
     expect(screen.getByText("x@y.z")).toBeDefined();
   });

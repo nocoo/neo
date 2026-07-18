@@ -8,9 +8,9 @@
  */
 
 import { getScopedDB } from "@/lib/auth-context";
-import { validateSecretData, validateBase32, validateOTPParams } from "@/models/validation";
 import { OTP_DEFAULTS } from "@/models/constants";
-import type { ActionResult, Secret, CreateSecretInput, UpdateSecretInput } from "@/models/types";
+import type { ActionResult, CreateSecretInput, Secret, UpdateSecretInput } from "@/models/types";
+import { validateBase32, validateOTPParams, validateSecretData } from "@/models/validation";
 
 /**
  * List all secrets for the authenticated user.
@@ -31,9 +31,7 @@ export async function getSecrets(): Promise<ActionResult<Secret[]>> {
 /**
  * Get a single secret by ID.
  */
-export async function getSecretById(
-  id: string
-): Promise<ActionResult<Secret>> {
+export async function getSecretById(id: string): Promise<ActionResult<Secret>> {
   try {
     const db = await getScopedDB();
     if (!db) return { success: false, error: "Unauthorized" };
@@ -53,9 +51,7 @@ export async function getSecretById(
 /**
  * Create a new secret.
  */
-export async function createSecret(
-  input: CreateSecretInput
-): Promise<ActionResult<Secret>> {
+export async function createSecret(input: CreateSecretInput): Promise<ActionResult<Secret>> {
   try {
     const db = await getScopedDB();
     if (!db) return { success: false, error: "Unauthorized" };
@@ -118,9 +114,7 @@ export async function createSecret(
 /**
  * Update an existing secret.
  */
-export async function updateSecret(
-  input: UpdateSecretInput
-): Promise<ActionResult<Secret>> {
+export async function updateSecret(input: UpdateSecretInput): Promise<ActionResult<Secret>> {
   try {
     const db = await getScopedDB();
     if (!db) return { success: false, error: "Unauthorized" };
@@ -157,7 +151,8 @@ export async function updateSecret(
     const updateData: Record<string, unknown> = {};
     if (input.name !== undefined) updateData.name = input.name.trim();
     if (input.account !== undefined) updateData.account = input.account?.trim() || null;
-    if (input.secret !== undefined) updateData.secret = input.secret.toUpperCase().replace(/\s/g, "");
+    if (input.secret !== undefined)
+      updateData.secret = input.secret.toUpperCase().replace(/\s/g, "");
     if (input.type !== undefined) updateData.type = input.type;
     if (input.digits !== undefined) updateData.digits = input.digits;
     if (input.period !== undefined) updateData.period = input.period;
@@ -178,9 +173,7 @@ export async function updateSecret(
 /**
  * Delete a secret by ID.
  */
-export async function deleteSecret(
-  id: string
-): Promise<ActionResult<void>> {
+export async function deleteSecret(id: string): Promise<ActionResult<void>> {
   try {
     const db = await getScopedDB();
     if (!db) return { success: false, error: "Unauthorized" };
@@ -214,9 +207,7 @@ export async function getDeletedSecrets(): Promise<ActionResult<Secret[]>> {
 /**
  * Restore a secret from the recycle bin.
  */
-export async function restoreSecret(
-  id: string
-): Promise<ActionResult<Secret>> {
+export async function restoreSecret(id: string): Promise<ActionResult<Secret>> {
   try {
     const db = await getScopedDB();
     if (!db) return { success: false, error: "Unauthorized" };
@@ -236,9 +227,7 @@ export async function restoreSecret(
 /**
  * Permanently delete a secret from the recycle bin.
  */
-export async function permanentDeleteSecret(
-  id: string
-): Promise<ActionResult<void>> {
+export async function permanentDeleteSecret(id: string): Promise<ActionResult<void>> {
   try {
     const db = await getScopedDB();
     if (!db) return { success: false, error: "Unauthorized" };
@@ -289,7 +278,7 @@ export async function getSecretCount(): Promise<ActionResult<number>> {
  * Batch import secrets.
  */
 export async function batchImportSecrets(
-  secrets: CreateSecretInput[]
+  secrets: CreateSecretInput[],
 ): Promise<ActionResult<{ imported: number; skipped: number; duplicates: number }>> {
   try {
     const db = await getScopedDB();
@@ -306,7 +295,7 @@ export async function batchImportSecrets(
     // Load existing secrets for duplicate detection (name + secret combo)
     const existing = await db.getSecrets();
     const existingKeys = new Set(
-      existing.map((s) => `${s.name.toLowerCase()}::${s.secret.toLowerCase()}`)
+      existing.map((s) => `${s.name.toLowerCase()}::${s.secret.toLowerCase()}`),
     );
 
     // Track within-batch duplicates too

@@ -16,9 +16,7 @@ try {
 } catch (e: unknown) {
   const err = e as { exitCode: number };
   if (err.exitCode === 127) {
-    console.error(
-      "❌ osv-scanner not installed. Install: brew install osv-scanner"
-    );
+    console.error("❌ osv-scanner not installed. Install: brew install osv-scanner");
     errors.push("osv-scanner not installed");
   } else {
     console.error("❌ osv-scanner: vulnerabilities detected");
@@ -30,17 +28,13 @@ try {
 console.log("🔍 G2: gitleaks — checking for secrets...");
 try {
   // Detect secrets in commits not yet pushed to upstream
-  const upstream = await $`git rev-parse --abbrev-ref @{u}`
-    .text()
-    .catch(() => "origin/main");
+  const upstream = await $`git rev-parse --abbrev-ref @{u}`.text().catch(() => "origin/main");
   await $`gitleaks git --log-opts=${upstream.trim()}..HEAD --no-banner`.quiet();
   console.log("✅ gitleaks: no secrets detected");
 } catch (e: unknown) {
   const err = e as { exitCode: number };
   if (err.exitCode === 127) {
-    console.error(
-      "❌ gitleaks not installed. Install: brew install gitleaks"
-    );
+    console.error("❌ gitleaks not installed. Install: brew install gitleaks");
     errors.push("gitleaks not installed");
   } else {
     console.error("❌ gitleaks: potential secrets detected");

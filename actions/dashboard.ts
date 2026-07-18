@@ -18,10 +18,7 @@ export async function getDashboardData(): Promise<ActionResult<DashboardData>> {
     const db = await getScopedDB();
     if (!db) return { success: false, error: "Unauthorized" };
 
-    const [secrets, settings] = await Promise.all([
-      db.getSecrets(),
-      db.getUserSettings(),
-    ]);
+    const [secrets, settings] = await Promise.all([db.getSecrets(), db.getUserSettings()]);
 
     return {
       success: true,

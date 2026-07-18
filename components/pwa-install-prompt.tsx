@@ -8,8 +8,8 @@
  * prompt is triggered.
  */
 
-import { useState, useEffect, useCallback } from "react";
 import { Download, X } from "lucide-react";
+import { useCallback, useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 
 // ── Types ────────────────────────────────────────────────────────────────
@@ -22,8 +22,7 @@ interface BeforeInstallPromptEvent extends Event {
 // ── Component ────────────────────────────────────────────────────────────
 
 export function PwaInstallPrompt() {
-  const [deferredPrompt, setDeferredPrompt] =
-    useState<BeforeInstallPromptEvent | null>(null);
+  const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
   const [dismissed, setDismissed] = useState(false);
 
   useEffect(() => {
@@ -58,9 +57,8 @@ export function PwaInstallPrompt() {
   }
 
   return (
-    <div
+    <header
       className="fixed bottom-4 left-4 right-4 z-50 mx-auto max-w-md rounded-card bg-secondary p-4"
-      role="banner"
       data-testid="pwa-install-prompt"
     >
       <div className="flex items-start gap-3">
@@ -86,15 +84,10 @@ export function PwaInstallPrompt() {
         <Button size="sm" onClick={handleInstall} className="flex-1">
           Install
         </Button>
-        <Button
-          size="sm"
-          variant="outline"
-          onClick={handleDismiss}
-          className="flex-1"
-        >
+        <Button size="sm" variant="outline" onClick={handleDismiss} className="flex-1">
           Not Now
         </Button>
       </div>
-    </div>
+    </header>
   );
 }

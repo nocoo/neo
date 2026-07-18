@@ -6,16 +6,16 @@
  * Connects to DashboardContext for state and server actions for mutations.
  */
 
-import { useState, useCallback, useEffect, useRef, useMemo } from "react";
-import { useDashboardState, useDashboardActions } from "@/contexts/dashboard-context";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
-  createSecret as createSecretAction,
-  updateSecret as updateSecretAction,
-  deleteSecret as deleteSecretAction,
   batchImportSecrets as batchImportAction,
+  createSecret as createSecretAction,
+  deleteSecret as deleteSecretAction,
+  updateSecret as updateSecretAction,
 } from "@/actions/secrets";
+import { useDashboardActions, useDashboardState } from "@/contexts/dashboard-context";
 import { generateTOTP } from "@/models/otp";
-import type { Secret, CreateSecretInput, UpdateSecretInput, OtpResult } from "@/models/types";
+import type { CreateSecretInput, OtpResult, Secret, UpdateSecretInput } from "@/models/types";
 
 // ── Helpers ──────────────────────────────────────────────────────────────
 
@@ -47,7 +47,9 @@ export interface SecretsViewModelActions {
   handleCreate: (input: CreateSecretInput) => Promise<boolean>;
   handleUpdate: (input: UpdateSecretInput) => Promise<boolean>;
   handleDelete: (id: string) => Promise<boolean>;
-  handleBatchImport: (secrets: CreateSecretInput[]) => Promise<{ imported: number; skipped: number; duplicates: number } | null>;
+  handleBatchImport: (
+    secrets: CreateSecretInput[],
+  ) => Promise<{ imported: number; skipped: number; duplicates: number } | null>;
   refreshOtp: (secretId: string) => Promise<void>;
   clearError: () => void;
 }
@@ -58,12 +60,8 @@ export type SecretsViewModel = SecretsViewModelState & SecretsViewModelActions;
 
 export function useSecretsViewModel(): SecretsViewModel {
   const { secrets } = useDashboardState();
-  const {
-    handleSecretCreated,
-    handleSecretDeleted,
-    handleSecretUpdated,
-    handleSecretsReloaded,
-  } = useDashboardActions();
+  const { handleSecretCreated, handleSecretDeleted, handleSecretUpdated, handleSecretsReloaded } =
+    useDashboardActions();
 
   const [searchQuery, setSearchQuery] = useState("");
   const [otpMap, setOtpMap] = useState<Map<string, OtpResult>>(new Map());
@@ -80,36 +78,31 @@ export function useSecretsViewModel(): SecretsViewModel {
     if (!searchQuery.trim()) return sorted;
     const query = searchQuery.toLowerCase();
     return sorted.filter(
-      (s) =>
-        s.name.toLowerCase().includes(query) ||
-        (s.account && s.account.toLowerCase().includes(query))
+      (s) => s.name.toLowerCase().includes(query) || s.account?.toLowerCase().includes(query),
     );
   }, [secrets, searchQuery]);
 
   // ── OTP generation ────────────────────────────────────────────────────
 
-  const generateOtpForSecret = useCallback(
-    async (secret: Secret): Promise<OtpResult | null> => {
-      if (secret.type !== "totp") return null;
-      try {
-        const period = secret.period || 30;
-        const counter = computeCounter(period);
-        const otp = await generateTOTP(secret.secret, counter, {
-          digits: secret.digits,
-          period,
-          algorithm: secret.algorithm,
-        });
-        return {
-          otp,
-          remainingSeconds: computeRemaining(period),
-          period,
-        };
-      } catch {
-        return null;
-      }
-    },
-    []
-  );
+  const generateOtpForSecret = useCallback(async (secret: Secret): Promise<OtpResult | null> => {
+    if (secret.type !== "totp") return null;
+    try {
+      const period = secret.period || 30;
+      const counter = computeCounter(period);
+      const otp = await generateTOTP(secret.secret, counter, {
+        digits: secret.digits,
+        period,
+        algorithm: secret.algorithm,
+      });
+      return {
+        otp,
+        remainingSeconds: computeRemaining(period),
+        period,
+      };
+    } catch {
+      return null;
+    }
+  }, []);
 
   const generateAllOtps = useCallback(async () => {
     const newMap = new Map<string, OtpResult>();
@@ -117,7 +110,7 @@ export function useSecretsViewModel(): SecretsViewModel {
       secrets.map(async (secret) => {
         const result = await generateOtpForSecret(secret);
         return { id: secret.id, result };
-      })
+      }),
     );
     for (const { id, result } of entries) {
       if (result) {
@@ -153,7 +146,7 @@ export function useSecretsViewModel(): SecretsViewModel {
         });
       }
     },
-    [secrets, generateOtpForSecret]
+    [secrets, generateOtpForSecret],
   );
 
   // ── CRUD handlers ─────────────────────────────────────────────────────
@@ -177,7 +170,7 @@ export function useSecretsViewModel(): SecretsViewModel {
         setBusy(false);
       }
     },
-    [handleSecretCreated]
+    [handleSecretCreated],
   );
 
   const handleUpdate = useCallback(
@@ -199,7 +192,7 @@ export function useSecretsViewModel(): SecretsViewModel {
         setBusy(false);
       }
     },
-    [handleSecretUpdated]
+    [handleSecretUpdated],
   );
 
   const handleDelete = useCallback(
@@ -221,12 +214,12 @@ export function useSecretsViewModel(): SecretsViewModel {
         setBusy(false);
       }
     },
-    [handleSecretDeleted]
+    [handleSecretDeleted],
   );
 
   const handleBatchImport = useCallback(
     async (
-      importSecrets: CreateSecretInput[]
+      importSecrets: CreateSecretInput[],
     ): Promise<{ imported: number; skipped: number; duplicates: number } | null> => {
       setBusy(true);
       setError(null);
@@ -251,7 +244,7 @@ export function useSecretsViewModel(): SecretsViewModel {
         setBusy(false);
       }
     },
-    [handleSecretsReloaded]
+    [handleSecretsReloaded],
   );
 
   const clearError = useCallback(() => setError(null), []);

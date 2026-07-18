@@ -8,14 +8,10 @@
  * replacing the D1 HTTP layer.
  */
 
-import {
-  getMockSecrets,
-  getMockUserSettings,
-  clearMockStorage,
-} from "@/tests/mocks/db-storage";
 import { expect } from "vitest";
-import type { Secret, UserSettings, ActionResult } from "@/models/types";
 import type { OtpAlgorithm } from "@/models/constants";
+import type { ActionResult, Secret, UserSettings } from "@/models/types";
+import { clearMockStorage, getMockSecrets, getMockUserSettings } from "@/tests/mocks/db-storage";
 
 // ── Types for internal storage rows ──────────────────────────────────────
 
@@ -59,9 +55,7 @@ export class MockScopedDB {
   }
 
   async getSecretById(id: string): Promise<Secret | null> {
-    const row = this.secrets.find(
-      (s) => s.id === id && s.user_id === this.userId
-    );
+    const row = this.secrets.find((s) => s.id === id && s.user_id === this.userId);
     return row ? this.toSecret(row) : null;
   }
 
@@ -98,11 +92,9 @@ export class MockScopedDB {
       period: number;
       algorithm: string;
       counter: number;
-    }>
+    }>,
   ): Promise<Secret | null> {
-    const row = this.secrets.find(
-      (s) => s.id === id && s.user_id === this.userId
-    );
+    const row = this.secrets.find((s) => s.id === id && s.user_id === this.userId);
     if (!row) return null;
 
     for (const [key, value] of Object.entries(data)) {
@@ -115,9 +107,7 @@ export class MockScopedDB {
   }
 
   async deleteSecret(id: string): Promise<boolean> {
-    const idx = this.secrets.findIndex(
-      (s) => s.id === id && s.user_id === this.userId
-    );
+    const idx = this.secrets.findIndex((s) => s.id === id && s.user_id === this.userId);
     if (idx >= 0) this.secrets.splice(idx, 1);
     return true;
   }
@@ -133,11 +123,13 @@ export class MockScopedDB {
     return row ? this.toSettings(row) : null;
   }
 
-  async upsertUserSettings(data: Partial<{
-    encryptionKeyHash: string | null;
-    theme: string;
-    language: string;
-  }>): Promise<UserSettings> {
+  async upsertUserSettings(
+    data: Partial<{
+      encryptionKeyHash: string | null;
+      theme: string;
+      language: string;
+    }>,
+  ): Promise<UserSettings> {
     const existing = this.settings.find((s) => s.user_id === this.userId);
 
     if (existing) {

@@ -5,12 +5,12 @@
  * for soft-deleted secrets.
  */
 
-import { useState, useCallback, useMemo } from "react";
+import { useCallback, useMemo, useState } from "react";
 import {
-  getDeletedSecrets as getDeletedSecretsAction,
-  restoreSecret as restoreSecretAction,
-  permanentDeleteSecret as permanentDeleteSecretAction,
   emptyRecycleBin as emptyRecycleBinAction,
+  getDeletedSecrets as getDeletedSecretsAction,
+  permanentDeleteSecret as permanentDeleteSecretAction,
+  restoreSecret as restoreSecretAction,
 } from "@/actions/secrets";
 import type { Secret } from "@/models/types";
 
@@ -40,9 +40,7 @@ export interface RecycleBinViewModel {
 
 // ── Hook ─────────────────────────────────────────────────────────────────
 
-export function useRecycleBinViewModel(
-  initialSecrets: Secret[] = [],
-): RecycleBinViewModel {
+export function useRecycleBinViewModel(initialSecrets: Secret[] = []): RecycleBinViewModel {
   const [deletedSecrets, setDeletedSecrets] = useState<Secret[]>(initialSecrets);
   const [searchQuery, setSearchQuery] = useState("");
   const [loading, setLoading] = useState(false);
@@ -61,9 +59,7 @@ export function useRecycleBinViewModel(
     if (!searchQuery.trim()) return sorted;
     const query = searchQuery.toLowerCase();
     return sorted.filter(
-      (s) =>
-        s.name.toLowerCase().includes(query) ||
-        (s.account && s.account.toLowerCase().includes(query)),
+      (s) => s.name.toLowerCase().includes(query) || s.account?.toLowerCase().includes(query),
     );
   }, [deletedSecrets, searchQuery]);
 

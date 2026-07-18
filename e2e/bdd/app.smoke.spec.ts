@@ -1,4 +1,4 @@
-import { test, expect } from "@playwright/test";
+import { expect, test } from "@playwright/test";
 
 test.describe("App — BDD Smoke", () => {
   test("Given the app is running, When I visit the login page, Then I see the app title", async ({

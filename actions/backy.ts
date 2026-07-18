@@ -11,12 +11,12 @@ import { getScopedDB } from "@/lib/auth-context";
 import { VERSION } from "@/lib/version";
 import { createEncryptedZip, generateArchiveFilename } from "@/models/backup-archive";
 import {
-  validateBackyConfig,
-  maskApiKey,
-  getBackyEnvironment,
-  buildBackyTag,
   type BackyHistoryResponse,
   type BackyPushDetail,
+  buildBackyTag,
+  getBackyEnvironment,
+  maskApiKey,
+  validateBackyConfig,
 } from "@/models/backy";
 import type { ActionResult, ParsedSecret } from "@/models/types";
 
@@ -38,7 +38,10 @@ export async function pushBackupToBacky(): Promise<ActionResult<BackyPushDetail>
 
     const encryptionKey = await db.getEncryptionKey();
     if (!encryptionKey) {
-      return { success: false, error: "No encryption key configured. Set up your encryption key in Settings first." };
+      return {
+        success: false,
+        error: "No encryption key configured. Set up your encryption key in Settings first.",
+      };
     }
 
     const start = Date.now();

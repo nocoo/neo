@@ -3,13 +3,13 @@
  * Preserves ALL RFC 6238/4226 official test vectors.
  */
 
-import { describe, it, expect } from "vitest";
+import { describe, expect, it } from "vitest";
 import {
-  generateOTP,
-  generateTOTP,
-  generateOTPAuthURL,
   base32toByteArray,
   byteArrayToBase32,
+  generateOTP,
+  generateOTPAuthURL,
+  generateTOTP,
   getHashAlgorithm,
 } from "@/models/otp";
 
@@ -28,10 +28,7 @@ describe("base32toByteArray", () => {
       },
       {
         input: "GEZDGNBVGY3TQOJQGEZDGNBVGY3TQOJQ",
-        expected: [
-          49, 50, 51, 52, 53, 54, 55, 56, 57, 48, 49, 50, 51, 52, 53, 54, 55,
-          56, 57, 48,
-        ],
+        expected: [49, 50, 51, 52, 53, 54, 55, 56, 57, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 48],
       },
     ];
 

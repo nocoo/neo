@@ -2,9 +2,9 @@
  * SecretsView wiring tests.
  */
 
-import { describe, it, expect, vi, beforeEach } from "vitest";
-import { render, screen, fireEvent } from "@testing-library/react";
-import type { Secret, OtpResult } from "@/models/types";
+import { fireEvent, render, screen } from "@testing-library/react";
+import { beforeEach, describe, expect, it, vi } from "vitest";
+import type { OtpResult, Secret } from "@/models/types";
 
 // ── Hoisted mocks ────────────────────────────────────────────────────────
 
@@ -101,9 +101,7 @@ describe("SecretsView", () => {
 
   it("renders empty state when no secrets", () => {
     render(<SecretsView />);
-    expect(
-      screen.getByText("No secrets yet. Add your first secret to get started.")
-    ).toBeDefined();
+    expect(screen.getByText("No secrets yet. Add your first secret to get started.")).toBeDefined();
   });
 
   it("renders secrets from viewmodel", () => {

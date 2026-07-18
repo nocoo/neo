@@ -9,12 +9,12 @@
 
 import {
   createContext,
-  useContext,
-  useState,
-  useCallback,
-  useMemo,
-  useEffect,
   type ReactNode,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useState,
 } from "react";
 import { getDashboardData } from "@/actions/dashboard";
 import type { Secret } from "@/models/types";
@@ -59,7 +59,9 @@ interface DashboardProviderProps {
 
 export function DashboardProvider({ children, initialData }: DashboardProviderProps) {
   const [secrets, setSecrets] = useState<Secret[]>(initialData?.secrets ?? []);
-  const [encryptionEnabled, setEncryptionEnabled] = useState(initialData?.encryptionEnabled ?? false);
+  const [encryptionEnabled, setEncryptionEnabled] = useState(
+    initialData?.encryptionEnabled ?? false,
+  );
   const [loading, setLoading] = useState(!initialData);
   const [error, setError] = useState<string | null>(null);
 
@@ -99,9 +101,7 @@ export function DashboardProvider({ children, initialData }: DashboardProviderPr
   }, []);
 
   const handleSecretUpdated = useCallback((secret: Secret) => {
-    setSecrets((prev) =>
-      prev.map((s) => (s.id === secret.id ? secret : s))
-    );
+    setSecrets((prev) => prev.map((s) => (s.id === secret.id ? secret : s)));
   }, []);
 
   const handleSecretsReloaded = useCallback((newSecrets: Secret[]) => {
@@ -125,7 +125,7 @@ export function DashboardProvider({ children, initialData }: DashboardProviderPr
 
   const stateValue = useMemo<DashboardState>(
     () => ({ secrets, encryptionEnabled, loading, error }),
-    [secrets, encryptionEnabled, loading, error]
+    [secrets, encryptionEnabled, loading, error],
   );
 
   const actionsValue = useMemo<DashboardActions>(
@@ -136,14 +136,12 @@ export function DashboardProvider({ children, initialData }: DashboardProviderPr
       handleSecretsReloaded,
       refresh,
     }),
-    [handleSecretCreated, handleSecretDeleted, handleSecretUpdated, handleSecretsReloaded, refresh]
+    [handleSecretCreated, handleSecretDeleted, handleSecretUpdated, handleSecretsReloaded, refresh],
   );
 
   return (
     <DashboardActionsContext.Provider value={actionsValue}>
-      <DashboardStateContext.Provider value={stateValue}>
-        {children}
-      </DashboardStateContext.Provider>
+      <DashboardStateContext.Provider value={stateValue}>{children}</DashboardStateContext.Provider>
     </DashboardActionsContext.Provider>
   );
 }

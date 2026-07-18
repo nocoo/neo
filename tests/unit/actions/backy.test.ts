@@ -2,7 +2,7 @@
  * Backy server action tests.
  */
 
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
 // ── Hoisted mocks ────────────────────────────────────────────────────────
 
@@ -57,14 +57,14 @@ vi.mock("@/models/backup-archive", () => ({
 }));
 
 import {
-  pushBackupToBacky,
+  fetchBackyHistory,
+  generateBackyPullWebhook,
   getBackyConfig,
+  getBackyPullWebhook,
+  pushBackupToBacky,
+  revokeBackyPullWebhook,
   saveBackyConfig,
   testBackyConnection,
-  fetchBackyHistory,
-  getBackyPullWebhook,
-  generateBackyPullWebhook,
-  revokeBackyPullWebhook,
 } from "@/actions/backy";
 import { getScopedDB } from "@/lib/auth-context";
 
@@ -95,7 +95,10 @@ describe("pushBackupToBacky", () => {
   });
 
   it("returns error when no encryption key", async () => {
-    mockGetBackySettings.mockResolvedValue({ webhookUrl: "https://backy.test/webhook/p1", apiKey: "key123" });
+    mockGetBackySettings.mockResolvedValue({
+      webhookUrl: "https://backy.test/webhook/p1",
+      apiKey: "key123",
+    });
     mockGetEncryptionKey.mockResolvedValue(null);
     const result = await pushBackupToBacky();
     expect(result.success).toBe(false);
@@ -103,13 +106,27 @@ describe("pushBackupToBacky", () => {
   });
 
   it("pushes backup successfully", async () => {
-    mockGetBackySettings.mockResolvedValue({ webhookUrl: "https://backy.test/webhook/p1", apiKey: "key123" });
+    mockGetBackySettings.mockResolvedValue({
+      webhookUrl: "https://backy.test/webhook/p1",
+      apiKey: "key123",
+    });
     mockGetEncryptionKey.mockResolvedValue("dGVzdGtleQ==");
     mockGetSecrets.mockResolvedValue([
-      { id: "s1", name: "GitHub", account: null, secret: "JBSWY3DPEHPK3PXP", type: "totp", digits: 6, period: 30, algorithm: "SHA-1", counter: 0 },
+      {
+        id: "s1",
+        name: "GitHub",
+        account: null,
+        secret: "JBSWY3DPEHPK3PXP",
+        type: "totp",
+        digits: 6,
+        period: 30,
+        algorithm: "SHA-1",
+        counter: 0,
+      },
     ]);
 
-    const mockFetch = vi.fn()
+    const mockFetch = vi
+      .fn()
       // POST response
       .mockResolvedValueOnce({
         ok: true,
@@ -139,15 +156,21 @@ describe("pushBackupToBacky", () => {
   });
 
   it("returns error on push failure", async () => {
-    mockGetBackySettings.mockResolvedValue({ webhookUrl: "https://backy.test/webhook/p1", apiKey: "key123" });
+    mockGetBackySettings.mockResolvedValue({
+      webhookUrl: "https://backy.test/webhook/p1",
+      apiKey: "key123",
+    });
     mockGetEncryptionKey.mockResolvedValue("dGVzdGtleQ==");
     mockGetSecrets.mockResolvedValue([]);
 
-    vi.stubGlobal("fetch", vi.fn().mockResolvedValue({
-      ok: false,
-      status: 413,
-      text: () => Promise.resolve("Payload too large"),
-    }));
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue({
+        ok: false,
+        status: 413,
+        text: () => Promise.resolve("Payload too large"),
+      }),
+    );
 
     const result = await pushBackupToBacky();
     expect(result.success).toBe(false);
@@ -202,7 +225,10 @@ describe("testBackyConnection", () => {
   });
 
   it("tests connection via HEAD request", async () => {
-    mockGetBackySettings.mockResolvedValue({ webhookUrl: "https://backy.test/webhook/p1", apiKey: "key123" });
+    mockGetBackySettings.mockResolvedValue({
+      webhookUrl: "https://backy.test/webhook/p1",
+      apiKey: "key123",
+    });
     vi.stubGlobal("fetch", vi.fn().mockResolvedValue({ ok: true }));
 
     const result = await testBackyConnection();
@@ -210,7 +236,10 @@ describe("testBackyConnection", () => {
   });
 
   it("returns error on failed connection", async () => {
-    mockGetBackySettings.mockResolvedValue({ webhookUrl: "https://backy.test/webhook/p1", apiKey: "key123" });
+    mockGetBackySettings.mockResolvedValue({
+      webhookUrl: "https://backy.test/webhook/p1",
+      apiKey: "key123",
+    });
     vi.stubGlobal("fetch", vi.fn().mockResolvedValue({ ok: false, status: 401 }));
 
     const result = await testBackyConnection();
@@ -227,11 +256,23 @@ describe("fetchBackyHistory", () => {
   });
 
   it("fetches history successfully", async () => {
-    mockGetBackySettings.mockResolvedValue({ webhookUrl: "https://backy.test/webhook/p1", apiKey: "key123" });
-    vi.stubGlobal("fetch", vi.fn().mockResolvedValue({
-      ok: true,
-      json: () => Promise.resolve({ project_name: "neo", environment: null, recent_backups: [{ id: "b1" }], total_backups: 1 }),
-    }));
+    mockGetBackySettings.mockResolvedValue({
+      webhookUrl: "https://backy.test/webhook/p1",
+      apiKey: "key123",
+    });
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue({
+        ok: true,
+        json: () =>
+          Promise.resolve({
+            project_name: "neo",
+            environment: null,
+            recent_backups: [{ id: "b1" }],
+            total_backups: 1,
+          }),
+      }),
+    );
 
     const result = await fetchBackyHistory();
     expect(result.success).toBe(true);
@@ -283,11 +324,15 @@ describe("pull webhook key CRUD", () => {
 
 describe("pushBackupToBacky — error paths", () => {
   it("succeeds when history fetch fails (catch branch)", async () => {
-    mockGetBackySettings.mockResolvedValue({ webhookUrl: "https://backy.test/webhook/p1", apiKey: "key123" });
+    mockGetBackySettings.mockResolvedValue({
+      webhookUrl: "https://backy.test/webhook/p1",
+      apiKey: "key123",
+    });
     mockGetEncryptionKey.mockResolvedValue("dGVzdGtleQ==");
     mockGetSecrets.mockResolvedValue([]);
 
-    const mockFetch = vi.fn()
+    const mockFetch = vi
+      .fn()
       .mockResolvedValueOnce({ ok: true, json: () => Promise.resolve({ ok: true }) })
       .mockRejectedValueOnce(new Error("network"));
     vi.stubGlobal("fetch", mockFetch);
@@ -298,11 +343,15 @@ describe("pushBackupToBacky — error paths", () => {
   });
 
   it("succeeds without history when GET returns non-ok", async () => {
-    mockGetBackySettings.mockResolvedValue({ webhookUrl: "https://backy.test/webhook/p1", apiKey: "key123" });
+    mockGetBackySettings.mockResolvedValue({
+      webhookUrl: "https://backy.test/webhook/p1",
+      apiKey: "key123",
+    });
     mockGetEncryptionKey.mockResolvedValue("dGVzdGtleQ==");
     mockGetSecrets.mockResolvedValue([]);
 
-    const mockFetch = vi.fn()
+    const mockFetch = vi
+      .fn()
       .mockResolvedValueOnce({ ok: true, json: () => Promise.resolve({ ok: true }) })
       .mockResolvedValueOnce({ ok: false, status: 500, json: () => Promise.resolve({}) });
     vi.stubGlobal("fetch", mockFetch);
@@ -339,7 +388,10 @@ describe("getBackyConfig — error paths", () => {
 describe("saveBackyConfig — error paths", () => {
   it("returns unauthorized when no db", async () => {
     vi.mocked(getScopedDB).mockResolvedValue(null);
-    const result = await saveBackyConfig({ webhookUrl: "https://backy.test/api/webhook/p1", apiKey: "abcdefghijklmnopqrstuvwxyz123456789012345678" });
+    const result = await saveBackyConfig({
+      webhookUrl: "https://backy.test/api/webhook/p1",
+      apiKey: "abcdefghijklmnopqrstuvwxyz123456789012345678",
+    });
     expect(result.success).toBe(false);
     if (!result.success) expect(result.error).toBe("Unauthorized");
   });
@@ -364,7 +416,10 @@ describe("testBackyConnection — error paths", () => {
   });
 
   it("returns failure when fetch rejects", async () => {
-    mockGetBackySettings.mockResolvedValue({ webhookUrl: "https://backy.test/webhook/p1", apiKey: "key123" });
+    mockGetBackySettings.mockResolvedValue({
+      webhookUrl: "https://backy.test/webhook/p1",
+      apiKey: "key123",
+    });
     vi.stubGlobal("fetch", vi.fn().mockRejectedValue(new Error("network")));
     const result = await testBackyConnection();
     expect(result.success).toBe(false);
@@ -381,7 +436,10 @@ describe("fetchBackyHistory — error paths", () => {
   });
 
   it("returns failure when GET returns non-ok", async () => {
-    mockGetBackySettings.mockResolvedValue({ webhookUrl: "https://backy.test/webhook/p1", apiKey: "key123" });
+    mockGetBackySettings.mockResolvedValue({
+      webhookUrl: "https://backy.test/webhook/p1",
+      apiKey: "key123",
+    });
     vi.stubGlobal("fetch", vi.fn().mockResolvedValue({ ok: false, status: 502 }));
     const result = await fetchBackyHistory();
     expect(result.success).toBe(false);
@@ -389,7 +447,10 @@ describe("fetchBackyHistory — error paths", () => {
   });
 
   it("returns failure when fetch rejects", async () => {
-    mockGetBackySettings.mockResolvedValue({ webhookUrl: "https://backy.test/webhook/p1", apiKey: "key123" });
+    mockGetBackySettings.mockResolvedValue({
+      webhookUrl: "https://backy.test/webhook/p1",
+      apiKey: "key123",
+    });
     vi.stubGlobal("fetch", vi.fn().mockRejectedValue(new Error("network")));
     const result = await fetchBackyHistory();
     expect(result.success).toBe(false);

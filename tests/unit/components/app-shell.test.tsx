@@ -2,8 +2,8 @@
  * AppShell component tests.
  */
 
-import { describe, it, expect, vi, beforeEach } from "vitest";
-import { render, screen, fireEvent } from "@testing-library/react";
+import { fireEvent, render, screen } from "@testing-library/react";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
 // ── Hoisted mocks ────────────────────────────────────────────────────────
 
@@ -62,7 +62,11 @@ const defaultUser = {
 
 describe("AppShell", () => {
   it("renders breadcrumb with page title", () => {
-    render(<AppShell user={defaultUser}><div>content</div></AppShell>);
+    render(
+      <AppShell user={defaultUser}>
+        <div>content</div>
+      </AppShell>,
+    );
     const breadcrumbNav = screen.getByLabelText("Breadcrumb");
     expect(breadcrumbNav).toBeDefined();
     expect(breadcrumbNav.textContent).toContain("Secrets");
@@ -70,14 +74,22 @@ describe("AppShell", () => {
 
   it("renders breadcrumbs with Home link for sub-pages", () => {
     mockPathname.mockReturnValue("/dashboard/backup");
-    render(<AppShell user={defaultUser}><div>content</div></AppShell>);
+    render(
+      <AppShell user={defaultUser}>
+        <div>content</div>
+      </AppShell>,
+    );
     const breadcrumbNav = screen.getByLabelText("Breadcrumb");
     expect(breadcrumbNav.textContent).toContain("Home");
     expect(breadcrumbNav.textContent).toContain("Backup");
   });
 
   it("renders GitHub link with aria-label", () => {
-    render(<AppShell user={defaultUser}><div>content</div></AppShell>);
+    render(
+      <AppShell user={defaultUser}>
+        <div>content</div>
+      </AppShell>,
+    );
     const githubLink = screen.getByLabelText("GitHub repository");
     expect(githubLink).toBeDefined();
     expect(githubLink.getAttribute("href")).toBe("https://github.com/nocoo/neo");
@@ -85,18 +97,30 @@ describe("AppShell", () => {
   });
 
   it("renders ThemeToggle in header", () => {
-    render(<AppShell user={defaultUser}><div>content</div></AppShell>);
+    render(
+      <AppShell user={defaultUser}>
+        <div>content</div>
+      </AppShell>,
+    );
     expect(screen.getByLabelText("Toggle theme")).toBeDefined();
   });
 
   it("renders children in content area", () => {
-    render(<AppShell user={defaultUser}><div data-testid="child">hello</div></AppShell>);
+    render(
+      <AppShell user={defaultUser}>
+        <div data-testid="child">hello</div>
+      </AppShell>,
+    );
     expect(screen.getByTestId("child")).toBeDefined();
     expect(screen.getByText("hello")).toBeDefined();
   });
 
   it("renders sidebar with user info", () => {
-    render(<AppShell user={defaultUser}><div>content</div></AppShell>);
+    render(
+      <AppShell user={defaultUser}>
+        <div>content</div>
+      </AppShell>,
+    );
     expect(screen.getByText("Test User")).toBeDefined();
     expect(screen.getByText("test@example.com")).toBeDefined();
   });
@@ -123,7 +147,11 @@ describe("AppShell — mobile mode", () => {
   });
 
   it("renders the mobile menu button and toggles the drawer", () => {
-    render(<AppShell user={defaultUser}><div>content</div></AppShell>);
+    render(
+      <AppShell user={defaultUser}>
+        <div>content</div>
+      </AppShell>,
+    );
     const menuBtn = screen.getByLabelText("Open menu");
     expect(menuBtn).toBeDefined();
 

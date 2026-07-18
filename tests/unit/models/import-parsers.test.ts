@@ -4,31 +4,32 @@
  * CSV parsing, format detection, and the unified parseImport entry.
  */
 
-import { describe, it, expect } from "vitest";
+import { describe, expect, it } from "vitest";
 import {
+  detectImportFormat,
+  parse2FAS,
+  parseAegis,
+  parseAndOTP,
+  parseAuthenticatorPro,
+  parseBitwarden,
+  parseFreeOTPPlus,
+  parseGenericCSV,
+  parseGenericJSON,
+  parseImport,
+  parseLastPass,
   parseOtpauthUri,
   parseOtpauthUris,
-  parseAegis,
-  parse2FAS,
-  parseBitwarden,
-  parseAndOTP,
-  parseLastPass,
   parseProton,
-  parseAuthenticatorPro,
-  parseFreeOTPPlus,
   parseRaivo,
-  parseGenericJSON,
-  parseGenericCSV,
   parseStepTwo,
-  detectImportFormat,
-  parseImport,
 } from "@/models/import-parsers";
 
 // ── parseOtpauthUri ─────────────────────────────────────────────────────────
 
 describe("parseOtpauthUri", () => {
   it("parses a standard TOTP URI", () => {
-    const uri = "otpauth://totp/GitHub:user%40example.com?secret=JBSWY3DPEHPK3PXP&issuer=GitHub&digits=6&period=30&algorithm=SHA1";
+    const uri =
+      "otpauth://totp/GitHub:user%40example.com?secret=JBSWY3DPEHPK3PXP&issuer=GitHub&digits=6&period=30&algorithm=SHA1";
     const result = parseOtpauthUri(uri);
     expect(result).not.toBeNull();
     expect(result!.name).toBe("GitHub");
@@ -153,8 +154,18 @@ describe("parseAegis", () => {
     const json = JSON.stringify({
       db: {
         entries: [
-          { type: "totp", issuer: "GitHub", name: "user@gh.com", info: { secret: "JBSWY3DP", digits: 6, period: 30, algo: "SHA1" } },
-          { type: "hotp", issuer: "Service", name: "admin", info: { secret: "MFRGGZDF", counter: 10 } },
+          {
+            type: "totp",
+            issuer: "GitHub",
+            name: "user@gh.com",
+            info: { secret: "JBSWY3DP", digits: 6, period: 30, algo: "SHA1" },
+          },
+          {
+            type: "hotp",
+            issuer: "Service",
+            name: "admin",
+            info: { secret: "MFRGGZDF", counter: 10 },
+          },
         ],
       },
     });
@@ -206,7 +217,14 @@ describe("parse2FAS", () => {
         {
           name: "GitHub",
           secret: "JBSWY3DP",
-          otp: { tokenType: "TOTP", issuer: "GitHub", account: "user", digits: 6, period: 30, algorithm: "SHA1" },
+          otp: {
+            tokenType: "TOTP",
+            issuer: "GitHub",
+            account: "user",
+            digits: 6,
+            period: 30,
+            algorithm: "SHA1",
+          },
         },
       ],
     });
@@ -277,9 +295,7 @@ describe("parseBitwarden", () => {
 
   it("parses Bitwarden with otpauth URIs", () => {
     const json = JSON.stringify({
-      items: [
-        { name: "Test", login: { totp: "otpauth://totp/Test?secret=ABC&issuer=Test" } },
-      ],
+      items: [{ name: "Test", login: { totp: "otpauth://totp/Test?secret=ABC&issuer=Test" } }],
     });
 
     const results = parseBitwarden(json);
@@ -310,7 +326,16 @@ describe("parseBitwarden", () => {
 describe("parseAndOTP", () => {
   it("parses andOTP JSON array", () => {
     const json = JSON.stringify([
-      { secret: "JBSWY3DP", issuer: "GitHub", label: "user", type: "TOTP", digits: 6, period: 30, algorithm: "SHA1", thumbnail: "default" },
+      {
+        secret: "JBSWY3DP",
+        issuer: "GitHub",
+        label: "user",
+        type: "TOTP",
+        digits: 6,
+        period: 30,
+        algorithm: "SHA1",
+        thumbnail: "default",
+      },
     ]);
 
     const results = parseAndOTP(json);
@@ -386,9 +411,7 @@ describe("parseProton", () => {
   it("parses Proton JSON with URIs", () => {
     const json = JSON.stringify({
       version: 1,
-      entries: [
-        { content: { uri: "otpauth://totp/GitHub?secret=JBSWY3DP&issuer=GitHub" } },
-      ],
+      entries: [{ content: { uri: "otpauth://totp/GitHub?secret=JBSWY3DP&issuer=GitHub" } }],
     });
 
     const results = parseProton(json);
@@ -413,7 +436,15 @@ describe("parseAuthenticatorPro", () => {
   it("parses Authenticator Pro JSON", () => {
     const json = JSON.stringify({
       Authenticators: [
-        { Issuer: "GitHub", Username: "user", Secret: "JBSWY3DP", Type: 1, Digits: 6, Period: 30, Algorithm: 0 },
+        {
+          Issuer: "GitHub",
+          Username: "user",
+          Secret: "JBSWY3DP",
+          Type: 1,
+          Digits: 6,
+          Period: 30,
+          Algorithm: 0,
+        },
       ],
     });
 
@@ -473,7 +504,14 @@ describe("parseFreeOTPPlus", () => {
     // "Hello!" in bytes
     const json = JSON.stringify({
       tokens: [
-        { issuerExt: "Test", label: "user", secret: [72, 101, 108, 108, 111, 33], type: "TOTP", digits: 6, period: 30 },
+        {
+          issuerExt: "Test",
+          label: "user",
+          secret: [72, 101, 108, 108, 111, 33],
+          type: "TOTP",
+          digits: 6,
+          period: 30,
+        },
       ],
     });
 
@@ -533,7 +571,15 @@ describe("parseFreeOTPPlus", () => {
 describe("parseRaivo", () => {
   it("parses Raivo JSON array", () => {
     const json = JSON.stringify([
-      { issuer: "GitHub", account: "user", secret: "JBSWY3DP", algorithm: "SHA1", digits: 6, kind: "TOTP", timer: 30 },
+      {
+        issuer: "GitHub",
+        account: "user",
+        secret: "JBSWY3DP",
+        algorithm: "SHA1",
+        digits: 6,
+        kind: "TOTP",
+        timer: 30,
+      },
     ]);
 
     const results = parseRaivo(json);
@@ -558,7 +604,9 @@ describe("parseRaivo", () => {
   });
 
   it("normalizes SHA-512 algorithm", () => {
-    const json = JSON.stringify([{ issuer: "X", secret: "ABC", algorithm: "SHA512", kind: "TOTP", timer: 30 }]);
+    const json = JSON.stringify([
+      { issuer: "X", secret: "ABC", algorithm: "SHA512", kind: "TOTP", timer: 30 },
+    ]);
     const results = parseRaivo(json);
     expect(results[0]!.algorithm).toBe("SHA-512");
   });
@@ -589,9 +637,7 @@ describe("parseGenericJSON", () => {
   });
 
   it("parses plain array format", () => {
-    const json = JSON.stringify([
-      { name: "Test", secret: "JBSWY3DP" },
-    ]);
+    const json = JSON.stringify([{ name: "Test", secret: "JBSWY3DP" }]);
 
     const results = parseGenericJSON(json);
     expect(results).toHaveLength(1);
@@ -641,10 +687,7 @@ describe("parseGenericCSV", () => {
   });
 
   it("handles quoted fields", () => {
-    const csv = [
-      "name,secret",
-      '"Service, Inc.",JBSWY3DP',
-    ].join("\n");
+    const csv = ["name,secret", '"Service, Inc.",JBSWY3DP'].join("\n");
 
     const results = parseGenericCSV(csv);
     expect(results).toHaveLength(1);
@@ -676,10 +719,7 @@ describe("parseGenericCSV", () => {
   });
 
   it("handles escaped quotes in CSV fields", () => {
-    const csv = [
-      "name,secret",
-      '"She said ""hello""",JBSWY3DP',
-    ].join("\n");
+    const csv = ["name,secret", '"She said ""hello""",JBSWY3DP'].join("\n");
     const results = parseGenericCSV(csv);
     expect(results).toHaveLength(1);
     expect(results[0]!.name).toBe('She said "hello"');
@@ -767,7 +807,8 @@ Account Name: \\uc0\\u29926 \\u24037 \\u8232 Email Address or Username: user\\u8
   });
 
   it("handles RTF with hex escapes and \\par control words", () => {
-    const rtf = "{\\rtf1\\ansi Your Step Two Data in iCloud\\par\nAccount Name: Caf\\'e9\\par\nEmail Address or Username: user\\par\nSecret Key: ABCDEF\\par\nHash Algorithm: sha1\\par\nPeriod: 30 seconds\\par\nDigits: 6\\par\nColor: Default color\\par\n}";
+    const rtf =
+      "{\\rtf1\\ansi Your Step Two Data in iCloud\\par\nAccount Name: Caf\\'e9\\par\nEmail Address or Username: user\\par\nSecret Key: ABCDEF\\par\nHash Algorithm: sha1\\par\nPeriod: 30 seconds\\par\nDigits: 6\\par\nColor: Default color\\par\n}";
     const results = parseStepTwo(rtf);
     expect(results).toHaveLength(1);
     expect(results[0]!.name).toBe("Café");
@@ -798,7 +839,11 @@ describe("detectImportFormat", () => {
   });
 
   it("detects Proton", () => {
-    expect(detectImportFormat(JSON.stringify({ entries: [{ content: { uri: "otpauth://totp/X?secret=A" } }] }))).toBe("proton");
+    expect(
+      detectImportFormat(
+        JSON.stringify({ entries: [{ content: { uri: "otpauth://totp/X?secret=A" } }] }),
+      ),
+    ).toBe("proton");
   });
 
   it("detects Authenticator Pro", () => {
@@ -846,7 +891,9 @@ describe("detectImportFormat", () => {
   });
 
   it("detects Step Two RTF", () => {
-    expect(detectImportFormat("{\\rtf1\\ansi Your Step Two Data in iCloud\\nAccount Name: X")).toBe("step-two");
+    expect(detectImportFormat("{\\rtf1\\ansi Your Step Two Data in iCloud\\nAccount Name: X")).toBe(
+      "step-two",
+    );
   });
 
   it("returns null for unrecognized content", () => {
@@ -869,7 +916,9 @@ describe("parseImport", () => {
   });
 
   it("parses with explicit format", () => {
-    const json = JSON.stringify({ db: { entries: [{ type: "totp", issuer: "Test", info: { secret: "ABC" } }] } });
+    const json = JSON.stringify({
+      db: { entries: [{ type: "totp", issuer: "Test", info: { secret: "ABC" } }] },
+    });
     const results = parseImport(json, "aegis");
     expect(results).toHaveLength(1);
   });
@@ -879,7 +928,10 @@ describe("parseImport", () => {
   });
 
   it("routes to 2fas parser with explicit format", () => {
-    const json = JSON.stringify({ services: [{ name: "X", secret: "ABC", otp: { tokenType: "TOTP" } }], schemaVersion: 3 });
+    const json = JSON.stringify({
+      services: [{ name: "X", secret: "ABC", otp: { tokenType: "TOTP" } }],
+      schemaVersion: 3,
+    });
     expect(parseImport(json, "2fas")).toHaveLength(1);
   });
 
@@ -926,7 +978,9 @@ describe("parseImport", () => {
   });
 
   it("routes to raivo parser with explicit format", () => {
-    const json = JSON.stringify([{ issuer: "X", secret: "ABC", algorithm: "SHA1", kind: "TOTP", timer: 30 }]);
+    const json = JSON.stringify([
+      { issuer: "X", secret: "ABC", algorithm: "SHA1", kind: "TOTP", timer: 30 },
+    ]);
     expect(parseImport(json, "raivo")).toHaveLength(1);
   });
 

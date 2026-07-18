@@ -5,30 +5,30 @@
  * Includes a color picker for assigning card colors.
  */
 
-import { useState, useCallback, useEffect } from "react";
+import { Check, X } from "lucide-react";
+import { useCallback, useEffect, useState } from "react";
 import { createPortal } from "react-dom";
-import { Button } from "@/components/ui/button";
-import { X, Check } from "lucide-react";
-import { cn } from "@/lib/utils";
 import type { CardThemeKey } from "@/components/secret-card";
 import { resolveThemeKey } from "@/components/secret-card";
-import type { Secret, CreateSecretInput, UpdateSecretInput } from "@/models/types";
+import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
+import type { CreateSecretInput, Secret, UpdateSecretInput } from "@/models/types";
 
 // ── Color options ────────────────────────────────────────────────────────
 
 const COLOR_OPTIONS: { key: CardThemeKey; label: string; swatch: string }[] = [
-  { key: "red",      label: "Red",     swatch: "bg-red-500" },
-  { key: "emerald",  label: "Emerald", swatch: "bg-emerald-600" },
-  { key: "blue",     label: "Blue",    swatch: "bg-blue-500" },
-  { key: "purple",   label: "Purple",  swatch: "bg-purple-500" },
-  { key: "amber",    label: "Amber",   swatch: "bg-amber-500" },
-  { key: "cyan",     label: "Cyan",    swatch: "bg-cyan-600" },
-  { key: "pink",     label: "Pink",    swatch: "bg-pink-500" },
-  { key: "indigo",   label: "Indigo",  swatch: "bg-indigo-500" },
-  { key: "teal",     label: "Teal",    swatch: "bg-teal-600" },
-  { key: "orange",   label: "Orange",  swatch: "bg-orange-500" },
-  { key: "white",    label: "White",   swatch: "bg-white border border-gray-300" },
-  { key: "black",    label: "Black",   swatch: "bg-gray-900" },
+  { key: "red", label: "Red", swatch: "bg-red-500" },
+  { key: "emerald", label: "Emerald", swatch: "bg-emerald-600" },
+  { key: "blue", label: "Blue", swatch: "bg-blue-500" },
+  { key: "purple", label: "Purple", swatch: "bg-purple-500" },
+  { key: "amber", label: "Amber", swatch: "bg-amber-500" },
+  { key: "cyan", label: "Cyan", swatch: "bg-cyan-600" },
+  { key: "pink", label: "Pink", swatch: "bg-pink-500" },
+  { key: "indigo", label: "Indigo", swatch: "bg-indigo-500" },
+  { key: "teal", label: "Teal", swatch: "bg-teal-600" },
+  { key: "orange", label: "Orange", swatch: "bg-orange-500" },
+  { key: "white", label: "White", swatch: "bg-white border border-gray-300" },
+  { key: "black", label: "Black", swatch: "bg-gray-900" },
 ];
 
 // ── Types ────────────────────────────────────────────────────────────────
@@ -116,7 +116,7 @@ export function SecretFormDialog({
         if (success) onClose();
       }
     },
-    [name, account, secretValue, color, isEdit, secret, onCreate, onUpdate, onClose]
+    [name, account, secretValue, color, isEdit, secret, onCreate, onUpdate, onClose],
   );
 
   if (!open) return null;
@@ -130,15 +130,8 @@ export function SecretFormDialog({
     >
       <div className="w-full max-w-lg rounded-lg bg-background p-6 shadow-lg">
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-lg font-semibold">
-            {isEdit ? "Edit Secret" : "Add Secret"}
-          </h2>
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={onClose}
-            aria-label="Close dialog"
-          >
+          <h2 className="text-lg font-semibold">{isEdit ? "Edit Secret" : "Add Secret"}</h2>
+          <Button variant="ghost" size="icon" onClick={onClose} aria-label="Close dialog">
             <X className="h-4 w-4" />
           </Button>
         </div>
@@ -189,15 +182,14 @@ export function SecretFormDialog({
           )}
 
           {/* Color picker */}
-          <div>
-            <label className="block text-sm font-medium mb-2">Color</label>
-            <div className="flex flex-wrap gap-2" role="radiogroup" aria-label="Card color">
+          <fieldset>
+            <legend className="block text-sm font-medium mb-2">Color</legend>
+            <div className="flex flex-wrap gap-2">
               {COLOR_OPTIONS.map((opt) => (
                 <button
                   key={opt.key}
                   type="button"
-                  role="radio"
-                  aria-checked={color === opt.key}
+                  aria-pressed={color === opt.key}
                   aria-label={opt.label}
                   onClick={() => setColor(opt.key)}
                   className={cn(
@@ -205,16 +197,14 @@ export function SecretFormDialog({
                     opt.swatch,
                     color === opt.key
                       ? "border-foreground scale-110"
-                      : "border-transparent hover:border-muted-foreground/50"
+                      : "border-transparent hover:border-muted-foreground/50",
                   )}
                 >
-                  {color === opt.key && (
-                    <Check className="h-3.5 w-3.5 text-white drop-shadow" />
-                  )}
+                  {color === opt.key && <Check className="h-3.5 w-3.5 text-white drop-shadow" />}
                 </button>
               ))}
             </div>
-          </div>
+          </fieldset>
 
           {formError && (
             <p className="text-sm text-destructive" role="alert">
@@ -233,6 +223,6 @@ export function SecretFormDialog({
         </form>
       </div>
     </div>,
-    document.body
+    document.body,
   );
 }

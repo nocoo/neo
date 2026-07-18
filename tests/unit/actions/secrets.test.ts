@@ -2,7 +2,7 @@
  * Secret CRUD server actions tests.
  */
 
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
 // ── Mock auth ───────────────────────────────────────────────────────────
 
@@ -64,17 +64,17 @@ vi.mock("@/lib/auth-context", () => ({
 }));
 
 import {
-  getSecrets,
-  getSecretById,
-  createSecret,
-  updateSecret,
-  deleteSecret,
-  getSecretCount,
   batchImportSecrets,
-  getDeletedSecrets,
-  restoreSecret,
-  permanentDeleteSecret,
+  createSecret,
+  deleteSecret,
   emptyRecycleBin,
+  getDeletedSecrets,
+  getSecretById,
+  getSecretCount,
+  getSecrets,
+  permanentDeleteSecret,
+  restoreSecret,
+  updateSecret,
 } from "@/actions/secrets";
 import { getScopedDB } from "@/lib/auth-context";
 
@@ -176,7 +176,7 @@ describe("createSecret", () => {
         digits: 6,
         period: 30,
         algorithm: "SHA-1",
-      })
+      }),
     );
   });
 
@@ -203,7 +203,7 @@ describe("createSecret", () => {
       expect.objectContaining({
         name: "GitHub",
         account: "user@example.com",
-      })
+      }),
     );
   });
 
@@ -216,7 +216,7 @@ describe("createSecret", () => {
     expect(mockCreateSecret).toHaveBeenCalledWith(
       expect.objectContaining({
         secret: "JBSWY3DPEHPK3PXP",
-      })
+      }),
     );
   });
 
@@ -230,7 +230,7 @@ describe("createSecret", () => {
         period: 30,
         algorithm: "SHA-1",
         counter: 0,
-      })
+      }),
     );
   });
 
@@ -468,17 +468,13 @@ describe("batchImportSecrets", () => {
 
   it("returns unauthorized when not authenticated", async () => {
     vi.mocked(getScopedDB).mockResolvedValue(null);
-    const result = await batchImportSecrets([
-      { name: "Test", secret: "JBSWY3DPEHPK3PXP" },
-    ]);
+    const result = await batchImportSecrets([{ name: "Test", secret: "JBSWY3DPEHPK3PXP" }]);
     expect(result.success).toBe(false);
   });
 
   it("handles outer database error gracefully", async () => {
     mockGetSecrets.mockRejectedValue(new Error("DB error"));
-    const result = await batchImportSecrets([
-      { name: "Test", secret: "JBSWY3DPEHPK3PXP" },
-    ]);
+    const result = await batchImportSecrets([{ name: "Test", secret: "JBSWY3DPEHPK3PXP" }]);
     expect(result.success).toBe(false);
     if (!result.success) expect(result.error).toBe("Failed to import secrets");
   });

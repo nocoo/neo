@@ -6,8 +6,8 @@
  * is the otpauth:// URI (RFC 6238 / RFC 4226).
  */
 
-import type { ParsedSecret, ImportFormat } from "./types";
-import type { OtpType, OtpAlgorithm } from "./constants";
+import type { OtpAlgorithm, OtpType } from "./constants";
+import type { ImportFormat, ParsedSecret } from "./types";
 
 // ── OTPAuth URI Parser (core) ───────────────────────────────────────────────
 
@@ -159,7 +159,7 @@ export function parse2FAS(json: string): ParsedSecret[] {
         name: s.otp?.issuer || s.name || "Unknown",
         account: s.otp?.account || "",
         secret,
-        type: ((s.otp?.tokenType || "TOTP").toLowerCase()) as OtpType,
+        type: (s.otp?.tokenType || "TOTP").toLowerCase() as OtpType,
         digits: s.otp?.digits || 6,
         period: s.otp?.period || 30,
         algorithm: normalizeAlgorithm(s.otp?.algorithm),
@@ -235,7 +235,7 @@ export function parseAndOTP(json: string): ParsedSecret[] {
         name: e.issuer || e.label || "Unknown",
         account: e.label || "",
         secret,
-        type: ((e.type || "TOTP").toLowerCase()) as OtpType,
+        type: (e.type || "TOTP").toLowerCase() as OtpType,
         digits: e.digits || 6,
         period: e.period || 30,
         algorithm: normalizeAlgorithm(e.algorithm),
@@ -375,7 +375,7 @@ export function parseFreeOTPPlus(json: string): ParsedSecret[] {
         name: t.issuerExt || t.label || "Unknown",
         account: t.label || "",
         secret,
-        type: ((t.type || "TOTP").toLowerCase()) as OtpType,
+        type: (t.type || "TOTP").toLowerCase() as OtpType,
         digits: t.digits || 6,
         period: t.period || 30,
         algorithm: normalizeAlgorithm(t.algo),
@@ -441,7 +441,7 @@ export function parseRaivo(json: string): ParsedSecret[] {
         name: e.issuer || "Unknown",
         account: e.account || "",
         secret,
-        type: ((e.kind || "TOTP").toLowerCase()) as OtpType,
+        type: (e.kind || "TOTP").toLowerCase() as OtpType,
         digits: e.digits || 6,
         period: e.timer || 30,
         algorithm: normalizeAlgorithm(e.algorithm),
@@ -504,7 +504,10 @@ function stripRtf(rtf: string): string {
   let text = rtf;
 
   // Remove RTF header groups like {\fonttbl...}, {\colortbl...}, {\*\expandedcolortbl...}
-  text = text.replace(/\{\\(?:\*\\)?(?:fonttbl|colortbl|expandedcolortbl|stylesheet|info)[^{}]*(?:\{[^{}]*\}[^{}]*)*\}/g, "");
+  text = text.replace(
+    /\{\\(?:\*\\)?(?:fonttbl|colortbl|expandedcolortbl|stylesheet|info)[^{}]*(?:\{[^{}]*\}[^{}]*)*\}/g,
+    "",
+  );
 
   // Convert Unicode escapes \uN to actual characters (skip the trailing replacement char)
   text = text.replace(/\\uc0\s*/g, "");
@@ -517,9 +520,8 @@ function stripRtf(rtf: string): string {
   text = text.replace(/\\par\b\s*/g, "\n");
   text = text.replace(/\\line\b\s*/g, "\n");
   text = text.replace(/\\\\/g, "\\");
-  text = text.replace(
-    new RegExp("\\\\'" + "([0-9a-fA-F]{2})", "g"),
-    (_m, hex) => String.fromCharCode(parseInt(hex as string, 16))
+  text = text.replace(new RegExp("\\\\'" + "([0-9a-fA-F]{2})", "g"), (_m, hex) =>
+    String.fromCharCode(parseInt(hex as string, 16)),
   );
   text = text.replace(/\\[A-Za-z]+\d*\s?/g, "");
 
@@ -555,7 +557,7 @@ export function parseGenericJSON(json: string): ParsedSecret[] {
         name: String(item.name || item.issuer || "Unknown"),
         account: String(item.account || item.email || ""),
         secret,
-        type: ((String(item.type || "TOTP")).toLowerCase()) as OtpType,
+        type: String(item.type || "TOTP").toLowerCase() as OtpType,
         digits: Number(item.digits) || 6,
         period: Number(item.period) || 30,
         algorithm: normalizeAlgorithm(String(item.algorithm || "")),
@@ -581,27 +583,15 @@ export function parseGenericCSV(csv: string): ParsedSecret[] {
   const headers = parseCSVLine(headerLine);
 
   // Find column indices
-  const nameIdx = headers.findIndex((h) =>
-    /^(name|service|issuer|服务名称)$/.test(h.trim())
-  );
+  const nameIdx = headers.findIndex((h) => /^(name|service|issuer|服务名称)$/.test(h.trim()));
   const accountIdx = headers.findIndex((h) =>
-    /^(account|email|username|账户信息|login_username)$/.test(h.trim())
+    /^(account|email|username|账户信息|login_username)$/.test(h.trim()),
   );
-  const secretIdx = headers.findIndex((h) =>
-    /^(secret|key|密钥|login_totp)$/.test(h.trim())
-  );
-  const typeIdx = headers.findIndex((h) =>
-    /^(type|otp_type|类型)$/.test(h.trim())
-  );
-  const digitsIdx = headers.findIndex((h) =>
-    /^(digits|位数)$/.test(h.trim())
-  );
-  const periodIdx = headers.findIndex((h) =>
-    /^(period|interval|周期)$/.test(h.trim())
-  );
-  const algorithmIdx = headers.findIndex((h) =>
-    /^(algorithm|algo|算法)$/.test(h.trim())
-  );
+  const secretIdx = headers.findIndex((h) => /^(secret|key|密钥|login_totp)$/.test(h.trim()));
+  const typeIdx = headers.findIndex((h) => /^(type|otp_type|类型)$/.test(h.trim()));
+  const digitsIdx = headers.findIndex((h) => /^(digits|位数)$/.test(h.trim()));
+  const periodIdx = headers.findIndex((h) => /^(period|interval|周期)$/.test(h.trim()));
+  const algorithmIdx = headers.findIndex((h) => /^(algorithm|algo|算法)$/.test(h.trim()));
 
   if (secretIdx === -1) return [];
 
@@ -616,7 +606,7 @@ export function parseGenericCSV(csv: string): ParsedSecret[] {
         name: cols[nameIdx] || "Unknown",
         account: cols[accountIdx] || "",
         secret,
-        type: ((cols[typeIdx] || "TOTP").toLowerCase()) as OtpType,
+        type: (cols[typeIdx] || "TOTP").toLowerCase() as OtpType,
         digits: parseInt(cols[digitsIdx] || "6", 10) || 6,
         period: parseInt(cols[periodIdx] || "30", 10) || 30,
         algorithm: normalizeAlgorithm(cols[algorithmIdx]),
@@ -670,9 +660,7 @@ export function detectImportFormat(content: string): ImportFormat | null {
   const firstLine = (trimmed.split(/\r?\n/)[0] ?? "").toLowerCase();
   if (
     firstLine.includes(",") &&
-    (firstLine.includes("secret") ||
-      firstLine.includes("密钥") ||
-      firstLine.includes("login_totp"))
+    (firstLine.includes("secret") || firstLine.includes("密钥") || firstLine.includes("login_totp"))
   ) {
     return "generic-csv";
   }
@@ -688,10 +676,7 @@ export function detectImportFormat(content: string): ImportFormat | null {
 /**
  * Parse import content with auto-detection or explicit format.
  */
-export function parseImport(
-  content: string,
-  format?: ImportFormat
-): ParsedSecret[] {
+export function parseImport(content: string, format?: ImportFormat): ParsedSecret[] {
   const detectedFormat = format || detectImportFormat(content);
   if (!detectedFormat) return [];
 

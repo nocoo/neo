@@ -17,9 +17,9 @@ export default function SecretsLoading() {
 
       {/* Secret card grid skeleton */}
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-3">
-        {Array.from({ length: 12 }).map((_, i) => (
+        {Array.from({ length: 12 }, (_, i) => i).map((i) => (
           <div
-            key={i}
+            key={`skeleton-${i}`}
             className="rounded-card bg-secondary p-4 space-y-3"
             style={{ animationDelay: `${Math.min(i * 40, 400)}ms` }}
           >

@@ -1,4 +1,5 @@
 #!/usr/bin/env bun
+
 /**
  * L2: API E2E test runner — real HTTP requests against a running Next.js server.
  *
@@ -9,8 +10,8 @@
  * 5. Cleanup server + build artifacts
  */
 
+import { rmSync } from "node:fs";
 import { $ } from "bun";
-import { rmSync } from "fs";
 
 const E2E_PORT = 17026;
 const BASE_URL = `http://localhost:${E2E_PORT}`;
@@ -37,7 +38,7 @@ async function ensurePortFree(): Promise<void> {
 function startServer(): ReturnType<typeof Bun.spawn> {
   console.log(`🚀 Starting Next.js dev server on port ${E2E_PORT}...`);
   return Bun.spawn(["bun", "next", "dev", "--webpack", "-p", String(E2E_PORT)], {
-    cwd: import.meta.dir + "/..",
+    cwd: `${import.meta.dir}/..`,
     env: {
       ...process.env,
       E2E_SKIP_AUTH: "true",

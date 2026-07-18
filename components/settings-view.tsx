@@ -4,20 +4,10 @@
  * SettingsView — user preferences, encryption key management, and Backy config.
  */
 
+import { Check, Copy, Eye, EyeOff, Key, Link, RefreshCw, Shield, Trash2 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { useSettingsViewModel } from "@/viewmodels/useSettingsViewModel";
-import {
-  Shield,
-  Eye,
-  EyeOff,
-  Copy,
-  Check,
-  Key,
-  Link,
-  RefreshCw,
-  Trash2,
-} from "lucide-react";
 
 // ── Component ────────────────────────────────────────────────────────────
 
@@ -28,7 +18,9 @@ export function SettingsView() {
   const [backyUrl, setBackyUrl] = useState("");
   const [backyApiKey, setBackyApiKey] = useState("");
   const [keyCopied, setKeyCopied] = useState(false);
-  const [connectionTestResult, setConnectionTestResult] = useState<"success" | "error" | null>(null);
+  const [connectionTestResult, setConnectionTestResult] = useState<"success" | "error" | null>(
+    null,
+  );
 
   // Populate Backy form when config loads
   useEffect(() => {
@@ -69,16 +61,14 @@ export function SettingsView() {
 
   return (
     <div className="space-y-6">
-
       {/* Error banner */}
       {vm.error && (
-        <div className="rounded-lg bg-destructive/10 px-4 py-3 text-sm text-destructive" role="alert">
+        <div
+          className="rounded-lg bg-destructive/10 px-4 py-3 text-sm text-destructive"
+          role="alert"
+        >
           {vm.error}
-          <button
-            type="button"
-            onClick={vm.clearError}
-            className="ml-2 underline cursor-pointer"
-          >
+          <button type="button" onClick={vm.clearError} className="ml-2 underline cursor-pointer">
             Dismiss
           </button>
         </div>
@@ -94,17 +84,14 @@ export function SettingsView() {
         {vm.encryptionEnabled && vm.encryptionKey ? (
           <div className="space-y-4">
             <div className="flex items-center justify-between">
-              <span
-                className="text-sm font-medium text-green-600"
-                data-testid="encryption-status"
-              >
+              <span className="text-sm font-medium text-green-600" data-testid="encryption-status">
                 Enabled
               </span>
             </div>
 
             {/* Key display */}
             <div className="space-y-2">
-              <label className="block text-sm font-medium">Your Encryption Key</label>
+              <h3 className="block text-sm font-medium">Your Encryption Key</h3>
               <div className="flex items-center gap-2">
                 <code
                   className="flex-1 rounded-md border border-border bg-muted px-3 py-2 text-sm font-mono break-all"
@@ -120,12 +107,7 @@ export function SettingsView() {
                 >
                   {vm.keyRevealed ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                 </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={handleCopyKey}
-                  aria-label="Copy key"
-                >
+                <Button variant="outline" size="sm" onClick={handleCopyKey} aria-label="Copy key">
                   {keyCopied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
                 </Button>
               </div>
@@ -147,7 +129,8 @@ export function SettingsView() {
                 Regenerate Key
               </Button>
               <p className="text-xs text-muted-foreground mt-1">
-                Regenerating will replace the current key. Existing encrypted backups will require the old key to restore.
+                Regenerating will replace the current key. Existing encrypted backups will require
+                the old key to restore.
               </p>
             </div>
           </div>
@@ -259,10 +242,14 @@ export function SettingsView() {
               Test Connection
             </Button>
             {connectionTestResult === "success" && (
-              <span className="text-sm text-green-600" data-testid="connection-success">Connected</span>
+              <span className="text-sm text-green-600" data-testid="connection-success">
+                Connected
+              </span>
             )}
             {connectionTestResult === "error" && (
-              <span className="text-sm text-destructive" data-testid="connection-error">Failed</span>
+              <span className="text-sm text-destructive" data-testid="connection-error">
+                Failed
+              </span>
             )}
           </div>
         </div>
@@ -320,12 +307,7 @@ export function SettingsView() {
 
       {/* Reload button */}
       <div className="flex justify-end">
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => vm.reload()}
-          disabled={vm.busy}
-        >
+        <Button variant="outline" size="sm" onClick={() => vm.reload()} disabled={vm.busy}>
           Reload Settings
         </Button>
       </div>

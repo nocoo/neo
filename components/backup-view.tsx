@@ -9,22 +9,22 @@
  *   3. Restore — upload ZIP + encryption key → POST /api/backup/restore
  */
 
-import { useState, useRef } from "react";
 import {
-  Archive,
-  Download,
-  Upload,
-  Send,
-  RefreshCw,
-  Check,
   AlertTriangle,
-  Key,
+  Archive,
+  Check,
   Database,
+  Download,
+  Key,
+  RefreshCw,
+  Send,
+  Upload,
 } from "lucide-react";
+import { useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
-import { useBackupViewModel } from "@/viewmodels/useBackupViewModel";
 import { useDashboardState } from "@/contexts/dashboard-context";
 import { formatFileSize, formatTimeAgo } from "@/models/backy";
+import { useBackupViewModel } from "@/viewmodels/useBackupViewModel";
 
 // ── Component ────────────────────────────────────────────────────────────
 
@@ -48,16 +48,14 @@ export function BackupView() {
 
   return (
     <div className="space-y-6">
-
       {/* Error banner */}
       {vm.error && (
-        <div className="rounded-lg bg-destructive/10 px-4 py-3 text-sm text-destructive" role="alert">
+        <div
+          className="rounded-lg bg-destructive/10 px-4 py-3 text-sm text-destructive"
+          role="alert"
+        >
           {vm.error}
-          <button
-            type="button"
-            onClick={vm.clearError}
-            className="ml-2 underline cursor-pointer"
-          >
+          <button type="button" onClick={vm.clearError} className="ml-2 underline cursor-pointer">
             Dismiss
           </button>
         </div>
@@ -93,7 +91,8 @@ export function BackupView() {
             <Database className="h-5 w-5 text-blue-600 dark:text-blue-400 mt-0.5 shrink-0" />
             <div>
               <p className="text-sm font-medium text-blue-800 dark:text-blue-200">
-                {vm.legacyBackupCount} exportable legacy backup{vm.legacyBackupCount > 1 ? "s" : ""} found
+                {vm.legacyBackupCount} exportable legacy backup{vm.legacyBackupCount > 1 ? "s" : ""}{" "}
+                found
               </p>
               <p className="text-xs text-blue-700 dark:text-blue-300">
                 Export your old backups as encrypted archives before they are removed.
@@ -191,11 +190,10 @@ export function BackupView() {
         {vm.history && vm.history.recent_backups.length > 0 && (
           <div className="mt-4">
             <h3 className="text-sm font-medium mb-2">Recent Backups</h3>
-            <div className="space-y-1.5" role="list" aria-label="Backup history">
+            <ul className="space-y-1.5" aria-label="Backup history">
               {vm.history.recent_backups.slice(0, 5).map((entry) => (
-                <div
+                <li
                   key={entry.id}
-                  role="listitem"
                   className="flex items-center justify-between text-xs text-muted-foreground py-1 border-b border-border last:border-0"
                 >
                   <span className="truncate">{entry.tag || "Backup"}</span>
@@ -203,9 +201,9 @@ export function BackupView() {
                     {formatTimeAgo(new Date(entry.created_at))}
                     {entry.file_size ? ` · ${formatFileSize(entry.file_size)}` : ""}
                   </span>
-                </div>
+                </li>
               ))}
-            </div>
+            </ul>
             {vm.history.total_backups > 5 && (
               <p className="text-xs text-muted-foreground mt-2">
                 {vm.history.total_backups} total backups
@@ -277,7 +275,8 @@ export function BackupView() {
                 <span>Restore complete</span>
               </div>
               <p className="text-xs text-green-600 dark:text-green-400 mt-1">
-                {vm.lastRestoreResult.imported} imported · {vm.lastRestoreResult.skipped} skipped · {vm.lastRestoreResult.duplicates} duplicates
+                {vm.lastRestoreResult.imported} imported · {vm.lastRestoreResult.skipped} skipped ·{" "}
+                {vm.lastRestoreResult.duplicates} duplicates
               </p>
             </div>
           )}

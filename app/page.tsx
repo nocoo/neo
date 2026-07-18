@@ -1,18 +1,40 @@
+import { headers } from "next/headers";
+import Image from "next/image";
+import { redirect } from "next/navigation";
+import { auth, signIn } from "@/auth";
 import { Github } from "@/components/icons/github";
 import { ThemeToggle } from "@/components/theme-toggle";
-import { signIn, auth } from "@/auth";
-import { redirect } from "next/navigation";
-import { headers } from "next/headers";
 
 function Barcode() {
-  const bars = [2, 1, 3, 1, 2, 1, 1, 3, 1, 2, 1, 3, 2, 1, 1, 2, 3, 1, 2, 1];
+  const bars: Array<{ id: string; w: number; dim: boolean }> = [
+    { id: "b01", w: 2, dim: false },
+    { id: "b02", w: 1, dim: true },
+    { id: "b03", w: 3, dim: true },
+    { id: "b04", w: 1, dim: false },
+    { id: "b05", w: 2, dim: true },
+    { id: "b06", w: 1, dim: true },
+    { id: "b07", w: 1, dim: false },
+    { id: "b08", w: 3, dim: true },
+    { id: "b09", w: 1, dim: true },
+    { id: "b10", w: 2, dim: false },
+    { id: "b11", w: 1, dim: true },
+    { id: "b12", w: 3, dim: true },
+    { id: "b13", w: 2, dim: false },
+    { id: "b14", w: 1, dim: true },
+    { id: "b15", w: 1, dim: true },
+    { id: "b16", w: 2, dim: false },
+    { id: "b17", w: 3, dim: true },
+    { id: "b18", w: 1, dim: true },
+    { id: "b19", w: 2, dim: false },
+    { id: "b20", w: 1, dim: true },
+  ];
   return (
     <div className="flex items-stretch gap-[1.5px] h-full">
-      {bars.map((w, i) => (
+      {bars.map((bar) => (
         <div
-          key={i}
+          key={bar.id}
           className="rounded-[0.5px] bg-primary-foreground"
-          style={{ width: `${w * 1.5}px`, opacity: i % 3 === 0 ? 0.9 : 0.5 }}
+          style={{ width: `${bar.w * 1.5}px`, opacity: bar.dim ? 0.5 : 0.9 }}
         />
       ))}
     </div>
@@ -96,11 +118,8 @@ export default async function Home({
                 }}
               />
               <div className="flex items-center gap-2">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src="/logo-24.png" alt="Neo" className="h-4 w-4" />
-                <span className="text-sm font-semibold text-primary-foreground">
-                  neo.
-                </span>
+                <Image src="/logo-24.png" alt="Neo" width={16} height={16} className="h-4 w-4" />
+                <span className="text-sm font-semibold text-primary-foreground">neo.</span>
               </div>
               <span className="text-[10px] font-medium uppercase tracking-widest text-primary-foreground/60">
                 2FA
@@ -121,16 +140,17 @@ export default async function Home({
           <div className="flex flex-1 flex-col items-center px-6 pt-6 pb-14">
             {/* Logo avatar */}
             <div className="flex h-24 w-24 items-center justify-center rounded-full bg-secondary dark:bg-background ring-1 ring-border overflow-hidden">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src="/logo-80.png" alt="Neo" className="h-full w-full object-cover" />
+              <Image
+                src="/logo-80.png"
+                alt="Neo"
+                width={80}
+                height={80}
+                className="h-full w-full object-cover"
+              />
             </div>
 
-            <p className="mt-5 text-lg font-semibold text-foreground">
-              Secure 2FA
-            </p>
-            <p className="mt-1 text-xs text-muted-foreground">
-              Sign in to manage your secrets
-            </p>
+            <p className="mt-5 text-lg font-semibold text-foreground">Secure 2FA</p>
+            <p className="mt-1 text-xs text-muted-foreground">Sign in to manage your secrets</p>
 
             {/* Divider */}
             <div className="mt-5 h-px w-full bg-border" />
@@ -144,14 +164,8 @@ export default async function Home({
                 "use server";
                 const h = await headers();
                 const proto = h.get("x-forwarded-proto") || "http";
-                const host =
-                  h.get("x-forwarded-host") ||
-                  h.get("host") ||
-                  "localhost:7026";
-                const path =
-                  callbackUrl && callbackUrl.startsWith("/")
-                    ? callbackUrl
-                    : "/dashboard";
+                const host = h.get("x-forwarded-host") || h.get("host") || "localhost:7026";
+                const path = callbackUrl?.startsWith("/") ? callbackUrl : "/dashboard";
                 const redirectTo = `${proto}://${host}${path}`;
                 await signIn("google", { redirectTo });
               }}
@@ -160,7 +174,8 @@ export default async function Home({
                 type="submit"
                 className="flex w-full items-center justify-center gap-2.5 rounded-xl bg-secondary px-4 py-3 text-sm font-medium text-foreground transition-colors hover:bg-accent cursor-pointer"
               >
-                <svg className="h-4 w-4" viewBox="0 0 24 24">
+                <svg className="h-4 w-4" viewBox="0 0 24 24" aria-hidden="true">
+                  <title>Google</title>
                   <path
                     d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z"
                     fill="#4285F4"
@@ -192,9 +207,7 @@ export default async function Home({
           <div className="absolute bottom-0 left-0 right-0 flex items-center justify-center border-t border-border bg-secondary/50 py-2.5">
             <div className="flex items-center gap-1.5">
               <div className="h-1.5 w-1.5 rounded-full bg-success animate-pulse" />
-              <span className="text-[10px] text-muted-foreground">
-                End-to-end encrypted
-              </span>
+              <span className="text-[10px] text-muted-foreground">End-to-end encrypted</span>
             </div>
           </div>
         </div>

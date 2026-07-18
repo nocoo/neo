@@ -11,14 +11,14 @@
  * Old D1 backup list, manual backup creation, and cleanup are removed.
  */
 
-import { useState, useCallback, useEffect } from "react";
-import { useDashboardActions, useDashboardState } from "@/contexts/dashboard-context";
+import { useCallback, useEffect, useState } from "react";
 import {
-  pushBackupToBacky as pushToBackyAction,
   fetchBackyHistory as fetchHistoryAction,
+  pushBackupToBacky as pushToBackyAction,
 } from "@/actions/backy";
 import { countLegacyBackups as countLegacyAction } from "@/actions/settings";
-import type { BackyPushDetail, BackyHistoryResponse } from "@/models/backy";
+import { useDashboardActions, useDashboardState } from "@/contexts/dashboard-context";
+import type { BackyHistoryResponse, BackyPushDetail } from "@/models/backy";
 
 // ── Types ────────────────────────────────────────────────────────────────
 
@@ -85,9 +85,13 @@ export function useBackupViewModel(): BackupViewModel {
   useEffect(() => {
     refreshHistory();
     // Check for legacy backups needing migration
-    countLegacyAction().then((result) => {
-      if (result.success) setLegacyBackupCount(result.data);
-    }).catch(() => {/* non-critical */});
+    countLegacyAction()
+      .then((result) => {
+        if (result.success) setLegacyBackupCount(result.data);
+      })
+      .catch(() => {
+        /* non-critical */
+      });
   }, [refreshHistory]);
 
   // ── Download encrypted archive ────────────────────────────────────────

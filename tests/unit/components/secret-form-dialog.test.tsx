@@ -2,8 +2,8 @@
  * SecretFormDialog component tests.
  */
 
-import { describe, it, expect, vi, beforeEach } from "vitest";
-import { render, screen, fireEvent, act } from "@testing-library/react";
+import { act, fireEvent, render, screen } from "@testing-library/react";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { SecretFormDialog } from "@/components/secret-form-dialog";
 import type { Secret } from "@/models/types";
 
@@ -35,9 +35,7 @@ beforeEach(() => {
 describe("SecretFormDialog", () => {
   describe("create mode", () => {
     it("renders create form", () => {
-      render(
-        <SecretFormDialog open={true} onClose={vi.fn()} onCreate={vi.fn()} />
-      );
+      render(<SecretFormDialog open={true} onClose={vi.fn()} onCreate={vi.fn()} />);
       expect(screen.getByText("Add Secret")).toBeDefined();
       expect(screen.getByLabelText("Name *")).toBeDefined();
       expect(screen.getByLabelText("Secret Key *")).toBeDefined();
@@ -45,9 +43,7 @@ describe("SecretFormDialog", () => {
 
     it("shows validation error when name is empty", async () => {
       const onCreate = vi.fn();
-      render(
-        <SecretFormDialog open={true} onClose={vi.fn()} onCreate={onCreate} />
-      );
+      render(<SecretFormDialog open={true} onClose={vi.fn()} onCreate={onCreate} />);
 
       await act(async () => {
         fireEvent.submit(screen.getByText("Create").closest("form")!);
@@ -59,9 +55,7 @@ describe("SecretFormDialog", () => {
 
     it("shows validation error when secret is empty", async () => {
       const onCreate = vi.fn();
-      render(
-        <SecretFormDialog open={true} onClose={vi.fn()} onCreate={onCreate} />
-      );
+      render(<SecretFormDialog open={true} onClose={vi.fn()} onCreate={onCreate} />);
 
       fireEvent.change(screen.getByLabelText("Name *"), {
         target: { value: "GitHub" },
@@ -78,13 +72,7 @@ describe("SecretFormDialog", () => {
       const onCreate = vi.fn().mockResolvedValue(true);
       const onClose = vi.fn();
 
-      render(
-        <SecretFormDialog
-          open={true}
-          onClose={onClose}
-          onCreate={onCreate}
-        />
-      );
+      render(<SecretFormDialog open={true} onClose={onClose} onCreate={onCreate} />);
 
       fireEvent.change(screen.getByLabelText("Name *"), {
         target: { value: "GitHub" },
@@ -101,7 +89,7 @@ describe("SecretFormDialog", () => {
         expect.objectContaining({
           name: "GitHub",
           secret: "JBSWY3DPEHPK3PXP",
-        })
+        }),
       );
       expect(onClose).toHaveBeenCalled();
     });
@@ -110,9 +98,7 @@ describe("SecretFormDialog", () => {
       const onCreate = vi.fn().mockResolvedValue(false);
       const onClose = vi.fn();
 
-      render(
-        <SecretFormDialog open={true} onClose={onClose} onCreate={onCreate} />
-      );
+      render(<SecretFormDialog open={true} onClose={onClose} onCreate={onCreate} />);
 
       fireEvent.change(screen.getByLabelText("Name *"), {
         target: { value: "GitHub" },
@@ -132,12 +118,7 @@ describe("SecretFormDialog", () => {
   describe("edit mode", () => {
     it("renders edit form with prefilled values", () => {
       render(
-        <SecretFormDialog
-          open={true}
-          secret={sampleSecret}
-          onClose={vi.fn()}
-          onUpdate={vi.fn()}
-        />
+        <SecretFormDialog open={true} secret={sampleSecret} onClose={vi.fn()} onUpdate={vi.fn()} />,
       );
       expect(screen.getByText("Edit Secret")).toBeDefined();
       expect(screen.getByDisplayValue("GitHub")).toBeDefined();
@@ -156,7 +137,7 @@ describe("SecretFormDialog", () => {
           secret={sampleSecret}
           onClose={onClose}
           onUpdate={onUpdate}
-        />
+        />,
       );
 
       fireEvent.change(screen.getByDisplayValue("GitHub"), {
@@ -171,7 +152,7 @@ describe("SecretFormDialog", () => {
         expect.objectContaining({
           id: "s_test_1",
           name: "GitHub Enterprise",
-        })
+        }),
       );
       expect(onClose).toHaveBeenCalled();
     });
@@ -184,19 +165,17 @@ describe("SecretFormDialog", () => {
           secret={coloredSecret}
           onClose={vi.fn()}
           onUpdate={vi.fn()}
-        />
+        />,
       );
 
       const blueRadio = screen.getByLabelText("Blue");
-      expect(blueRadio.getAttribute("aria-checked")).toBe("true");
+      expect(blueRadio.getAttribute("aria-pressed")).toBe("true");
     });
   });
 
   describe("color picker", () => {
     it("renders color picker with all options", () => {
-      render(
-        <SecretFormDialog open={true} onClose={vi.fn()} onCreate={vi.fn()} />
-      );
+      render(<SecretFormDialog open={true} onClose={vi.fn()} onCreate={vi.fn()} />);
       expect(screen.getByText("Color")).toBeDefined();
       expect(screen.getByLabelText("Red")).toBeDefined();
       expect(screen.getByLabelText("Blue")).toBeDefined();
@@ -205,21 +184,17 @@ describe("SecretFormDialog", () => {
     });
 
     it("selects a color when clicked", () => {
-      render(
-        <SecretFormDialog open={true} onClose={vi.fn()} onCreate={vi.fn()} />
-      );
+      render(<SecretFormDialog open={true} onClose={vi.fn()} onCreate={vi.fn()} />);
 
       fireEvent.click(screen.getByLabelText("Red"));
-      expect(screen.getByLabelText("Red").getAttribute("aria-checked")).toBe("true");
-      expect(screen.getByLabelText("Blue").getAttribute("aria-checked")).toBe("false");
+      expect(screen.getByLabelText("Red").getAttribute("aria-pressed")).toBe("true");
+      expect(screen.getByLabelText("Blue").getAttribute("aria-pressed")).toBe("false");
     });
 
     it("includes color in create submission", async () => {
       const onCreate = vi.fn().mockResolvedValue(true);
 
-      render(
-        <SecretFormDialog open={true} onClose={vi.fn()} onCreate={onCreate} />
-      );
+      render(<SecretFormDialog open={true} onClose={vi.fn()} onCreate={onCreate} />);
 
       fireEvent.change(screen.getByLabelText("Name *"), {
         target: { value: "Test" },
@@ -236,7 +211,7 @@ describe("SecretFormDialog", () => {
       expect(onCreate).toHaveBeenCalledWith(
         expect.objectContaining({
           color: "purple",
-        })
+        }),
       );
     });
 
@@ -250,7 +225,7 @@ describe("SecretFormDialog", () => {
           secret={coloredSecret}
           onClose={vi.fn()}
           onUpdate={onUpdate}
-        />
+        />,
       );
 
       // Switch color from blue to orange
@@ -263,35 +238,28 @@ describe("SecretFormDialog", () => {
       expect(onUpdate).toHaveBeenCalledWith(
         expect.objectContaining({
           color: "orange",
-        })
+        }),
       );
     });
 
     it("resolves hash color when secret has no explicit color", () => {
       // sampleSecret has color: null, so resolveThemeKey computes from name
       render(
-        <SecretFormDialog
-          open={true}
-          secret={sampleSecret}
-          onClose={vi.fn()}
-          onUpdate={vi.fn()}
-        />
+        <SecretFormDialog open={true} secret={sampleSecret} onClose={vi.fn()} onUpdate={vi.fn()} />,
       );
 
-      // At least one color radio should be checked (the hash-derived color)
-      const allRadios = screen.getAllByRole("radio");
-      const checkedRadio = allRadios.find(
-        (r) => r.getAttribute("aria-checked") === "true"
-      );
-      expect(checkedRadio).toBeDefined();
+      // At least one color button should be pressed (the hash-derived color)
+      const allSwatches = screen
+        .getAllByRole("button")
+        .filter((btn) => btn.hasAttribute("aria-pressed"));
+      const pressed = allSwatches.find((r) => r.getAttribute("aria-pressed") === "true");
+      expect(pressed).toBeDefined();
     });
   });
 
   describe("dialog behavior", () => {
     it("renders nothing when not open", () => {
-      const { container } = render(
-        <SecretFormDialog open={false} onClose={vi.fn()} />
-      );
+      const { container } = render(<SecretFormDialog open={false} onClose={vi.fn()} />);
       expect(container.querySelector("[role='dialog']")).toBeNull();
     });
 
@@ -312,9 +280,7 @@ describe("SecretFormDialog", () => {
     });
 
     it("shows busy state", () => {
-      render(
-        <SecretFormDialog open={true} onClose={vi.fn()} busy={true} />
-      );
+      render(<SecretFormDialog open={true} onClose={vi.fn()} busy={true} />);
       expect(screen.getByText("Saving...")).toBeDefined();
     });
   });

@@ -4,9 +4,9 @@
  * which enforce the user_id condition in every SQL query.
  */
 
+import type { Secret, UserSettings } from "@/models/types";
 import { executeD1Query } from "./d1-client";
 import { rowToSecret, rowToUserSettings } from "./mappers";
-import type { Secret, UserSettings } from "@/models/types";
 
 export class ScopedDB {
   constructor(private readonly userId: string) {}
@@ -16,7 +16,7 @@ export class ScopedDB {
   async getSecrets(): Promise<Secret[]> {
     const rows = await executeD1Query<Record<string, unknown>>(
       "SELECT * FROM secrets WHERE user_id = ? AND deleted_at IS NULL ORDER BY created_at DESC",
-      [this.userId]
+      [this.userId],
     );
     return rows.map(rowToSecret);
   }
@@ -24,7 +24,7 @@ export class ScopedDB {
   async getSecretById(id: string): Promise<Secret | null> {
     const rows = await executeD1Query<Record<string, unknown>>(
       "SELECT * FROM secrets WHERE id = ? AND user_id = ? AND deleted_at IS NULL",
-      [id, this.userId]
+      [id, this.userId],
     );
     return rows[0] ? rowToSecret(rows[0]) : null;
   }
@@ -60,7 +60,7 @@ export class ScopedDB {
         data.color ?? null,
         now,
         now,
-      ]
+      ],
     );
     const row = rows[0];
     if (!row) throw new Error("INSERT INTO secrets RETURNING * returned no rows");
@@ -79,7 +79,7 @@ export class ScopedDB {
       algorithm: string;
       counter: number;
       color: string | null;
-    }>
+    }>,
   ): Promise<Secret | null> {
     const setClauses: string[] = [];
     const params: unknown[] = [];
@@ -99,7 +99,7 @@ export class ScopedDB {
 
     const rows = await executeD1Query<Record<string, unknown>>(
       `UPDATE secrets SET ${setClauses.join(", ")} WHERE id = ? AND user_id = ? RETURNING *`,
-      params
+      params,
     );
     return rows[0] ? rowToSecret(rows[0]) : null;
   }
@@ -108,7 +108,7 @@ export class ScopedDB {
     const now = Math.floor(Date.now() / 1000);
     await executeD1Query(
       "UPDATE secrets SET deleted_at = ?, updated_at = ? WHERE id = ? AND user_id = ? AND deleted_at IS NULL",
-      [now, now, id, this.userId]
+      [now, now, id, this.userId],
     );
     return true;
   }
@@ -116,7 +116,7 @@ export class ScopedDB {
   async getDeletedSecrets(): Promise<Secret[]> {
     const rows = await executeD1Query<Record<string, unknown>>(
       "SELECT * FROM secrets WHERE user_id = ? AND deleted_at IS NOT NULL ORDER BY deleted_at DESC",
-      [this.userId]
+      [this.userId],
     );
     return rows.map(rowToSecret);
   }
@@ -125,7 +125,7 @@ export class ScopedDB {
     const now = Math.floor(Date.now() / 1000);
     const rows = await executeD1Query<Record<string, unknown>>(
       "UPDATE secrets SET deleted_at = NULL, updated_at = ? WHERE id = ? AND user_id = ? AND deleted_at IS NOT NULL RETURNING *",
-      [now, id, this.userId]
+      [now, id, this.userId],
     );
     return rows[0] ? rowToSecret(rows[0]) : null;
   }
@@ -133,7 +133,7 @@ export class ScopedDB {
   async permanentDeleteSecret(id: string): Promise<boolean> {
     await executeD1Query(
       "DELETE FROM secrets WHERE id = ? AND user_id = ? AND deleted_at IS NOT NULL",
-      [id, this.userId]
+      [id, this.userId],
     );
     return true;
   }
@@ -141,20 +141,19 @@ export class ScopedDB {
   async emptyRecycleBin(): Promise<number> {
     const countRows = await executeD1Query<{ count: number }>(
       "SELECT COUNT(*) as count FROM secrets WHERE user_id = ? AND deleted_at IS NOT NULL",
-      [this.userId]
+      [this.userId],
     );
     const count = countRows[0]?.count ?? 0;
-    await executeD1Query(
-      "DELETE FROM secrets WHERE user_id = ? AND deleted_at IS NOT NULL",
-      [this.userId]
-    );
+    await executeD1Query("DELETE FROM secrets WHERE user_id = ? AND deleted_at IS NOT NULL", [
+      this.userId,
+    ]);
     return count;
   }
 
   async getSecretCount(): Promise<number> {
     const rows = await executeD1Query<{ count: number }>(
       "SELECT COUNT(*) as count FROM secrets WHERE user_id = ? AND deleted_at IS NULL",
-      [this.userId]
+      [this.userId],
     );
     return rows[0]?.count ?? 0;
   }
@@ -164,16 +163,18 @@ export class ScopedDB {
   async getUserSettings(): Promise<UserSettings | null> {
     const rows = await executeD1Query<Record<string, unknown>>(
       "SELECT * FROM user_settings WHERE user_id = ?",
-      [this.userId]
+      [this.userId],
     );
     return rows[0] ? rowToUserSettings(rows[0]) : null;
   }
 
-  async upsertUserSettings(data: Partial<{
-    encryptionKeyHash: string | null;
-    theme: string;
-    language: string;
-  }>): Promise<UserSettings> {
+  async upsertUserSettings(
+    data: Partial<{
+      encryptionKeyHash: string | null;
+      theme: string;
+      language: string;
+    }>,
+  ): Promise<UserSettings> {
     const existing = await this.getUserSettings();
 
     if (existing) {
@@ -193,7 +194,7 @@ export class ScopedDB {
         params.push(this.userId);
         const rows = await executeD1Query<Record<string, unknown>>(
           `UPDATE user_settings SET ${setClauses.join(", ")} WHERE user_id = ? RETURNING *`,
-          params
+          params,
         );
         const updatedRow = rows[0];
         if (!updatedRow) throw new Error("UPDATE user_settings RETURNING * returned no rows");
@@ -206,12 +207,7 @@ export class ScopedDB {
       `INSERT INTO user_settings (user_id, encryption_key_hash, theme, language)
        VALUES (?, ?, ?, ?)
        RETURNING *`,
-      [
-        this.userId,
-        data.encryptionKeyHash ?? null,
-        data.theme ?? "system",
-        data.language ?? "en",
-      ]
+      [this.userId, data.encryptionKeyHash ?? null, data.theme ?? "system", data.language ?? "en"],
     );
     const insertedRow = rows[0];
     if (!insertedRow) throw new Error("INSERT INTO user_settings RETURNING * returned no rows");
@@ -228,15 +224,15 @@ export class ScopedDB {
   async setEncryptionKey(key: string): Promise<void> {
     const existing = await this.getUserSettings();
     if (existing) {
-      await executeD1Query(
-        "UPDATE user_settings SET encryption_key = ? WHERE user_id = ?",
-        [key, this.userId]
-      );
+      await executeD1Query("UPDATE user_settings SET encryption_key = ? WHERE user_id = ?", [
+        key,
+        this.userId,
+      ]);
     } else {
       await executeD1Query(
         `INSERT INTO user_settings (user_id, encryption_key, theme, language)
          VALUES (?, ?, 'system', 'en')`,
-        [this.userId, key]
+        [this.userId, key],
       );
     }
   }
@@ -256,13 +252,13 @@ export class ScopedDB {
     if (existing) {
       await executeD1Query(
         "UPDATE user_settings SET backy_webhook_url = ?, backy_api_key = ? WHERE user_id = ?",
-        [data.webhookUrl, data.apiKey, this.userId]
+        [data.webhookUrl, data.apiKey, this.userId],
       );
     } else {
       await executeD1Query(
         `INSERT INTO user_settings (user_id, backy_webhook_url, backy_api_key, theme, language)
          VALUES (?, ?, ?, 'system', 'en')`,
-        [this.userId, data.webhookUrl, data.apiKey]
+        [this.userId, data.webhookUrl, data.apiKey],
       );
     }
   }
@@ -277,24 +273,23 @@ export class ScopedDB {
   async upsertBackyPullWebhook(key: string): Promise<void> {
     const existing = await this.getUserSettings();
     if (existing) {
-      await executeD1Query(
-        "UPDATE user_settings SET backy_pull_key = ? WHERE user_id = ?",
-        [key, this.userId]
-      );
+      await executeD1Query("UPDATE user_settings SET backy_pull_key = ? WHERE user_id = ?", [
+        key,
+        this.userId,
+      ]);
     } else {
       await executeD1Query(
         `INSERT INTO user_settings (user_id, backy_pull_key, theme, language)
          VALUES (?, ?, 'system', 'en')`,
-        [this.userId, key]
+        [this.userId, key],
       );
     }
   }
 
   async deleteBackyPullWebhook(): Promise<void> {
-    await executeD1Query(
-      "UPDATE user_settings SET backy_pull_key = NULL WHERE user_id = ?",
-      [this.userId]
-    );
+    await executeD1Query("UPDATE user_settings SET backy_pull_key = NULL WHERE user_id = ?", [
+      this.userId,
+    ]);
   }
 
   // ── Legacy Backups (read-only, for migration) ─────────────────────────────
@@ -358,9 +353,7 @@ export class ScopedDB {
  * Verify a Backy pull webhook key and return the associated userId.
  * Used by the pull webhook route handler where we don't have a session.
  */
-export async function verifyBackyPullWebhook(
-  key: string,
-): Promise<{ userId: string } | null> {
+export async function verifyBackyPullWebhook(key: string): Promise<{ userId: string } | null> {
   const rows = await executeD1Query<Record<string, unknown>>(
     "SELECT user_id FROM user_settings WHERE backy_pull_key = ? LIMIT 1",
     [key],

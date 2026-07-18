@@ -4,15 +4,15 @@
  * RecycleBinView — client component for browsing and managing soft-deleted secrets.
  */
 
-import { useState, useCallback, useRef } from "react";
-import { Search, Undo2, Trash2, AlertTriangle } from "lucide-react";
+import { AlertTriangle, Search, Trash2, Undo2 } from "lucide-react";
+import { useCallback, useRef, useState } from "react";
 import { createPortal } from "react-dom";
+import { CARD_THEMES, resolveThemeKey } from "@/components/secret-card";
 import { Button } from "@/components/ui/button";
-import { useRecycleBinViewModel } from "@/viewmodels/useRecycleBinViewModel";
 import { useHotkey } from "@/hooks/use-hotkey";
 import { cn } from "@/lib/utils";
-import { resolveThemeKey, CARD_THEMES } from "@/components/secret-card";
 import type { Secret } from "@/models/types";
+import { useRecycleBinViewModel } from "@/viewmodels/useRecycleBinViewModel";
 
 // ── Confirm Dialog ────────────────────────────────────────────────────────
 
@@ -99,9 +99,7 @@ function DeletedSecretRow({
 
       {/* Info */}
       <div className="flex-1 min-w-0">
-        <p className="text-sm font-medium text-foreground truncate">
-          {secret.name}
-        </p>
+        <p className="text-sm font-medium text-foreground truncate">{secret.name}</p>
         <p className="text-xs text-muted-foreground truncate">
           {secret.account ? `${secret.account} · ` : ""}
           Deleted {deletedDate}
@@ -139,11 +137,7 @@ function DeletedSecretRow({
 
 // ── Main Component ────────────────────────────────────────────────────────
 
-export function RecycleBinView({
-  initialSecrets,
-}: {
-  initialSecrets: Secret[];
-}) {
+export function RecycleBinView({ initialSecrets }: { initialSecrets: Secret[] }) {
   const vm = useRecycleBinViewModel(initialSecrets);
 
   // Search input ref for Cmd+K focus
@@ -204,11 +198,7 @@ export function RecycleBinView({
           role="alert"
         >
           {vm.error}
-          <button
-            type="button"
-            onClick={vm.clearError}
-            className="ml-2 underline cursor-pointer"
-          >
+          <button type="button" onClick={vm.clearError} className="ml-2 underline cursor-pointer">
             Dismiss
           </button>
         </div>
@@ -226,25 +216,23 @@ export function RecycleBinView({
         <div className="flex flex-col items-center justify-center py-12 text-center">
           <Trash2 className="h-10 w-10 text-muted-foreground/30 mb-3" />
           <p className="text-sm text-muted-foreground">
-            {vm.searchQuery
-              ? "No deleted secrets match your search."
-              : "Recycle bin is empty."}
+            {vm.searchQuery ? "No deleted secrets match your search." : "Recycle bin is empty."}
           </p>
         </div>
       ) : (
         !vm.loading && (
-          <div className="flex flex-col gap-2" role="list" aria-label="Deleted secrets list">
+          <ul className="flex flex-col gap-2" aria-label="Deleted secrets list">
             {vm.filteredSecrets.map((secret) => (
-              <div key={secret.id} role="listitem">
+              <li key={secret.id}>
                 <DeletedSecretRow
                   secret={secret}
                   onRestore={vm.handleRestore}
                   onPermanentDelete={(id) => setConfirmDeleteId(id)}
                   busy={vm.busy}
                 />
-              </div>
+              </li>
             ))}
-          </div>
+          </ul>
         )
       )}
 

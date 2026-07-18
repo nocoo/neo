@@ -12,9 +12,9 @@ export default function BackupLoading() {
 
       {/* Action cards grid */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-        {Array.from({ length: 3 }).map((_, i) => (
+        {Array.from({ length: 3 }, (_, i) => i).map((i) => (
           <div
-            key={i}
+            key={`skeleton-${i}`}
             className="rounded-card bg-secondary p-6 space-y-4"
             style={{ animationDelay: `${i * 50}ms` }}
           >

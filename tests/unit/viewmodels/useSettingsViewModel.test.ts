@@ -2,8 +2,8 @@
  * Settings ViewModel tests.
  */
 
-import { describe, it, expect, vi, beforeEach } from "vitest";
-import { renderHook, act } from "@testing-library/react";
+import { act, renderHook } from "@testing-library/react";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
 // ── Hoisted mocks ────────────────────────────────────────────────────────
 
@@ -58,8 +58,8 @@ vi.mock("@/contexts/dashboard-context", () => ({
   useDashboardActions: vi.fn().mockReturnValue({ refresh: mockRefresh }),
 }));
 
-import { useSettingsViewModel } from "@/viewmodels/useSettingsViewModel";
 import type { UserSettings } from "@/models/types";
+import { useSettingsViewModel } from "@/viewmodels/useSettingsViewModel";
 
 // ── Helpers ──────────────────────────────────────────────────────────────
 
@@ -346,7 +346,10 @@ describe("useSettingsViewModel", () => {
     });
 
     it("tests connection failure", async () => {
-      mockTestBackyConnection.mockResolvedValue({ success: false, error: "Connection failed (401)" });
+      mockTestBackyConnection.mockResolvedValue({
+        success: false,
+        error: "Connection failed (401)",
+      });
 
       const { result } = renderHook(() => useSettingsViewModel());
       await act(async () => {});

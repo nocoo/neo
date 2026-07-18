@@ -6,22 +6,22 @@
  * Connects to DashboardContext for encryption status and settings server actions.
  */
 
-import { useState, useCallback, useEffect } from "react";
-import { useDashboardState, useDashboardActions } from "@/contexts/dashboard-context";
+import { useCallback, useEffect, useState } from "react";
 import {
-  getUserSettings as getUserSettingsAction,
-  updateUserSettings as updateUserSettingsAction,
-  getEncryptionKey as getEncryptionKeyAction,
-  generateAndSaveEncryptionKey as generateKeyAction,
-} from "@/actions/settings";
-import {
+  generateBackyPullWebhook as generatePullWebhookAction,
   getBackyConfig as getBackyConfigAction,
+  getBackyPullWebhook as getPullWebhookAction,
+  revokeBackyPullWebhook as revokePullWebhookAction,
   saveBackyConfig as saveBackyConfigAction,
   testBackyConnection as testConnectionAction,
-  getBackyPullWebhook as getPullWebhookAction,
-  generateBackyPullWebhook as generatePullWebhookAction,
-  revokeBackyPullWebhook as revokePullWebhookAction,
 } from "@/actions/backy";
+import {
+  generateAndSaveEncryptionKey as generateKeyAction,
+  getEncryptionKey as getEncryptionKeyAction,
+  getUserSettings as getUserSettingsAction,
+  updateUserSettings as updateUserSettingsAction,
+} from "@/actions/settings";
+import { useDashboardActions, useDashboardState } from "@/contexts/dashboard-context";
 import type { UserSettings } from "@/models/types";
 
 // ── Types ────────────────────────────────────────────────────────────────
@@ -144,17 +144,17 @@ export function useSettingsViewModel(): SettingsViewModel {
         setBusy(false);
       }
     },
-    []
+    [],
   );
 
   const handleUpdateTheme = useCallback(
     (theme: string) => updateSettings({ theme }),
-    [updateSettings]
+    [updateSettings],
   );
 
   const handleUpdateLanguage = useCallback(
     (language: string) => updateSettings({ language }),
-    [updateSettings]
+    [updateSettings],
   );
 
   // ── Encryption key management ───────────────────────────────────────────
@@ -217,7 +217,7 @@ export function useSettingsViewModel(): SettingsViewModel {
         setBusy(false);
       }
     },
-    []
+    [],
   );
 
   const handleTestBackyConnection = useCallback(async (): Promise<boolean> => {

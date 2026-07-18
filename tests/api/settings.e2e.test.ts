@@ -2,13 +2,13 @@
  * API E2E tests — Auth, Settings, and Dashboard.
  */
 
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
+  assertError,
+  assertSuccess,
   createMockScopedDB,
   resetStorage,
   TEST_USER_ID,
-  assertSuccess,
-  assertError,
 } from "./setup";
 
 // ── Top-level mock (authenticated) ──────────────────────────────────────
@@ -26,10 +26,13 @@ vi.mock("@/lib/auth-context", () => ({
   requireAuth: vi.fn().mockResolvedValue(TEST_USER_ID),
 }));
 
-import { getUserSettings, updateUserSettings } from "@/actions/settings";
 import { getDashboardData } from "@/actions/dashboard";
 import { createSecret } from "@/actions/secrets";
-import { generateAndSaveEncryptionKey } from "@/actions/settings";
+import {
+  generateAndSaveEncryptionKey,
+  getUserSettings,
+  updateUserSettings,
+} from "@/actions/settings";
 
 // ── Reset ────────────────────────────────────────────────────────────────
 

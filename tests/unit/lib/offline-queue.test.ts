@@ -2,19 +2,19 @@
  * Offline queue tests.
  */
 
-import { describe, it, expect, beforeEach } from "vitest";
+import { beforeEach, describe, expect, it } from "vitest";
 import "fake-indexeddb/auto";
 
+import type { QueueEntry } from "@/lib/offline-queue";
 import {
+  clear,
+  count,
+  deleteDatabase,
   enqueue,
   getAll,
-  count,
-  remove,
   incrementRetry,
-  clear,
-  deleteDatabase,
+  remove,
 } from "@/lib/offline-queue";
-import type { QueueEntry } from "@/lib/offline-queue";
 
 // ── Setup ────────────────────────────────────────────────────────────────
 

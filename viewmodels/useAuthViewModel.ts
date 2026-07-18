@@ -6,8 +6,8 @@
  * Wraps next-auth/react useSession for type-safe access.
  */
 
+import { signIn, signOut, useSession } from "next-auth/react";
 import { useCallback, useMemo } from "react";
-import { useSession, signIn, signOut } from "next-auth/react";
 
 // ── Types ────────────────────────────────────────────────────────────────
 

@@ -1,6 +1,6 @@
 import { getDashboardData } from "@/actions/dashboard";
-import { DashboardProvider } from "@/contexts/dashboard-context";
 import { BackupView } from "@/components/backup-view";
+import { DashboardProvider } from "@/contexts/dashboard-context";
 
 export default async function BackupPage() {
   const result = await getDashboardData();

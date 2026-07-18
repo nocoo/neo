@@ -4,12 +4,12 @@
  * ToolsView — developer tools for import/export and OTP testing.
  */
 
-import { useState, useCallback } from "react";
-import { Button } from "@/components/ui/button";
-import { TestTube, Upload, Download } from "lucide-react";
-import { useDevToolsViewModel } from "@/viewmodels/useDevToolsViewModel";
-import { ImportDialog } from "@/components/import-dialog";
+import { Download, TestTube, Upload } from "lucide-react";
+import { useCallback, useState } from "react";
 import { ExportDialog } from "@/components/export-dialog";
+import { ImportDialog } from "@/components/import-dialog";
+import { Button } from "@/components/ui/button";
+import { useDevToolsViewModel } from "@/viewmodels/useDevToolsViewModel";
 import { useSecretsViewModel } from "@/viewmodels/useSecretsViewModel";
 
 // ── Component ────────────────────────────────────────────────────────────
@@ -35,10 +35,12 @@ export function ToolsView() {
 
   return (
     <div className="space-y-6">
-
       {/* Error banner */}
       {devTools.error && (
-        <div className="rounded-lg bg-destructive/10 px-4 py-3 text-sm text-destructive" role="alert">
+        <div
+          className="rounded-lg bg-destructive/10 px-4 py-3 text-sm text-destructive"
+          role="alert"
+        >
           {devTools.error}
           <button
             type="button"
@@ -72,9 +74,7 @@ export function ToolsView() {
             <Download className="h-5 w-5 text-primary" />
             <h2 className="text-lg font-medium">Export</h2>
           </div>
-          <p className="text-sm text-muted-foreground">
-            Export your secrets in various formats
-          </p>
+          <p className="text-sm text-muted-foreground">Export your secrets in various formats</p>
           <Button variant="outline" onClick={() => setShowExport(true)} className="w-full">
             Open Export Tool
           </Button>
@@ -125,7 +125,10 @@ export function ToolsView() {
             </Button>
             {devTools.otpTestResult && (
               <div className="text-center">
-                <span className="font-display font-mono text-2xl font-bold tracking-widest" data-testid="otp-test-result">
+                <span
+                  className="font-display font-mono text-2xl font-bold tracking-widest"
+                  data-testid="otp-test-result"
+                >
                   {devTools.otpTestResult}
                 </span>
               </div>

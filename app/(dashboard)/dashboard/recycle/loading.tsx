@@ -12,9 +12,9 @@ export default function RecycleLoading() {
 
       {/* Deleted secrets list */}
       <div className="space-y-2">
-        {Array.from({ length: 6 }).map((_, i) => (
+        {Array.from({ length: 6 }, (_, i) => i).map((i) => (
           <div
-            key={i}
+            key={`skeleton-${i}`}
             className="rounded-card bg-secondary px-4 py-3 flex items-center gap-3"
             style={{ animationDelay: `${Math.min(i * 40, 200)}ms` }}
           >

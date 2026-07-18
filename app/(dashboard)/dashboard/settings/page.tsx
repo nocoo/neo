@@ -1,6 +1,6 @@
 import { getDashboardData } from "@/actions/dashboard";
-import { DashboardProvider } from "@/contexts/dashboard-context";
 import { SettingsView } from "@/components/settings-view";
+import { DashboardProvider } from "@/contexts/dashboard-context";
 
 export default async function SettingsPage() {
   const result = await getDashboardData();

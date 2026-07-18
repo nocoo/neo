@@ -3,20 +3,19 @@
  * Preserves all round-trip, tamper-detection, and IV-randomness tests.
  */
 
-import { describe, it, expect } from "vitest";
-import {
-  encryptData,
-  decryptData,
-  isEncrypted,
-  generateEncryptionKey,
-} from "@/models/encryption";
+import { describe, expect, it } from "vitest";
+import { decryptData, encryptData, generateEncryptionKey, isEncrypted } from "@/models/encryption";
 
 // 32-byte key → base64
 const TEST_KEY = btoa(
-  String.fromCharCode(...new Uint8Array(Array.from("12345678901234567890123456789012").map((c) => c.charCodeAt(0))))
+  String.fromCharCode(
+    ...new Uint8Array(Array.from("12345678901234567890123456789012").map((c) => c.charCodeAt(0))),
+  ),
 );
 const WRONG_KEY = btoa(
-  String.fromCharCode(...new Uint8Array(Array.from("wrongkeywrongkeywrongkeywrongke").map((c) => c.charCodeAt(0))))
+  String.fromCharCode(
+    ...new Uint8Array(Array.from("wrongkeywrongkeywrongkeywrongke").map((c) => c.charCodeAt(0))),
+  ),
 );
 
 // ── isEncrypted ─────────────────────────────────────────────────────────────
@@ -111,9 +110,7 @@ describe("encryptData / decryptData", () => {
   });
 
   it("requires an encryption key", async () => {
-    await expect(encryptData({ name: "Test" }, "")).rejects.toThrow(
-      "ENCRYPTION_KEY"
-    );
+    await expect(encryptData({ name: "Test" }, "")).rejects.toThrow("ENCRYPTION_KEY");
   });
 
   it("produces different ciphertext for same data (IV randomness)", async () => {
@@ -207,7 +204,7 @@ describe("edge cases", () => {
 
   it("rejects unsupported version prefix", async () => {
     await expect(decryptData("v2:abc:def", TEST_KEY)).rejects.toThrow(
-      "Unsupported encryption version"
+      "Unsupported encryption version",
     );
   });
 });
@@ -217,14 +214,10 @@ describe("edge cases", () => {
 describe("key validation", () => {
   it("rejects a key that is too short", async () => {
     const shortKey = btoa("shortkey");
-    await expect(encryptData({ test: "data" }, shortKey)).rejects.toThrow(
-      "Invalid key length"
-    );
+    await expect(encryptData({ test: "data" }, shortKey)).rejects.toThrow("Invalid key length");
   });
 
   it("rejects an invalid base64 key", async () => {
-    await expect(
-      encryptData({ test: "data" }, "not-valid-base64!!!")
-    ).rejects.toThrow();
+    await expect(encryptData({ test: "data" }, "not-valid-base64!!!")).rejects.toThrow();
   });
 });

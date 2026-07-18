@@ -3,14 +3,12 @@
  * Zero React dependency — pure TypeScript interfaces.
  */
 
-import type { OtpType, OtpAlgorithm } from "./constants";
+import type { OtpAlgorithm, OtpType } from "./constants";
 
 // ── ActionResult ─────────────────────────────────────────────────────────────
 
 /** Unified return type for all Server Actions */
-export type ActionResult<T> =
-  | { success: true; data: T }
-  | { success: false; error: string };
+export type ActionResult<T> = { success: true; data: T } | { success: false; error: string };
 
 // ── Secret ───────────────────────────────────────────────────────────────────
 

@@ -4,9 +4,9 @@
  * DeleteConfirmDialog — confirmation dialog for secret deletion.
  */
 
+import { AlertTriangle } from "lucide-react";
 import { createPortal } from "react-dom";
 import { Button } from "@/components/ui/button";
-import { AlertTriangle } from "lucide-react";
 
 // ── Types ────────────────────────────────────────────────────────────────
 
@@ -48,7 +48,9 @@ export function DeleteConfirmDialog({
           </div>
           <div>
             <h2 className="text-lg font-semibold">Delete Secret</h2>
-            <p className="text-sm text-muted-foreground">The secret will be moved to Recycle Bin.</p>
+            <p className="text-sm text-muted-foreground">
+              The secret will be moved to Recycle Bin.
+            </p>
           </div>
         </div>
 
@@ -66,6 +68,6 @@ export function DeleteConfirmDialog({
         </div>
       </div>
     </div>,
-    document.body
+    document.body,
   );
 }

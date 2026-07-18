@@ -4,12 +4,12 @@
  * child loggers, performance timer, and log filtering.
  */
 
-import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import {
+  getLogger,
   Logger,
   LogLevel,
   PerformanceTimer,
-  getLogger,
   resetLogger,
   sanitizeHeaders,
 } from "@/lib/logger";
@@ -148,8 +148,8 @@ describe("sanitizeHeaders", () => {
     });
 
     const sanitized = sanitizeHeaders(headers);
-    expect(sanitized["authorization"]).toBe("***REDACTED***");
-    expect(sanitized["cookie"]).toBe("***REDACTED***");
+    expect(sanitized.authorization).toBe("***REDACTED***");
+    expect(sanitized.cookie).toBe("***REDACTED***");
     expect(sanitized["x-api-key"]).toBe("***REDACTED***");
     expect(sanitized["content-type"]).toBe("application/json");
   });
@@ -161,7 +161,7 @@ describe("sanitizeHeaders", () => {
     };
 
     const sanitized = sanitizeHeaders(headers);
-    expect(sanitized["Authorization"]).toBe("***REDACTED***");
+    expect(sanitized.Authorization).toBe("***REDACTED***");
     expect(sanitized["Content-Type"]).toBe("text/html");
   });
 

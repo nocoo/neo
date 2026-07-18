@@ -6,21 +6,13 @@
  * Provides import parsing, export formatting, and single-secret OTP verification.
  */
 
-import { useState, useCallback } from "react";
+import { useCallback, useState } from "react";
 import { useDashboardState } from "@/contexts/dashboard-context";
-import {
-  detectImportFormat,
-  parseImport,
-} from "@/models/import-parsers";
 import { exportSecrets } from "@/models/export-formatters";
+import { detectImportFormat, parseImport } from "@/models/import-parsers";
 import { generateTOTP } from "@/models/otp";
+import type { ExportFormat, ImportFormat, ParsedSecret, Secret } from "@/models/types";
 import { validateBase32 } from "@/models/validation";
-import type {
-  ParsedSecret,
-  ImportFormat,
-  ExportFormat,
-  Secret,
-} from "@/models/types";
 
 // ── Types ────────────────────────────────────────────────────────────────
 
@@ -45,7 +37,10 @@ export interface DevToolsViewModelActions {
   /** Export current secrets in given format. */
   handleExport: (format: ExportFormat) => void;
   /** Generate a test OTP from a base32 secret. */
-  handleTestOtp: (secret: string, options?: { digits?: number; period?: number; algorithm?: string }) => Promise<void>;
+  handleTestOtp: (
+    secret: string,
+    options?: { digits?: number; period?: number; algorithm?: string },
+  ) => Promise<void>;
   /** Clear parsed secrets. */
   clearParsed: () => void;
   /** Clear export output. */
@@ -85,32 +80,29 @@ export function useDevToolsViewModel(): DevToolsViewModel {
 
   // ── Import parsing ────────────────────────────────────────────────────
 
-  const handleParseImport = useCallback(
-    (content: string, format?: ImportFormat) => {
-      setError(null);
-      try {
-        const detected = format ?? detectImportFormat(content);
-        setDetectedFormat(detected);
+  const handleParseImport = useCallback((content: string, format?: ImportFormat) => {
+    setError(null);
+    try {
+      const detected = format ?? detectImportFormat(content);
+      setDetectedFormat(detected);
 
-        if (!detected) {
-          setError("Unable to detect import format");
-          setParsedSecrets([]);
-          return;
-        }
-
-        const parsed = parseImport(content, detected);
-        setParsedSecrets(parsed);
-
-        if (parsed.length === 0) {
-          setError("No secrets found in imported data");
-        }
-      } catch {
-        setError("Failed to parse import data");
+      if (!detected) {
+        setError("Unable to detect import format");
         setParsedSecrets([]);
+        return;
       }
-    },
-    []
-  );
+
+      const parsed = parseImport(content, detected);
+      setParsedSecrets(parsed);
+
+      if (parsed.length === 0) {
+        setError("No secrets found in imported data");
+      }
+    } catch {
+      setError("Failed to parse import data");
+      setParsedSecrets([]);
+    }
+  }, []);
 
   // ── Export ─────────────────────────────────────────────────────────────
 
@@ -126,16 +118,13 @@ export function useDevToolsViewModel(): DevToolsViewModel {
         setExportOutput("");
       }
     },
-    [secrets]
+    [secrets],
   );
 
   // ── OTP testing ───────────────────────────────────────────────────────
 
   const handleTestOtp = useCallback(
-    async (
-      secret: string,
-      options?: { digits?: number; period?: number; algorithm?: string }
-    ) => {
+    async (secret: string, options?: { digits?: number; period?: number; algorithm?: string }) => {
       setError(null);
       setBusy(true);
       try {
@@ -161,7 +150,7 @@ export function useDevToolsViewModel(): DevToolsViewModel {
         setBusy(false);
       }
     },
-    []
+    [],
   );
 
   // ── Clear helpers ─────────────────────────────────────────────────────

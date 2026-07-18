@@ -2,8 +2,8 @@
  * D1 HTTP client tests — isD1Configured + executeD1Query.
  */
 
-import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import { isD1Configured, executeD1Query } from "@/lib/db/d1-client";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { executeD1Query, isD1Configured } from "@/lib/db/d1-client";
 
 describe("isD1Configured", () => {
   const originalEnv = process.env;
@@ -64,9 +64,7 @@ describe("executeD1Query", () => {
 
   it("throws when credentials are missing", async () => {
     delete process.env.CLOUDFLARE_API_TOKEN;
-    await expect(executeD1Query("SELECT 1")).rejects.toThrow(
-      "D1 credentials not configured"
-    );
+    await expect(executeD1Query("SELECT 1")).rejects.toThrow("D1 credentials not configured");
     expect(mockFetch).not.toHaveBeenCalled();
   });
 
@@ -88,7 +86,7 @@ describe("executeD1Query", () => {
       expect.objectContaining({
         method: "POST",
         body: JSON.stringify({ sql: "SELECT * FROM t WHERE id = ?", params: [1] }),
-      })
+      }),
     );
     expect(results).toEqual([{ id: 1 }]);
   });
@@ -139,7 +137,7 @@ describe("executeD1Query", () => {
     });
 
     await expect(executeD1Query("INSERT INTO users ...")).rejects.toThrow(
-      "UNIQUE constraint failed"
+      "UNIQUE constraint failed",
     );
   });
 
@@ -169,7 +167,7 @@ describe("executeD1Query", () => {
     });
 
     await expect(executeD1Query("INSERT INTO secrets ...")).rejects.toThrow(
-      "UNIQUE constraint failed"
+      "UNIQUE constraint failed",
     );
   });
 
@@ -190,7 +188,7 @@ describe("executeD1Query", () => {
       expect.any(String),
       expect.objectContaining({
         body: JSON.stringify({ sql: "SELECT 1", params: [] }),
-      })
+      }),
     );
   });
 });

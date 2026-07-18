@@ -2,7 +2,7 @@
  * Settings server actions tests.
  */
 
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const {
   mockGetUserSettings,
@@ -46,11 +46,11 @@ vi.mock("@/models/encryption", () => ({
 }));
 
 import {
+  countLegacyBackups,
+  generateAndSaveEncryptionKey,
+  getEncryptionKey,
   getUserSettings,
   updateUserSettings,
-  getEncryptionKey,
-  generateAndSaveEncryptionKey,
-  countLegacyBackups,
 } from "@/actions/settings";
 import { getScopedDB } from "@/lib/auth-context";
 

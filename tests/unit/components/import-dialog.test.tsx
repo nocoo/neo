@@ -2,8 +2,8 @@
  * ImportDialog component tests.
  */
 
-import { describe, it, expect, vi, beforeEach } from "vitest";
-import { render, screen, fireEvent, act } from "@testing-library/react";
+import { act, fireEvent, render, screen } from "@testing-library/react";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { ImportDialog } from "@/components/import-dialog";
 import type { ParsedSecret } from "@/models/types";
 
@@ -35,7 +35,7 @@ describe("ImportDialog", () => {
         parsedSecrets={[]}
         detectedFormat={null}
         error={null}
-      />
+      />,
     );
     expect(container.querySelector("[role='dialog']")).toBeNull();
   });
@@ -50,7 +50,7 @@ describe("ImportDialog", () => {
         parsedSecrets={[]}
         detectedFormat={null}
         error={null}
-      />
+      />,
     );
     expect(screen.getByText("Import Secrets")).toBeDefined();
     expect(screen.getByLabelText("Or paste content")).toBeDefined();
@@ -67,7 +67,7 @@ describe("ImportDialog", () => {
         parsedSecrets={[]}
         detectedFormat={null}
         error={null}
-      />
+      />,
     );
 
     fireEvent.change(screen.getByLabelText("Or paste content"), {
@@ -88,7 +88,7 @@ describe("ImportDialog", () => {
         parsedSecrets={sampleParsed}
         detectedFormat="otpauth-uri"
         error={null}
-      />
+      />,
     );
     expect(screen.getByText("otpauth-uri")).toBeDefined();
   });
@@ -103,7 +103,7 @@ describe("ImportDialog", () => {
         parsedSecrets={sampleParsed}
         detectedFormat="aegis"
         error={null}
-      />
+      />,
     );
     expect(screen.getByText("Found 1 secret")).toBeDefined();
   });
@@ -121,7 +121,7 @@ describe("ImportDialog", () => {
         parsedSecrets={sampleParsed}
         detectedFormat="aegis"
         error={null}
-      />
+      />,
     );
 
     await act(async () => {
@@ -142,7 +142,7 @@ describe("ImportDialog", () => {
         parsedSecrets={[]}
         detectedFormat={null}
         error={null}
-      />
+      />,
     );
 
     const importBtn = screen.getByText("Import 0 Secrets");
@@ -159,7 +159,7 @@ describe("ImportDialog", () => {
         parsedSecrets={[]}
         detectedFormat={null}
         error="Invalid format"
-      />
+      />,
     );
     expect(screen.getByText("Invalid format")).toBeDefined();
   });
@@ -175,7 +175,7 @@ describe("ImportDialog", () => {
         parsedSecrets={[]}
         detectedFormat={null}
         error={null}
-      />
+      />,
     );
 
     fireEvent.click(screen.getByText("Cancel"));

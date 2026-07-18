@@ -6,12 +6,8 @@
  * from the main thread.
  */
 
-import {
-  getAll,
-  remove,
-  incrementRetry,
-} from "@/lib/offline-queue";
-import type { QueueEntry, OperationType } from "@/lib/offline-queue";
+import type { OperationType, QueueEntry } from "@/lib/offline-queue";
+import { getAll, incrementRetry, remove } from "@/lib/offline-queue";
 
 // ── Types ────────────────────────────────────────────────────────────────
 
@@ -42,10 +38,7 @@ export const SYNC_TAG = "neo-offline-sync";
 const handlers = new Map<OperationType, ReplayHandler>();
 
 /** Register a replay handler for an operation type. */
-export function registerHandler(
-  type: OperationType,
-  handler: ReplayHandler,
-): void {
+export function registerHandler(type: OperationType, handler: ReplayHandler): void {
   handlers.set(type, handler);
 }
 
@@ -131,19 +124,18 @@ export async function replayAll(): Promise<SyncResult> {
 
 /** Request a background sync (call from main thread). */
 export async function requestSync(): Promise<boolean> {
-  if (
-    typeof navigator === "undefined" ||
-    !("serviceWorker" in navigator)
-  ) {
+  if (typeof navigator === "undefined" || !("serviceWorker" in navigator)) {
     return false;
   }
 
   try {
     const registration = await navigator.serviceWorker.ready;
     if ("sync" in registration) {
-      await (registration as ServiceWorkerRegistration & {
-        sync: { register: (tag: string) => Promise<void> };
-      }).sync.register(SYNC_TAG);
+      await (
+        registration as ServiceWorkerRegistration & {
+          sync: { register: (tag: string) => Promise<void> };
+        }
+      ).sync.register(SYNC_TAG);
       return true;
     }
     return false;

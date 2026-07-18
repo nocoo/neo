@@ -4,11 +4,11 @@
  * ImportDialog — allows users to import secrets from various formats.
  */
 
-import { useState, useCallback } from "react";
+import { Upload, X } from "lucide-react";
+import { useCallback, useState } from "react";
 import { createPortal } from "react-dom";
 import { Button } from "@/components/ui/button";
-import { Upload, X } from "lucide-react";
-import type { ParsedSecret, ImportFormat } from "@/models/types";
+import type { ImportFormat, ParsedSecret } from "@/models/types";
 
 // ── Types ────────────────────────────────────────────────────────────────
 
@@ -16,7 +16,9 @@ export interface ImportDialogProps {
   open: boolean;
   onClose: () => void;
   onParse: (content: string, format?: ImportFormat) => void;
-  onImport: (secrets: { name: string; secret: string; account?: string }[]) => Promise<{ imported: number; skipped: number; duplicates: number } | null>;
+  onImport: (
+    secrets: { name: string; secret: string; account?: string }[],
+  ) => Promise<{ imported: number; skipped: number; duplicates: number } | null>;
   parsedSecrets: ParsedSecret[];
   detectedFormat: ImportFormat | null;
   error: string | null;
@@ -50,7 +52,7 @@ export function ImportDialog({
       };
       reader.readAsText(file);
     },
-    [onParse]
+    [onParse],
   );
 
   const handlePaste = useCallback(() => {
@@ -145,9 +147,13 @@ export function ImportDialog({
                 Found {parsedSecrets.length} secret{parsedSecrets.length !== 1 ? "s" : ""}
               </p>
               <ul className="max-h-40 overflow-y-auto space-y-1" aria-label="Parsed secrets">
-                {parsedSecrets.map((s, i) => (
-                  <li key={i} className="text-xs text-muted-foreground">
-                    {s.name}{s.account ? ` (${s.account})` : ""}
+                {parsedSecrets.map((s) => (
+                  <li
+                    key={`${s.name}::${s.account ?? ""}::${s.secret}`}
+                    className="text-xs text-muted-foreground"
+                  >
+                    {s.name}
+                    {s.account ? ` (${s.account})` : ""}
                   </li>
                 ))}
               </ul>
@@ -164,16 +170,15 @@ export function ImportDialog({
             <Button variant="outline" onClick={onClose}>
               Cancel
             </Button>
-            <Button
-              onClick={handleImport}
-              disabled={parsedSecrets.length === 0 || busy}
-            >
-              {busy ? "Importing..." : `Import ${parsedSecrets.length} Secret${parsedSecrets.length !== 1 ? "s" : ""}`}
+            <Button onClick={handleImport} disabled={parsedSecrets.length === 0 || busy}>
+              {busy
+                ? "Importing..."
+                : `Import ${parsedSecrets.length} Secret${parsedSecrets.length !== 1 ? "s" : ""}`}
             </Button>
           </div>
         </div>
       </div>
     </div>,
-    document.body
+    document.body,
   );
 }

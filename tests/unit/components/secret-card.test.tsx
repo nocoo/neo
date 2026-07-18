@@ -2,10 +2,10 @@
  * SecretCard component tests.
  */
 
-import { describe, it, expect, vi, beforeEach } from "vitest";
-import { render, screen, fireEvent } from "@testing-library/react";
+import { fireEvent, render, screen } from "@testing-library/react";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { SecretCard } from "@/components/secret-card";
-import type { Secret, OtpResult } from "@/models/types";
+import type { OtpResult, Secret } from "@/models/types";
 
 // ── Helpers ──────────────────────────────────────────────────────────────
 
@@ -154,12 +154,34 @@ describe("SecretCard", () => {
 
   it("auto-hash never assigns white or black", () => {
     // Test many names to ensure hash only picks from HASH_THEMES (10 saturated colors)
-    const names = ["Alpha", "Beta", "Gamma", "Delta", "Epsilon", "Zeta", "Eta", "Theta", "Iota", "Kappa",
-      "Lambda", "Mu", "Nu", "Xi", "Omicron", "Pi", "Rho", "Sigma", "Tau", "Upsilon"];
+    const names = [
+      "Alpha",
+      "Beta",
+      "Gamma",
+      "Delta",
+      "Epsilon",
+      "Zeta",
+      "Eta",
+      "Theta",
+      "Iota",
+      "Kappa",
+      "Lambda",
+      "Mu",
+      "Nu",
+      "Xi",
+      "Omicron",
+      "Pi",
+      "Rho",
+      "Sigma",
+      "Tau",
+      "Upsilon",
+    ];
     for (const name of names) {
       const s = { ...sampleSecret, id: `s_${name}`, name, color: null };
       const { container } = render(<SecretCard secret={s} />);
-      const frontFace = container.querySelector(`[data-testid='secret-card-s_${name}'] > div > div`);
+      const frontFace = container.querySelector(
+        `[data-testid='secret-card-s_${name}'] > div > div`,
+      );
       const className = frontFace?.className ?? "";
       expect(className).not.toContain("bg-white");
       expect(className).not.toContain("bg-gray-900");

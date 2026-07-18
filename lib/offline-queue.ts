@@ -8,11 +8,7 @@
 
 // ── Types ────────────────────────────────────────────────────────────────
 
-export type OperationType =
-  | "create_secret"
-  | "update_secret"
-  | "delete_secret"
-  | "create_backup";
+export type OperationType = "create_secret" | "update_secret" | "delete_secret" | "create_backup";
 
 export interface QueueEntry {
   /** Auto-incremented by IndexedDB. */
@@ -57,10 +53,7 @@ function openDb(): Promise<IDBDatabase> {
   });
 }
 
-function txStore(
-  db: IDBDatabase,
-  mode: IDBTransactionMode,
-): IDBObjectStore {
+function txStore(db: IDBDatabase, mode: IDBTransactionMode): IDBObjectStore {
   const tx = db.transaction(STORE_NAME, mode);
   return tx.objectStore(STORE_NAME);
 }

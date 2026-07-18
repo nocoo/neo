@@ -2,8 +2,8 @@
  * DeleteConfirmDialog component tests.
  */
 
-import { describe, it, expect, vi, beforeEach } from "vitest";
-import { render, screen, fireEvent } from "@testing-library/react";
+import { fireEvent, render, screen } from "@testing-library/react";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { DeleteConfirmDialog } from "@/components/delete-confirm-dialog";
 
 beforeEach(() => {
@@ -18,19 +18,14 @@ describe("DeleteConfirmDialog", () => {
         secretName="GitHub"
         onClose={vi.fn()}
         onConfirm={vi.fn()}
-      />
+      />,
     );
     expect(container.querySelector("[role='dialog']")).toBeNull();
   });
 
   it("renders confirmation message with secret name", () => {
     render(
-      <DeleteConfirmDialog
-        open={true}
-        secretName="GitHub"
-        onClose={vi.fn()}
-        onConfirm={vi.fn()}
-      />
+      <DeleteConfirmDialog open={true} secretName="GitHub" onClose={vi.fn()} onConfirm={vi.fn()} />,
     );
     expect(screen.getByText("Delete Secret")).toBeDefined();
     expect(screen.getByText("GitHub")).toBeDefined();
@@ -44,7 +39,7 @@ describe("DeleteConfirmDialog", () => {
         secretName="GitHub"
         onClose={vi.fn()}
         onConfirm={onConfirm}
-      />
+      />,
     );
 
     fireEvent.click(screen.getByText("Delete"));
@@ -54,12 +49,7 @@ describe("DeleteConfirmDialog", () => {
   it("calls onClose when cancel clicked", () => {
     const onClose = vi.fn();
     render(
-      <DeleteConfirmDialog
-        open={true}
-        secretName="GitHub"
-        onClose={onClose}
-        onConfirm={vi.fn()}
-      />
+      <DeleteConfirmDialog open={true} secretName="GitHub" onClose={onClose} onConfirm={vi.fn()} />,
     );
 
     fireEvent.click(screen.getByText("Cancel"));
@@ -74,7 +64,7 @@ describe("DeleteConfirmDialog", () => {
         onClose={vi.fn()}
         onConfirm={vi.fn()}
         busy={true}
-      />
+      />,
     );
     expect(screen.getByText("Deleting...")).toBeDefined();
   });

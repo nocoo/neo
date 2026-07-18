@@ -11,9 +11,10 @@
 
 import { NextResponse } from "next/server";
 import { getScopedDB } from "@/lib/auth-context";
-import { openEncryptedZip, MAX_ARCHIVE_UPLOAD_BYTES } from "@/models/backup-archive";
-import { validateBase32 } from "@/models/validation";
+import { MAX_ARCHIVE_UPLOAD_BYTES, openEncryptedZip } from "@/models/backup-archive";
 import { OTP_DEFAULTS } from "@/models/constants";
+import type { ParsedSecret } from "@/models/types";
+import { validateBase32 } from "@/models/validation";
 
 export async function POST(request: Request) {
   try {
@@ -27,24 +28,20 @@ export async function POST(request: Request) {
     const encryptionKey = formData.get("encryptionKey");
 
     if (!file || !(file instanceof Blob)) {
-      return NextResponse.json(
-        { error: "Missing or invalid file" },
-        { status: 400 },
-      );
+      return NextResponse.json({ error: "Missing or invalid file" }, { status: 400 });
     }
 
     if (file.size > MAX_ARCHIVE_UPLOAD_BYTES) {
       return NextResponse.json(
-        { error: `File too large: ${file.size} bytes exceeds ${MAX_ARCHIVE_UPLOAD_BYTES} byte limit` },
+        {
+          error: `File too large: ${file.size} bytes exceeds ${MAX_ARCHIVE_UPLOAD_BYTES} byte limit`,
+        },
         { status: 413 },
       );
     }
 
     if (!encryptionKey || typeof encryptionKey !== "string") {
-      return NextResponse.json(
-        { error: "Missing encryption key" },
-        { status: 400 },
-      );
+      return NextResponse.json({ error: "Missing encryption key" }, { status: 400 });
     }
 
     // Read file into Uint8Array
@@ -52,15 +49,12 @@ export async function POST(request: Request) {
     const zipBytes = new Uint8Array(arrayBuffer);
 
     // Decrypt and extract secrets
-    let parsedSecrets;
+    let parsedSecrets: ParsedSecret[];
     try {
       parsedSecrets = await openEncryptedZip(zipBytes, encryptionKey);
     } catch (error) {
       const message = error instanceof Error ? error.message : "Decryption failed";
-      return NextResponse.json(
-        { error: `Failed to decrypt archive: ${message}` },
-        { status: 400 },
-      );
+      return NextResponse.json({ error: `Failed to decrypt archive: ${message}` }, { status: 400 });
     }
 
     // Import secrets using same dedup logic as batchImportSecrets
@@ -117,9 +111,6 @@ export async function POST(request: Request) {
     });
   } catch (error) {
     console.error("Failed to restore backup:", error);
-    return NextResponse.json(
-      { error: "Failed to restore backup" },
-      { status: 500 },
-    );
+    return NextResponse.json({ error: "Failed to restore backup" }, { status: 500 });
   }
 }

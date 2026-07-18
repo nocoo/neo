@@ -4,30 +4,26 @@
  * formatting, environment detection.
  */
 
-import { describe, it, expect, vi, afterEach } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import {
-  isValidWebhookUrl,
-  validateBackyConfig,
-  maskApiKey,
-  getBackyEnvironment,
   buildBackyTag,
   formatFileSize,
   formatTimeAgo,
+  getBackyEnvironment,
+  isValidWebhookUrl,
+  maskApiKey,
+  validateBackyConfig,
 } from "@/models/backy";
 
 // ── isValidWebhookUrl ────────────────────────────────────────────────────────
 
 describe("isValidWebhookUrl", () => {
   it("accepts https URL", () => {
-    expect(isValidWebhookUrl("https://backy.example.com/api/webhook/123")).toBe(
-      true,
-    );
+    expect(isValidWebhookUrl("https://backy.example.com/api/webhook/123")).toBe(true);
   });
 
   it("rejects http URL (requires HTTPS)", () => {
-    expect(isValidWebhookUrl("http://backy.example.com/api/webhook/123")).toBe(
-      false,
-    );
+    expect(isValidWebhookUrl("http://backy.example.com/api/webhook/123")).toBe(false);
   });
 
   it("rejects empty string", () => {
@@ -188,15 +184,11 @@ describe("getBackyEnvironment", () => {
 
 describe("buildBackyTag", () => {
   it("builds tag with correct format", () => {
-    expect(buildBackyTag("0.8.0", 12, "2026-03-20")).toBe(
-      "v0.8.0-2026-03-20-12secrets",
-    );
+    expect(buildBackyTag("0.8.0", 12, "2026-03-20")).toBe("v0.8.0-2026-03-20-12secrets");
   });
 
   it("handles zero secrets", () => {
-    expect(buildBackyTag("1.0.0", 0, "2026-01-01")).toBe(
-      "v1.0.0-2026-01-01-0secrets",
-    );
+    expect(buildBackyTag("1.0.0", 0, "2026-01-01")).toBe("v1.0.0-2026-01-01-0secrets");
   });
 
   it("uses current date when not provided", () => {
@@ -209,9 +201,7 @@ describe("buildBackyTag", () => {
   });
 
   it("handles large secret count", () => {
-    expect(buildBackyTag("2.0.0", 999, "2026-12-31")).toBe(
-      "v2.0.0-2026-12-31-999secrets",
-    );
+    expect(buildBackyTag("2.0.0", 999, "2026-12-31")).toBe("v2.0.0-2026-12-31-999secrets");
   });
 });
 
@@ -260,9 +250,7 @@ describe("formatTimeAgo", () => {
   });
 
   it("shows months ago", () => {
-    const sixtyDaysAgo = new Date(
-      Date.now() - 60 * 24 * 60 * 60 * 1000,
-    ).toISOString();
+    const sixtyDaysAgo = new Date(Date.now() - 60 * 24 * 60 * 60 * 1000).toISOString();
     expect(formatTimeAgo(sixtyDaysAgo)).toBe("2mo ago");
   });
 

@@ -4,9 +4,9 @@
  * Supports keyboard navigation via roving selectedIndex.
  */
 
-import { useRef, useEffect, useState, useCallback } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { SecretCard } from "@/components/secret-card";
-import type { Secret, OtpResult } from "@/models/types";
+import type { OtpResult, Secret } from "@/models/types";
 
 // ── Types ────────────────────────────────────────────────────────────────
 
@@ -36,7 +36,7 @@ export function SecretList({
   onSelectedIndexChange,
   onFocusSearch,
 }: SecretListProps) {
-  const gridRef = useRef<HTMLDivElement>(null);
+  const gridRef = useRef<HTMLUListElement>(null);
   const [columnCount, setColumnCount] = useState(1);
 
   // Track copy triggers per card index — incrementing number fires copy
@@ -137,10 +137,9 @@ export function SecretList({
           </p>
         </div>
       ) : (
-        <div
+        <ul
           ref={gridRef}
           className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-3 outline-none"
-          role="list"
           aria-label="Secrets list"
           tabIndex={selectedIndex !== null && selectedIndex !== undefined ? 0 : -1}
           onKeyDown={handleGridKeyDown}
@@ -148,24 +147,25 @@ export function SecretList({
           {secrets.map((secret, index) => {
             const otp = otpMap.get(secret.id);
             return (
-              <div
+              <li
                 key={secret.id}
-                role="listitem"
                 className="animate-fade-up"
                 style={{ animationDelay: `${index * 50}ms` }}
               >
                 <SecretCard
                   secret={secret}
                   selected={selectedIndex === index}
-                  {...(copyTriggers[index] !== undefined ? { copyTrigger: copyTriggers[index] } : {})}
+                  {...(copyTriggers[index] !== undefined
+                    ? { copyTrigger: copyTriggers[index] }
+                    : {})}
                   {...(otp ? { otp } : {})}
                   {...(onEdit ? { onEdit } : {})}
                   {...(onDelete ? { onDelete } : {})}
                 />
-              </div>
+              </li>
             );
           })}
-        </div>
+        </ul>
       )}
     </div>
   );

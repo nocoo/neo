@@ -1,6 +1,6 @@
 import { getDashboardData } from "@/actions/dashboard";
-import { DashboardProvider } from "@/contexts/dashboard-context";
 import { ToolsView } from "@/components/tools-view";
+import { DashboardProvider } from "@/contexts/dashboard-context";
 
 export default async function ToolsPage() {
   const result = await getDashboardData();

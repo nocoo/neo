@@ -50,10 +50,7 @@ function getD1Credentials(): {
 /**
  * Execute a SQL query against Cloudflare D1 via HTTP API.
  */
-export async function executeD1Query<T>(
-  sql: string,
-  params: unknown[] = []
-): Promise<T[]> {
+export async function executeD1Query<T>(sql: string, params: unknown[] = []): Promise<T[]> {
   const { accountId, databaseId, token } = getD1Credentials();
 
   const response = await fetch(
@@ -63,7 +60,7 @@ export async function executeD1Query<T>(
       headers: getD1Headers(token),
       body: JSON.stringify({ sql, params }),
       signal: AbortSignal.timeout(D1_FETCH_TIMEOUT_MS),
-    }
+    },
   );
 
   if (!response.ok) {

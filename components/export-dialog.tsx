@@ -4,10 +4,10 @@
  * ExportDialog — allows users to export secrets in various formats.
  */
 
-import { useState, useCallback } from "react";
+import { Check, Copy, Download, X } from "lucide-react";
+import { useCallback, useState } from "react";
 import { createPortal } from "react-dom";
 import { Button } from "@/components/ui/button";
-import { Copy, Check, Download, X } from "lucide-react";
 import type { ExportFormat } from "@/models/types";
 
 // ── Types ────────────────────────────────────────────────────────────────
@@ -33,13 +33,7 @@ export interface ExportDialogProps {
 
 // ── Component ────────────────────────────────────────────────────────────
 
-export function ExportDialog({
-  open,
-  onClose,
-  onExport,
-  exportOutput,
-  error,
-}: ExportDialogProps) {
+export function ExportDialog({ open, onClose, onExport, exportOutput, error }: ExportDialogProps) {
   const [selectedFormat, setSelectedFormat] = useState<ExportFormat>("otpauth-uri");
   const [copied, setCopied] = useState(false);
 
@@ -64,7 +58,8 @@ export function ExportDialog({
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    const ext = selectedFormat === "generic-csv" ? "csv" : selectedFormat === "generic-txt" ? "txt" : "json";
+    const ext =
+      selectedFormat === "generic-csv" ? "csv" : selectedFormat === "generic-txt" ? "txt" : "json";
     a.download = `secrets-export.${ext}`;
     a.click();
     URL.revokeObjectURL(url);
@@ -151,6 +146,6 @@ export function ExportDialog({
         </div>
       </div>
     </div>,
-    document.body
+    document.body,
   );
 }

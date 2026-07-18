@@ -4,19 +4,19 @@
  * ErrorFactory convenience methods, and instanceof checks.
  */
 
-import { describe, it, expect } from "vitest";
+import { describe, expect, it } from "vitest";
 import {
   AppError,
   AuthenticationError,
   AuthorizationError,
-  ValidationError,
-  NotFoundError,
-  ConflictError,
-  RateLimitError,
   ConfigurationError,
-  EncryptionError,
+  ConflictError,
   DatabaseError,
+  EncryptionError,
   ErrorFactory,
+  NotFoundError,
+  RateLimitError,
+  ValidationError,
 } from "@/models/errors";
 
 // ── AppError base ───────────────────────────────────────────────────────────

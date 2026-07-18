@@ -2,7 +2,7 @@
  * Unit tests for isEmailAllowed — fail-closed whitelist.
  */
 
-import { describe, it, expect } from "vitest";
+import { describe, expect, it } from "vitest";
 import { isEmailAllowed } from "@/lib/auth-whitelist";
 
 describe("isEmailAllowed", () => {

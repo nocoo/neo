@@ -50,7 +50,10 @@ export async function updateUserSettings(input: {
     if (input.language !== undefined) {
       const validLanguages = ["en", "zh"];
       if (!validLanguages.includes(input.language)) {
-        return { success: false, error: `Invalid language: must be one of ${validLanguages.join(", ")}` };
+        return {
+          success: false,
+          error: `Invalid language: must be one of ${validLanguages.join(", ")}`,
+        };
       }
     }
 

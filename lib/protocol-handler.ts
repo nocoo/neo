@@ -16,10 +16,7 @@ export const HANDLER_URL = "/dashboard?otpauth=%s";
 
 /** Check if the Protocol Handler API is available. */
 export function isProtocolHandlerSupported(): boolean {
-  return (
-    typeof navigator !== "undefined" &&
-    "registerProtocolHandler" in navigator
-  );
+  return typeof navigator !== "undefined" && "registerProtocolHandler" in navigator;
 }
 
 /**

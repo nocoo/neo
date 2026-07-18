@@ -8,8 +8,8 @@
  * Plus the error path of useSidebar() outside a provider.
  */
 
-import { describe, it, expect, vi, beforeEach } from "vitest";
-import { render, screen, fireEvent } from "@testing-library/react";
+import { fireEvent, render, screen } from "@testing-library/react";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const { mockVm } = vi.hoisted(() => ({
   mockVm: {
@@ -37,10 +37,18 @@ function Probe() {
     <div>
       <span data-testid="collapsed">{String(ctx.collapsed)}</span>
       <span data-testid="mobile">{String(ctx.isMobile)}</span>
-      <button onClick={ctx.toggle}>toggle</button>
-      <button onClick={() => ctx.setCollapsed(true)}>setCollapsed</button>
-      <button onClick={() => ctx.setMobileOpen(true)}>openMobile</button>
-      <button onClick={() => ctx.setMobileOpen(false)}>closeMobile</button>
+      <button type="button" onClick={ctx.toggle}>
+        toggle
+      </button>
+      <button type="button" onClick={() => ctx.setCollapsed(true)}>
+        setCollapsed
+      </button>
+      <button type="button" onClick={() => ctx.setMobileOpen(true)}>
+        openMobile
+      </button>
+      <button type="button" onClick={() => ctx.setMobileOpen(false)}>
+        closeMobile
+      </button>
     </div>
   );
 }

@@ -2,10 +2,10 @@
  * SecretList component tests.
  */
 
-import { describe, it, expect, vi, beforeEach } from "vitest";
-import { render, screen, fireEvent } from "@testing-library/react";
+import { fireEvent, render, screen } from "@testing-library/react";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { SecretList } from "@/components/secret-list";
-import type { Secret, OtpResult } from "@/models/types";
+import type { OtpResult, Secret } from "@/models/types";
 
 // ── Helpers ──────────────────────────────────────────────────────────────
 
@@ -46,46 +46,23 @@ beforeEach(() => {
 
 describe("SecretList", () => {
   it("renders all secrets", () => {
-    render(
-      <SecretList
-        secrets={[sampleSecret, sampleSecret2]}
-        otpMap={otpMap}
-      />
-    );
+    render(<SecretList secrets={[sampleSecret, sampleSecret2]} otpMap={otpMap} />);
     expect(screen.getByText("GitHub")).toBeDefined();
     expect(screen.getByText("GitLab")).toBeDefined();
   });
 
   it("shows empty state when no secrets", () => {
-    render(
-      <SecretList
-        secrets={[]}
-        otpMap={new Map()}
-      />
-    );
-    expect(
-      screen.getByText("No secrets yet. Add your first secret to get started.")
-    ).toBeDefined();
+    render(<SecretList secrets={[]} otpMap={new Map()} />);
+    expect(screen.getByText("No secrets yet. Add your first secret to get started.")).toBeDefined();
   });
 
   it("shows search empty state when filtering returns nothing", () => {
-    render(
-      <SecretList
-        secrets={[]}
-        otpMap={new Map()}
-        searchQuery="nonexistent"
-      />
-    );
+    render(<SecretList secrets={[]} otpMap={new Map()} searchQuery="nonexistent" />);
     expect(screen.getByText("No secrets match your search.")).toBeDefined();
   });
 
   it("passes OTP to cards", () => {
-    render(
-      <SecretList
-        secrets={[sampleSecret]}
-        otpMap={otpMap}
-      />
-    );
+    render(<SecretList secrets={[sampleSecret]} otpMap={otpMap} />);
     expect(screen.getByText("123456")).toBeDefined();
   });
 
@@ -94,12 +71,7 @@ describe("SecretList", () => {
     const onDelete = vi.fn();
 
     render(
-      <SecretList
-        secrets={[sampleSecret]}
-        otpMap={otpMap}
-        onEdit={onEdit}
-        onDelete={onDelete}
-      />
+      <SecretList secrets={[sampleSecret]} otpMap={otpMap} onEdit={onEdit} onDelete={onDelete} />,
     );
 
     fireEvent.click(screen.getByLabelText("Edit GitHub"));
@@ -110,12 +82,7 @@ describe("SecretList", () => {
   });
 
   it("renders list with proper aria roles", () => {
-    render(
-      <SecretList
-        secrets={[sampleSecret]}
-        otpMap={otpMap}
-      />
-    );
+    render(<SecretList secrets={[sampleSecret]} otpMap={otpMap} />);
     expect(screen.getByRole("list")).toBeDefined();
     expect(screen.getByRole("listitem")).toBeDefined();
   });

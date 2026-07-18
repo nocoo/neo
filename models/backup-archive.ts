@@ -10,8 +10,8 @@
  * Pure functions — no DB, no side effects.
  */
 
-import { zipSync, unzipSync } from "fflate";
-import { encryptData, decryptData } from "./encryption";
+import { unzipSync, zipSync } from "fflate";
+import { decryptData, encryptData } from "./encryption";
 import type { ParsedSecret } from "./types";
 
 // ── Constants ────────────────────────────────────────────────────────────────
@@ -187,32 +187,24 @@ export async function openEncryptedZip(
     if (!file) continue;
     totalBytes += file.byteLength;
     if (totalBytes > MAX_PAYLOAD_BYTES) {
-      throw new Error(
-        `Decompressed archive too large: exceeds ${MAX_PAYLOAD_BYTES} byte limit`,
-      );
+      throw new Error(`Decompressed archive too large: exceeds ${MAX_PAYLOAD_BYTES} byte limit`);
     }
   }
 
   // Validate manifest exists
   const manifestBytes = files[MANIFEST_FILENAME];
   if (!manifestBytes) {
-    throw new Error(
-      `Invalid archive: missing ${MANIFEST_FILENAME}`,
-    );
+    throw new Error(`Invalid archive: missing ${MANIFEST_FILENAME}`);
   }
 
   // Parse and validate manifest
-  const manifest = JSON.parse(
-    fromBytes(manifestBytes),
-  ) as BackupManifest;
+  const manifest = JSON.parse(fromBytes(manifestBytes)) as BackupManifest;
   validateManifest(manifest);
 
   // Validate encrypted payload exists
   const payloadBytes = files[PAYLOAD_FILENAME];
   if (!payloadBytes) {
-    throw new Error(
-      `Invalid archive: missing ${PAYLOAD_FILENAME}`,
-    );
+    throw new Error(`Invalid archive: missing ${PAYLOAD_FILENAME}`);
   }
 
   // Decrypt payload
@@ -256,15 +248,11 @@ export function validateManifest(manifest: BackupManifest): void {
   }
 
   if (typeof manifest.secretCount !== "number" || manifest.secretCount < 0) {
-    throw new Error(
-      `Invalid manifest: secretCount must be a non-negative number`,
-    );
+    throw new Error(`Invalid manifest: secretCount must be a non-negative number`);
   }
 
-  if (!manifest.encryption || manifest.encryption.algorithm !== "AES-GCM-256") {
-    throw new Error(
-      `Invalid manifest: unsupported encryption algorithm`,
-    );
+  if (manifest.encryption?.algorithm !== "AES-GCM-256") {
+    throw new Error(`Invalid manifest: unsupported encryption algorithm`);
   }
 }
 

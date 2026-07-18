@@ -4,26 +4,21 @@
  * New flow: archive download, push to Backy, restore from ZIP.
  */
 
-import { describe, it, expect, vi, beforeEach } from "vitest";
-import { renderHook, act } from "@testing-library/react";
+import { act, renderHook } from "@testing-library/react";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
 // ── Hoisted mocks ────────────────────────────────────────────────────────
 
-const {
-  mockPushToBacky,
-  mockFetchHistory,
-  mockRefresh,
-  mockUseDashboardState,
-  mockCountLegacy,
-} = vi.hoisted(() => {
-  return {
-    mockPushToBacky: vi.fn(),
-    mockFetchHistory: vi.fn(),
-    mockRefresh: vi.fn().mockResolvedValue(undefined),
-    mockUseDashboardState: vi.fn(),
-    mockCountLegacy: vi.fn(),
-  };
-});
+const { mockPushToBacky, mockFetchHistory, mockRefresh, mockUseDashboardState, mockCountLegacy } =
+  vi.hoisted(() => {
+    return {
+      mockPushToBacky: vi.fn(),
+      mockFetchHistory: vi.fn(),
+      mockRefresh: vi.fn().mockResolvedValue(undefined),
+      mockUseDashboardState: vi.fn(),
+      mockCountLegacy: vi.fn(),
+    };
+  });
 
 vi.mock("@/actions/backy", () => ({
   pushBackupToBacky: mockPushToBacky,
@@ -46,7 +41,10 @@ import { useBackupViewModel } from "@/viewmodels/useBackupViewModel";
 beforeEach(() => {
   vi.clearAllMocks();
   mockUseDashboardState.mockReturnValue({ encryptionEnabled: true });
-  mockFetchHistory.mockResolvedValue({ success: true, data: { project_name: "neo", environment: null, total_backups: 0, recent_backups: [] } });
+  mockFetchHistory.mockResolvedValue({
+    success: true,
+    data: { project_name: "neo", environment: null, total_backups: 0, recent_backups: [] },
+  });
   mockCountLegacy.mockResolvedValue({ success: true, data: 0 });
   // Mock global fetch for archive download and restore
   vi.stubGlobal("fetch", vi.fn());
@@ -99,7 +97,9 @@ describe("useBackupViewModel", () => {
       vi.mocked(fetch).mockResolvedValue({
         ok: true,
         blob: () => Promise.resolve(mockBlob),
-        headers: new Headers({ "Content-Disposition": 'attachment; filename="neo-backup-2026-03-20.zip"' }),
+        headers: new Headers({
+          "Content-Disposition": 'attachment; filename="neo-backup-2026-03-20.zip"',
+        }),
       } as Response);
 
       const { result } = renderHook(() => useBackupViewModel());
@@ -180,7 +180,21 @@ describe("useBackupViewModel", () => {
         message: "Push successful (100ms)",
         durationMs: 100,
         request: { tag: "neo/1.0", fileName: "backup.zip", fileSizeBytes: 1024, secretCount: 5 },
-        history: { project_name: "neo", environment: null, total_backups: 1, recent_backups: [{ id: "b1", tag: "neo/1.0", environment: "production", file_size: 1024, is_single_json: 0, created_at: "2026-03-20" }] },
+        history: {
+          project_name: "neo",
+          environment: null,
+          total_backups: 1,
+          recent_backups: [
+            {
+              id: "b1",
+              tag: "neo/1.0",
+              environment: "production",
+              file_size: 1024,
+              is_single_json: 0,
+              created_at: "2026-03-20",
+            },
+          ],
+        },
       };
       mockPushToBacky.mockResolvedValue({ success: true, data: pushDetail });
 

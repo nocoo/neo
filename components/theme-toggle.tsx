@@ -1,8 +1,8 @@
 "use client";
 
-import { useState, useEffect } from "react";
 import { Monitor, Moon, Sun } from "lucide-react";
 import { useTheme } from "next-themes";
+import { useEffect, useState } from "react";
 
 /**
  * 3-state theme toggle: system → light → dark → system.
@@ -24,6 +24,7 @@ export function ThemeToggle() {
   if (!mounted) {
     return (
       <button
+        type="button"
         className="flex h-8 w-8 items-center justify-center rounded-lg text-muted-foreground transition-colors"
         aria-label="Toggle theme"
       >
@@ -32,11 +33,11 @@ export function ThemeToggle() {
     );
   }
 
-  const Icon =
-    theme === "system" ? Monitor : resolvedTheme === "dark" ? Moon : Sun;
+  const Icon = theme === "system" ? Monitor : resolvedTheme === "dark" ? Moon : Sun;
 
   return (
     <button
+      type="button"
       onClick={cycle}
       className="flex h-8 w-8 items-center justify-center rounded-lg text-muted-foreground hover:text-foreground hover:bg-accent transition-colors cursor-pointer"
       aria-label="Toggle theme"

@@ -1,9 +1,4 @@
-import {
-  sqliteTable,
-  text,
-  integer,
-  primaryKey,
-} from "drizzle-orm/sqlite-core";
+import { integer, primaryKey, sqliteTable, text } from "drizzle-orm/sqlite-core";
 
 // ============================================
 // Auth.js Tables (required for D1 adapter)
@@ -52,7 +47,7 @@ export const verificationTokens = sqliteTable(
   },
   (table) => ({
     compositePk: primaryKey({ columns: [table.identifier, table.token] }),
-  })
+  }),
 );
 
 // ============================================

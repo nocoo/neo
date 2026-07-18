@@ -14,9 +14,7 @@ function rowToUser(row: Record<string, unknown>) {
     id: row.id as string,
     name: row.name as string | null,
     email: row.email as string,
-    emailVerified: row.emailVerified
-      ? new Date(row.emailVerified as number)
-      : null,
+    emailVerified: row.emailVerified ? new Date(row.emailVerified as number) : null,
     image: row.image as string | null,
   };
 }
@@ -35,7 +33,7 @@ export function D1Adapter(): Adapter {
           user.email,
           user.emailVerified?.getTime() ?? null,
           user.image ?? null,
-        ]
+        ],
       );
       const row = rows[0];
       if (!row) throw new Error("INSERT INTO users RETURNING * returned no rows");
@@ -45,7 +43,7 @@ export function D1Adapter(): Adapter {
     async getUser(id) {
       const rows = await executeD1Query<Record<string, unknown>>(
         "SELECT * FROM users WHERE id = ?",
-        [id]
+        [id],
       );
       return rows[0] ? rowToUser(rows[0]) : null;
     },
@@ -53,7 +51,7 @@ export function D1Adapter(): Adapter {
     async getUserByEmail(email) {
       const rows = await executeD1Query<Record<string, unknown>>(
         "SELECT * FROM users WHERE email = ?",
-        [email]
+        [email],
       );
       return rows[0] ? rowToUser(rows[0]) : null;
     },
@@ -63,7 +61,7 @@ export function D1Adapter(): Adapter {
         `SELECT u.* FROM users u
          JOIN accounts a ON u.id = a.userId
          WHERE a.provider = ? AND a.providerAccountId = ?`,
-        [provider, providerAccountId]
+        [provider, providerAccountId],
       );
       return rows[0] ? rowToUser(rows[0]) : null;
     },
@@ -93,7 +91,7 @@ export function D1Adapter(): Adapter {
 
       const rows = await executeD1Query<Record<string, unknown>>(
         `UPDATE users SET ${setClauses.join(", ")} WHERE id = ? RETURNING *`,
-        params
+        params,
       );
       const updatedRow = rows[0];
       if (!updatedRow) throw new Error("UPDATE users RETURNING * returned no rows");
@@ -122,16 +120,16 @@ export function D1Adapter(): Adapter {
           account.scope ?? null,
           account.id_token ?? null,
           account.session_state ?? null,
-        ]
+        ],
       );
       return account;
     },
 
     async unlinkAccount({ providerAccountId, provider }) {
-      await executeD1Query(
-        "DELETE FROM accounts WHERE provider = ? AND providerAccountId = ?",
-        [provider, providerAccountId]
-      );
+      await executeD1Query("DELETE FROM accounts WHERE provider = ? AND providerAccountId = ?", [
+        provider,
+        providerAccountId,
+      ]);
     },
 
     async createSession(session) {
@@ -139,7 +137,7 @@ export function D1Adapter(): Adapter {
       await executeD1Query(
         `INSERT INTO sessions (id, sessionToken, userId, expires)
          VALUES (?, ?, ?, ?)`,
-        [id, session.sessionToken, session.userId, session.expires.getTime()]
+        [id, session.sessionToken, session.userId, session.expires.getTime()],
       );
       return session;
     },
@@ -150,7 +148,7 @@ export function D1Adapter(): Adapter {
          FROM sessions s
          JOIN users u ON s.userId = u.id
          WHERE s.sessionToken = ?`,
-        [sessionToken]
+        [sessionToken],
       );
 
       if (!rows[0]) return null;
@@ -166,9 +164,7 @@ export function D1Adapter(): Adapter {
           id: row.u_id as string,
           name: row.u_name as string | null,
           email: row.u_email as string,
-          emailVerified: row.u_emailVerified
-            ? new Date(row.u_emailVerified as number)
-            : null,
+          emailVerified: row.u_emailVerified ? new Date(row.u_emailVerified as number) : null,
           image: row.u_image as string | null,
         },
       };
@@ -193,7 +189,7 @@ export function D1Adapter(): Adapter {
 
       const rows = await executeD1Query<Record<string, unknown>>(
         `UPDATE sessions SET ${setClauses.join(", ")} WHERE sessionToken = ? RETURNING *`,
-        params
+        params,
       );
 
       if (!rows[0]) return null;
@@ -207,17 +203,14 @@ export function D1Adapter(): Adapter {
     },
 
     async deleteSession(sessionToken) {
-      await executeD1Query(
-        "DELETE FROM sessions WHERE sessionToken = ?",
-        [sessionToken]
-      );
+      await executeD1Query("DELETE FROM sessions WHERE sessionToken = ?", [sessionToken]);
     },
 
     async createVerificationToken(token) {
       await executeD1Query(
         `INSERT INTO verificationTokens (identifier, token, expires)
          VALUES (?, ?, ?)`,
-        [token.identifier, token.token, token.expires.getTime()]
+        [token.identifier, token.token, token.expires.getTime()],
       );
       return token;
     },
@@ -225,7 +218,7 @@ export function D1Adapter(): Adapter {
     async useVerificationToken({ identifier, token }) {
       const rows = await executeD1Query<Record<string, unknown>>(
         `DELETE FROM verificationTokens WHERE identifier = ? AND token = ? RETURNING *`,
-        [identifier, token]
+        [identifier, token],
       );
 
       if (!rows[0]) return null;

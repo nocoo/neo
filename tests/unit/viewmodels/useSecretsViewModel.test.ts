@@ -2,8 +2,8 @@
  * Secrets ViewModel tests.
  */
 
-import { describe, it, expect, vi, beforeEach } from "vitest";
-import { renderHook, act } from "@testing-library/react";
+import { act, renderHook } from "@testing-library/react";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
 // ── Hoisted mocks ────────────────────────────────────────────────────────
 
@@ -71,8 +71,8 @@ vi.mock("@/contexts/dashboard-context", () => ({
   }),
 }));
 
-import { useSecretsViewModel } from "@/viewmodels/useSecretsViewModel";
 import type { Secret } from "@/models/types";
+import { useSecretsViewModel } from "@/viewmodels/useSecretsViewModel";
 
 // ── Helpers ──────────────────────────────────────────────────────────────
 

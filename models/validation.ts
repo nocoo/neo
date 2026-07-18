@@ -6,10 +6,7 @@
  * validation, normalization, sorting, and duplicate detection.
  */
 
-import {
-  OTP_DIGIT_OPTIONS,
-  BATCH_IMPORT_LIMIT,
-} from "./constants";
+import { BATCH_IMPORT_LIMIT, OTP_DIGIT_OPTIONS } from "./constants";
 import type { ParsedSecret } from "./types";
 
 // ── Result Types ────────────────────────────────────────────────────────────
@@ -82,13 +79,10 @@ const MAX_NAME_LENGTH = 50;
 /**
  * Validate a secret's name + secret fields.
  */
-export function validateSecretData(data: {
-  name?: string;
-  secret?: string;
-}): ValidationResult {
+export function validateSecretData(data: { name?: string; secret?: string }): ValidationResult {
   const { name, secret } = data;
 
-  if (!name || !name.trim()) {
+  if (!name?.trim()) {
     return { valid: false, error: "Service name is required" };
   }
 
@@ -99,7 +93,7 @@ export function validateSecretData(data: {
     };
   }
 
-  if (!secret || !secret.trim()) {
+  if (!secret?.trim()) {
     return { valid: false, error: "Secret is required" };
   }
 
@@ -196,7 +190,7 @@ export function createSecretObject(
     algorithm?: string;
     counter?: number | string;
   },
-  existingId?: string | null
+  existingId?: string | null,
 ): ParsedSecret & { id: string; createdAt?: string } {
   const normalizedType = (data.type || "TOTP").toUpperCase();
 
@@ -226,9 +220,7 @@ export function createSecretObject(
  * Returns a new sorted array.
  */
 export function sortSecretsByName<T extends { name: string }>(secrets: T[]): T[] {
-  return [...secrets].sort((a, b) =>
-    a.name.toLowerCase().localeCompare(b.name.toLowerCase())
-  );
+  return [...secrets].sort((a, b) => a.name.toLowerCase().localeCompare(b.name.toLowerCase()));
 }
 
 // ── Duplicate Detection ─────────────────────────────────────────────────────
@@ -241,19 +233,15 @@ export function checkDuplicateSecret(
   secrets: { name: string; account?: string; secret?: string }[],
   name: string,
   account: string,
-  secret: string = "",
-  excludeIndex: number = -1
+  secret = "",
+  excludeIndex = -1,
 ): boolean {
   const normalizedSecret = secret.replace(/\s+/g, "").toUpperCase();
 
   return secrets.some((s, index) => {
     if (index === excludeIndex) return false;
     const existingSecret = (s.secret || "").replace(/\s+/g, "").toUpperCase();
-    return (
-      s.name === name &&
-      (s.account || "") === account &&
-      existingSecret === normalizedSecret
-    );
+    return s.name === name && (s.account || "") === account && existingSecret === normalizedSecret;
   });
 }
 
@@ -262,9 +250,7 @@ export function checkDuplicateSecret(
 /**
  * Validate a batch of secrets for import.
  */
-export function validateBatchImport(
-  secrets: unknown
-): ValidationResult {
+export function validateBatchImport(secrets: unknown): ValidationResult {
   if (!Array.isArray(secrets)) {
     return { valid: false, error: "Secrets must be an array" };
   }

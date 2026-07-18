@@ -2,29 +2,25 @@
  * RecycleBin ViewModel tests.
  */
 
-import { describe, it, expect, vi, beforeEach } from "vitest";
-import { renderHook, act } from "@testing-library/react";
+import { act, renderHook } from "@testing-library/react";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
 // ── Hoisted mocks ────────────────────────────────────────────────────────
 
-const {
-  mockGetDeletedSecrets,
-  mockRestoreSecret,
-  mockPermanentDeleteSecret,
-  mockEmptyRecycleBin,
-} = vi.hoisted(() => {
-  const mockGetDeletedSecrets = vi.fn();
-  const mockRestoreSecret = vi.fn();
-  const mockPermanentDeleteSecret = vi.fn();
-  const mockEmptyRecycleBin = vi.fn();
+const { mockGetDeletedSecrets, mockRestoreSecret, mockPermanentDeleteSecret, mockEmptyRecycleBin } =
+  vi.hoisted(() => {
+    const mockGetDeletedSecrets = vi.fn();
+    const mockRestoreSecret = vi.fn();
+    const mockPermanentDeleteSecret = vi.fn();
+    const mockEmptyRecycleBin = vi.fn();
 
-  return {
-    mockGetDeletedSecrets,
-    mockRestoreSecret,
-    mockPermanentDeleteSecret,
-    mockEmptyRecycleBin,
-  };
-});
+    return {
+      mockGetDeletedSecrets,
+      mockRestoreSecret,
+      mockPermanentDeleteSecret,
+      mockEmptyRecycleBin,
+    };
+  });
 
 vi.mock("@/actions/secrets", () => ({
   getDeletedSecrets: mockGetDeletedSecrets,
@@ -33,8 +29,8 @@ vi.mock("@/actions/secrets", () => ({
   emptyRecycleBin: mockEmptyRecycleBin,
 }));
 
-import { useRecycleBinViewModel } from "@/viewmodels/useRecycleBinViewModel";
 import type { Secret } from "@/models/types";
+import { useRecycleBinViewModel } from "@/viewmodels/useRecycleBinViewModel";
 
 // ── Helpers ──────────────────────────────────────────────────────────────
 
@@ -74,9 +70,7 @@ beforeEach(() => {
 describe("useRecycleBinViewModel", () => {
   describe("initial state", () => {
     it("uses initialSecrets", () => {
-      const { result } = renderHook(() =>
-        useRecycleBinViewModel([deletedSecret, deletedSecret2]),
-      );
+      const { result } = renderHook(() => useRecycleBinViewModel([deletedSecret, deletedSecret2]));
       expect(result.current.deletedSecrets).toHaveLength(2);
       expect(result.current.filteredSecrets).toHaveLength(2);
       expect(result.current.loading).toBe(false);
@@ -92,27 +86,21 @@ describe("useRecycleBinViewModel", () => {
 
   describe("search", () => {
     it("filters by name", () => {
-      const { result } = renderHook(() =>
-        useRecycleBinViewModel([deletedSecret, deletedSecret2]),
-      );
+      const { result } = renderHook(() => useRecycleBinViewModel([deletedSecret, deletedSecret2]));
       act(() => result.current.setSearchQuery("github"));
       expect(result.current.filteredSecrets).toHaveLength(1);
       expect(result.current.filteredSecrets[0]!.name).toBe("GitHub");
     });
 
     it("filters by account", () => {
-      const { result } = renderHook(() =>
-        useRecycleBinViewModel([deletedSecret, deletedSecret2]),
-      );
+      const { result } = renderHook(() => useRecycleBinViewModel([deletedSecret, deletedSecret2]));
       act(() => result.current.setSearchQuery("admin"));
       expect(result.current.filteredSecrets).toHaveLength(1);
       expect(result.current.filteredSecrets[0]!.name).toBe("GitLab");
     });
 
     it("shows all when query is empty", () => {
-      const { result } = renderHook(() =>
-        useRecycleBinViewModel([deletedSecret, deletedSecret2]),
-      );
+      const { result } = renderHook(() => useRecycleBinViewModel([deletedSecret, deletedSecret2]));
       act(() => result.current.setSearchQuery("github"));
       act(() => result.current.setSearchQuery(""));
       expect(result.current.filteredSecrets).toHaveLength(2);
@@ -122,9 +110,7 @@ describe("useRecycleBinViewModel", () => {
   describe("handleRestore", () => {
     it("removes restored secret from list on success", async () => {
       mockRestoreSecret.mockResolvedValue({ success: true, data: deletedSecret });
-      const { result } = renderHook(() =>
-        useRecycleBinViewModel([deletedSecret, deletedSecret2]),
-      );
+      const { result } = renderHook(() => useRecycleBinViewModel([deletedSecret, deletedSecret2]));
 
       let success: boolean;
       await act(async () => {
@@ -137,9 +123,7 @@ describe("useRecycleBinViewModel", () => {
 
     it("sets error on failure", async () => {
       mockRestoreSecret.mockResolvedValue({ success: false, error: "Not found" });
-      const { result } = renderHook(() =>
-        useRecycleBinViewModel([deletedSecret]),
-      );
+      const { result } = renderHook(() => useRecycleBinViewModel([deletedSecret]));
 
       let success: boolean;
       await act(async () => {
@@ -152,9 +136,7 @@ describe("useRecycleBinViewModel", () => {
 
     it("handles thrown error", async () => {
       mockRestoreSecret.mockRejectedValue(new Error("Network error"));
-      const { result } = renderHook(() =>
-        useRecycleBinViewModel([deletedSecret]),
-      );
+      const { result } = renderHook(() => useRecycleBinViewModel([deletedSecret]));
 
       await act(async () => {
         await result.current.handleRestore(deletedSecret.id);
@@ -166,9 +148,7 @@ describe("useRecycleBinViewModel", () => {
   describe("handlePermanentDelete", () => {
     it("removes permanently deleted secret from list", async () => {
       mockPermanentDeleteSecret.mockResolvedValue({ success: true, data: undefined });
-      const { result } = renderHook(() =>
-        useRecycleBinViewModel([deletedSecret, deletedSecret2]),
-      );
+      const { result } = renderHook(() => useRecycleBinViewModel([deletedSecret, deletedSecret2]));
 
       let success: boolean;
       await act(async () => {
@@ -180,9 +160,7 @@ describe("useRecycleBinViewModel", () => {
 
     it("sets error on failure", async () => {
       mockPermanentDeleteSecret.mockResolvedValue({ success: false, error: "DB error" });
-      const { result } = renderHook(() =>
-        useRecycleBinViewModel([deletedSecret]),
-      );
+      const { result } = renderHook(() => useRecycleBinViewModel([deletedSecret]));
 
       let success: boolean;
       await act(async () => {
@@ -194,9 +172,7 @@ describe("useRecycleBinViewModel", () => {
 
     it("handles thrown error", async () => {
       mockPermanentDeleteSecret.mockRejectedValue(new Error("Network"));
-      const { result } = renderHook(() =>
-        useRecycleBinViewModel([deletedSecret]),
-      );
+      const { result } = renderHook(() => useRecycleBinViewModel([deletedSecret]));
 
       await act(async () => {
         await result.current.handlePermanentDelete(deletedSecret.id);
@@ -208,9 +184,7 @@ describe("useRecycleBinViewModel", () => {
   describe("handleEmptyBin", () => {
     it("clears all deleted secrets on success", async () => {
       mockEmptyRecycleBin.mockResolvedValue({ success: true, data: 2 });
-      const { result } = renderHook(() =>
-        useRecycleBinViewModel([deletedSecret, deletedSecret2]),
-      );
+      const { result } = renderHook(() => useRecycleBinViewModel([deletedSecret, deletedSecret2]));
 
       let success: boolean;
       await act(async () => {
@@ -222,9 +196,7 @@ describe("useRecycleBinViewModel", () => {
 
     it("sets error on failure", async () => {
       mockEmptyRecycleBin.mockResolvedValue({ success: false, error: "Failed" });
-      const { result } = renderHook(() =>
-        useRecycleBinViewModel([deletedSecret]),
-      );
+      const { result } = renderHook(() => useRecycleBinViewModel([deletedSecret]));
 
       let success: boolean;
       await act(async () => {
@@ -237,9 +209,7 @@ describe("useRecycleBinViewModel", () => {
 
     it("handles thrown error", async () => {
       mockEmptyRecycleBin.mockRejectedValue(new Error("Network"));
-      const { result } = renderHook(() =>
-        useRecycleBinViewModel([deletedSecret]),
-      );
+      const { result } = renderHook(() => useRecycleBinViewModel([deletedSecret]));
 
       await act(async () => {
         await result.current.handleEmptyBin();
@@ -254,9 +224,7 @@ describe("useRecycleBinViewModel", () => {
         success: true,
         data: [deletedSecret2],
       });
-      const { result } = renderHook(() =>
-        useRecycleBinViewModel([deletedSecret]),
-      );
+      const { result } = renderHook(() => useRecycleBinViewModel([deletedSecret]));
 
       await act(async () => {
         await result.current.refresh();
@@ -279,9 +247,7 @@ describe("useRecycleBinViewModel", () => {
   describe("clearError", () => {
     it("clears the error state", async () => {
       mockRestoreSecret.mockResolvedValue({ success: false, error: "Some error" });
-      const { result } = renderHook(() =>
-        useRecycleBinViewModel([deletedSecret]),
-      );
+      const { result } = renderHook(() => useRecycleBinViewModel([deletedSecret]));
 
       await act(async () => {
         await result.current.handleRestore(deletedSecret.id);

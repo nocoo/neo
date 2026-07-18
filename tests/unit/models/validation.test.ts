@@ -4,15 +4,15 @@
  * validation, normalization, sorting, and duplicate detection.
  */
 
-import { describe, it, expect } from "vitest";
+import { describe, expect, it } from "vitest";
 import {
-  validateBase32,
-  validateSecretData,
-  validateOTPParams,
+  checkDuplicateSecret,
   createSecretObject,
   sortSecretsByName,
-  checkDuplicateSecret,
+  validateBase32,
   validateBatchImport,
+  validateOTPParams,
+  validateSecretData,
 } from "@/models/validation";
 
 // ── validateBase32 ──────────────────────────────────────────────────────────
@@ -95,9 +95,7 @@ describe("validateBase32", () => {
 
 describe("validateSecretData", () => {
   it("accepts valid secret data", () => {
-    expect(
-      validateSecretData({ name: "GitHub", secret: "JBSWY3DPEHPK3PXP" }).valid
-    ).toBe(true);
+    expect(validateSecretData({ name: "GitHub", secret: "JBSWY3DPEHPK3PXP" }).valid).toBe(true);
   });
 
   it("rejects empty service name", () => {
@@ -118,9 +116,9 @@ describe("validateSecretData", () => {
   });
 
   it("accepts name of exactly 50 chars", () => {
-    expect(
-      validateSecretData({ name: "A".repeat(50), secret: "JBSWY3DPEHPK3PXP" }).valid
-    ).toBe(true);
+    expect(validateSecretData({ name: "A".repeat(50), secret: "JBSWY3DPEHPK3PXP" }).valid).toBe(
+      true,
+    );
   });
 
   it("rejects empty secret", () => {
@@ -143,9 +141,7 @@ describe("validateSecretData", () => {
   });
 
   it("handles unicode service names", () => {
-    expect(
-      validateSecretData({ name: "谷歌邮箱", secret: "JBSWY3DPEHPK3PXP" }).valid
-    ).toBe(true);
+    expect(validateSecretData({ name: "谷歌邮箱", secret: "JBSWY3DPEHPK3PXP" }).valid).toBe(true);
   });
 
   it("rejects extremely long names", () => {
@@ -164,13 +160,13 @@ describe("validateOTPParams", () => {
 
   it("accepts valid TOTP params", () => {
     expect(
-      validateOTPParams({ type: "TOTP", digits: 6, period: 30, algorithm: "SHA1" }).valid
+      validateOTPParams({ type: "TOTP", digits: 6, period: 30, algorithm: "SHA1" }).valid,
     ).toBe(true);
   });
 
   it("accepts valid HOTP params", () => {
     expect(
-      validateOTPParams({ type: "HOTP", digits: 6, counter: 0, algorithm: "SHA1" }).valid
+      validateOTPParams({ type: "HOTP", digits: 6, counter: 0, algorithm: "SHA1" }).valid,
     ).toBe(true);
   });
 
@@ -246,9 +242,7 @@ describe("validateOTPParams", () => {
   });
 
   it("ignores counter when type is TOTP", () => {
-    expect(
-      validateOTPParams({ type: "TOTP", period: 30, counter: 999 }).valid
-    ).toBe(true);
+    expect(validateOTPParams({ type: "TOTP", period: 30, counter: 999 }).valid).toBe(true);
   });
 });
 
@@ -274,15 +268,13 @@ describe("createSecretObject", () => {
     const a = createSecretObject({ name: "Test", secret: "JBSWY3DPEHPK3PXP" });
     const b = createSecretObject({ name: "Test", secret: "JBSWY3DPEHPK3PXP" });
     expect(a.id).not.toBe(b.id);
-    expect(a.id).toMatch(
-      /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
-    );
+    expect(a.id).toMatch(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i);
   });
 
   it("preserves existing ID", () => {
     const obj = createSecretObject(
       { name: "GitHub", secret: "JBSWY3DPEHPK3PXP" },
-      "existing-id-123"
+      "existing-id-123",
     );
     expect(obj.id).toBe("existing-id-123");
     expect(obj.createdAt).toBeUndefined();
@@ -369,12 +361,7 @@ describe("sortSecretsByName", () => {
     ];
 
     const sorted = sortSecretsByName(secrets);
-    expect(sorted.map((s) => s.name)).toEqual([
-      "Apple",
-      "Google",
-      "Microsoft",
-      "Zoom",
-    ]);
+    expect(sorted.map((s) => s.name)).toEqual(["Apple", "Google", "Microsoft", "Zoom"]);
   });
 
   it("sorts case-insensitively", () => {
@@ -439,68 +426,64 @@ describe("checkDuplicateSecret", () => {
   ];
 
   it("detects a duplicate", () => {
-    expect(
-      checkDuplicateSecret(secrets, "GitHub", "user@example.com", "JBSWY3DPEHPK3PXP")
-    ).toBe(true);
+    expect(checkDuplicateSecret(secrets, "GitHub", "user@example.com", "JBSWY3DPEHPK3PXP")).toBe(
+      true,
+    );
   });
 
   it("returns false for non-duplicate", () => {
-    expect(
-      checkDuplicateSecret(secrets, "Apple", "user@example.com", "NEWSECRETNEWSECR")
-    ).toBe(false);
+    expect(checkDuplicateSecret(secrets, "Apple", "user@example.com", "NEWSECRETNEWSECR")).toBe(
+      false,
+    );
   });
 
   it("distinguishes same name different account", () => {
-    expect(
-      checkDuplicateSecret(secrets, "GitHub", "newuser@example.com", "JBSWY3DPEHPK3PXP")
-    ).toBe(false);
+    expect(checkDuplicateSecret(secrets, "GitHub", "newuser@example.com", "JBSWY3DPEHPK3PXP")).toBe(
+      false,
+    );
   });
 
   it("excludes self by index (for updates)", () => {
-    expect(
-      checkDuplicateSecret(secrets, "GitHub", "user@example.com", "JBSWY3DPEHPK3PXP", 0)
-    ).toBe(false);
+    expect(checkDuplicateSecret(secrets, "GitHub", "user@example.com", "JBSWY3DPEHPK3PXP", 0)).toBe(
+      false,
+    );
   });
 
   it("detects duplicate when excluding a different index", () => {
-    expect(
-      checkDuplicateSecret(secrets, "GitHub", "user@example.com", "JBSWY3DPEHPK3PXP", 1)
-    ).toBe(true);
+    expect(checkDuplicateSecret(secrets, "GitHub", "user@example.com", "JBSWY3DPEHPK3PXP", 1)).toBe(
+      true,
+    );
   });
 
   it("handles empty account", () => {
-    expect(
-      checkDuplicateSecret(secrets, "Microsoft", "", "GEZDGNBVGY3TQOJQ")
-    ).toBe(true);
+    expect(checkDuplicateSecret(secrets, "Microsoft", "", "GEZDGNBVGY3TQOJQ")).toBe(true);
   });
 
   it("handles empty array", () => {
-    expect(
-      checkDuplicateSecret([], "GitHub", "user@example.com", "JBSWY3DPEHPK3PXP")
-    ).toBe(false);
+    expect(checkDuplicateSecret([], "GitHub", "user@example.com", "JBSWY3DPEHPK3PXP")).toBe(false);
   });
 
   it("name comparison is case-sensitive", () => {
-    expect(
-      checkDuplicateSecret(secrets, "github", "user@example.com", "JBSWY3DPEHPK3PXP")
-    ).toBe(false);
+    expect(checkDuplicateSecret(secrets, "github", "user@example.com", "JBSWY3DPEHPK3PXP")).toBe(
+      false,
+    );
   });
 
   it("account comparison is case-sensitive", () => {
-    expect(
-      checkDuplicateSecret(secrets, "GitHub", "USER@EXAMPLE.COM", "JBSWY3DPEHPK3PXP")
-    ).toBe(false);
+    expect(checkDuplicateSecret(secrets, "GitHub", "USER@EXAMPLE.COM", "JBSWY3DPEHPK3PXP")).toBe(
+      false,
+    );
   });
 
   it("handles negative excludeIndex", () => {
     expect(
-      checkDuplicateSecret(secrets, "GitHub", "user@example.com", "JBSWY3DPEHPK3PXP", -1)
+      checkDuplicateSecret(secrets, "GitHub", "user@example.com", "JBSWY3DPEHPK3PXP", -1),
     ).toBe(true);
   });
 
   it("handles out-of-range excludeIndex", () => {
     expect(
-      checkDuplicateSecret(secrets, "GitHub", "user@example.com", "JBSWY3DPEHPK3PXP", 999)
+      checkDuplicateSecret(secrets, "GitHub", "user@example.com", "JBSWY3DPEHPK3PXP", 999),
     ).toBe(true);
   });
 
@@ -576,12 +559,8 @@ describe("integration: full secret creation flow", () => {
     const sorted = sortSecretsByName(secrets);
     expect(sorted[0]!.name).toBe("Apple");
 
-    expect(
-      checkDuplicateSecret(sorted, "GitHub", "", "JBSWY3DPEHPK3PXP")
-    ).toBe(true);
+    expect(checkDuplicateSecret(sorted, "GitHub", "", "JBSWY3DPEHPK3PXP")).toBe(true);
 
-    expect(
-      checkDuplicateSecret(sorted, "Microsoft", "", "JBSWY3DPEHPK3PXP")
-    ).toBe(false);
+    expect(checkDuplicateSecret(sorted, "Microsoft", "", "JBSWY3DPEHPK3PXP")).toBe(false);
   });
 });

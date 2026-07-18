@@ -2,9 +2,9 @@
  * Dashboard context tests.
  */
 
-import { describe, it, expect, vi } from "vitest";
-import { renderHook, act } from "@testing-library/react";
+import { act, renderHook } from "@testing-library/react";
 import { type ReactNode } from "react";
+import { describe, expect, it, vi } from "vitest";
 
 // Mock getDashboardData before importing the context
 vi.mock("@/actions/dashboard", () => ({
@@ -19,9 +19,9 @@ vi.mock("@/actions/dashboard", () => ({
 
 import {
   DashboardProvider,
-  useDashboardState,
   useDashboardActions,
   useDashboardService,
+  useDashboardState,
 } from "@/contexts/dashboard-context";
 import type { Secret } from "@/models/types";
 
@@ -140,7 +140,6 @@ describe("useDashboardActions", () => {
     expect(result.current.secrets).toHaveLength(2);
     expect(result.current.secrets[0]!.name).toBe("AWS");
   });
-
 });
 
 describe("context hooks", () => {

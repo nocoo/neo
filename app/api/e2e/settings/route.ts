@@ -4,12 +4,12 @@
  */
 
 import { NextRequest, NextResponse } from "next/server";
-import { isE2EMode } from "@/lib/auth-context";
 import {
+  generateAndSaveEncryptionKey,
   getUserSettings,
   updateUserSettings,
-  generateAndSaveEncryptionKey,
 } from "@/actions/settings";
+import { isE2EMode } from "@/lib/auth-context";
 
 function guardE2E(): NextResponse | null {
   if (!isE2EMode()) {

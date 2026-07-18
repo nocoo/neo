@@ -4,13 +4,13 @@
  * Tests Server Actions end-to-end with in-memory mock storage.
  */
 
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
+  assertError,
+  assertSuccess,
   createMockScopedDB,
   resetStorage,
   TEST_USER_ID,
-  assertSuccess,
-  assertError,
 } from "./setup";
 
 // ── Top-level mock ───────────────────────────────────────────────────────
@@ -29,13 +29,13 @@ vi.mock("@/lib/auth-context", () => ({
 }));
 
 import {
-  getSecrets,
-  getSecretById,
-  createSecret,
-  updateSecret,
-  deleteSecret,
-  getSecretCount,
   batchImportSecrets,
+  createSecret,
+  deleteSecret,
+  getSecretById,
+  getSecretCount,
+  getSecrets,
+  updateSecret,
 } from "@/actions/secrets";
 
 // ── Reset storage between tests ──────────────────────────────────────────

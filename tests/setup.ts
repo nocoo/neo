@@ -16,6 +16,6 @@ if (typeof window !== "undefined") {
 
   // Polyfill Element.scrollIntoView
   if (typeof Element.prototype.scrollIntoView === "undefined") {
-    Element.prototype.scrollIntoView = function () {};
+    Element.prototype.scrollIntoView = () => {};
   }
 }

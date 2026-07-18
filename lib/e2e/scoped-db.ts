@@ -9,8 +9,8 @@
  * Used only when isE2EMode() returns true (NODE_ENV !== "production" && E2E_SKIP_AUTH=true).
  */
 
-import type { Secret, UserSettings } from "@/models/types";
 import type { OtpAlgorithm, OtpType } from "@/models/constants";
+import type { Secret, UserSettings } from "@/models/types";
 
 // ── In-memory storage (process-level, survives across requests) ─────────────
 
@@ -67,7 +67,7 @@ export class E2eScopedDB {
 
   async getSecretById(id: string): Promise<Secret | null> {
     const row = secrets.find(
-      (s) => s.id === id && s.user_id === this.userId && s.deleted_at === null
+      (s) => s.id === id && s.user_id === this.userId && s.deleted_at === null,
     );
     return row ? rowToSecret(row) : null;
   }
@@ -117,10 +117,10 @@ export class E2eScopedDB {
       algorithm: string;
       counter: number;
       color: string | null;
-    }>
+    }>,
   ): Promise<Secret | null> {
     const row = secrets.find(
-      (s) => s.id === id && s.user_id === this.userId && s.deleted_at === null
+      (s) => s.id === id && s.user_id === this.userId && s.deleted_at === null,
     );
     if (!row) return null;
 
@@ -135,7 +135,7 @@ export class E2eScopedDB {
 
   async deleteSecret(id: string): Promise<boolean> {
     const row = secrets.find(
-      (s) => s.id === id && s.user_id === this.userId && s.deleted_at === null
+      (s) => s.id === id && s.user_id === this.userId && s.deleted_at === null,
     );
     if (row) {
       const now = Math.floor(Date.now() / 1000);
@@ -154,7 +154,7 @@ export class E2eScopedDB {
 
   async restoreSecret(id: string): Promise<Secret | null> {
     const row = secrets.find(
-      (s) => s.id === id && s.user_id === this.userId && s.deleted_at !== null
+      (s) => s.id === id && s.user_id === this.userId && s.deleted_at !== null,
     );
     if (!row) return null;
     row.deleted_at = null;
@@ -164,27 +164,21 @@ export class E2eScopedDB {
 
   async permanentDeleteSecret(id: string): Promise<boolean> {
     const idx = secrets.findIndex(
-      (s) => s.id === id && s.user_id === this.userId && s.deleted_at !== null
+      (s) => s.id === id && s.user_id === this.userId && s.deleted_at !== null,
     );
     if (idx >= 0) secrets.splice(idx, 1);
     return true;
   }
 
   async emptyRecycleBin(): Promise<number> {
-    const toDelete = secrets.filter(
-      (s) => s.user_id === this.userId && s.deleted_at !== null
-    );
+    const toDelete = secrets.filter((s) => s.user_id === this.userId && s.deleted_at !== null);
     const count = toDelete.length;
-    secrets = secrets.filter(
-      (s) => !(s.user_id === this.userId && s.deleted_at !== null)
-    );
+    secrets = secrets.filter((s) => !(s.user_id === this.userId && s.deleted_at !== null));
     return count;
   }
 
   async getSecretCount(): Promise<number> {
-    return secrets.filter(
-      (s) => s.user_id === this.userId && s.deleted_at === null
-    ).length;
+    return secrets.filter((s) => s.user_id === this.userId && s.deleted_at === null).length;
   }
 
   // ── User Settings ────────────────────────────────────────────────────────
@@ -194,11 +188,13 @@ export class E2eScopedDB {
     return row ? rowToSettings(row) : null;
   }
 
-  async upsertUserSettings(data: Partial<{
-    encryptionKeyHash: string | null;
-    theme: string;
-    language: string;
-  }>): Promise<UserSettings> {
+  async upsertUserSettings(
+    data: Partial<{
+      encryptionKeyHash: string | null;
+      theme: string;
+      language: string;
+    }>,
+  ): Promise<UserSettings> {
     const existing = settings.find((s) => s.user_id === this.userId);
 
     if (existing) {

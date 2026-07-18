@@ -2,8 +2,8 @@
  * ThemeToggle component tests — covers the cycle() branches.
  */
 
-import { describe, it, expect, vi, beforeEach } from "vitest";
-import { render, screen, fireEvent } from "@testing-library/react";
+import { fireEvent, render, screen } from "@testing-library/react";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
 // ── Hoisted mocks ────────────────────────────────────────────────────────
 
@@ -25,7 +25,11 @@ describe("ThemeToggle", () => {
   });
 
   it("cycles from system to light", () => {
-    mockUseTheme.mockReturnValue({ theme: "system", setTheme: mockSetTheme, resolvedTheme: "light" });
+    mockUseTheme.mockReturnValue({
+      theme: "system",
+      setTheme: mockSetTheme,
+      resolvedTheme: "light",
+    });
     render(<ThemeToggle />);
 
     fireEvent.click(screen.getByRole("button", { name: /toggle theme/i }));
@@ -33,7 +37,11 @@ describe("ThemeToggle", () => {
   });
 
   it("cycles from light to dark", () => {
-    mockUseTheme.mockReturnValue({ theme: "light", setTheme: mockSetTheme, resolvedTheme: "light" });
+    mockUseTheme.mockReturnValue({
+      theme: "light",
+      setTheme: mockSetTheme,
+      resolvedTheme: "light",
+    });
     render(<ThemeToggle />);
 
     fireEvent.click(screen.getByRole("button", { name: /toggle theme/i }));

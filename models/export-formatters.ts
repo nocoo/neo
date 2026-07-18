@@ -5,8 +5,8 @@
  * All formatters take ParsedSecret[] and return a string.
  */
 
-import type { ParsedSecret, ExportFormat } from "./types";
 import type { OtpAlgorithm } from "./constants";
+import type { ExportFormat, ParsedSecret } from "./types";
 
 // ── OTPAuth URI Builder ─────────────────────────────────────────────────────
 
@@ -15,8 +15,7 @@ import type { OtpAlgorithm } from "./constants";
  */
 export function toOtpauthUri(secret: ParsedSecret): string {
   const type = secret.type === "hotp" ? "hotp" : "totp";
-  const label =
-    secret.name + (secret.account ? ":" + secret.account : "");
+  const label = secret.name + (secret.account ? `:${secret.account}` : "");
   const params = new URLSearchParams({
     secret: secret.secret.toUpperCase(),
     issuer: secret.name,
@@ -66,7 +65,7 @@ export function exportAsAegis(secrets: ParsedSecret[]): string {
   return JSON.stringify(
     { version: 1, header: { slots: null, params: null }, db: { version: 1, entries } },
     null,
-    2
+    2,
   );
 }
 
@@ -87,7 +86,10 @@ export function exportAs2FAS(secrets: ParsedSecret[]): string {
       counter: s.counter || 0,
     },
     order: { position: 0 },
-    icon: { selected: "Label", label: { text: s.name.substring(0, 2).toUpperCase(), backgroundColor: "Default" } },
+    icon: {
+      selected: "Label",
+      label: { text: s.name.substring(0, 2).toUpperCase(), backgroundColor: "Default" },
+    },
   }));
 
   return JSON.stringify({ services, schemaVersion: 4, appVersionCode: 1 }, null, 2);
@@ -215,16 +217,7 @@ export function exportAsGenericJSON(secrets: ParsedSecret[]): string {
  * Export as CSV.
  */
 export function exportAsCSV(secrets: ParsedSecret[]): string {
-  const headers = [
-    "name",
-    "account",
-    "secret",
-    "type",
-    "digits",
-    "period",
-    "algorithm",
-    "counter",
-  ];
+  const headers = ["name", "account", "secret", "type", "digits", "period", "algorithm", "counter"];
 
   const rows = secrets.map((s) =>
     [
@@ -236,7 +229,7 @@ export function exportAsCSV(secrets: ParsedSecret[]): string {
       String(s.period || 30),
       denormalizeAlgorithm(s.algorithm),
       String(s.counter || 0),
-    ].join(",")
+    ].join(","),
   );
 
   return [headers.join(","), ...rows].join("\n");
@@ -247,10 +240,7 @@ export function exportAsCSV(secrets: ParsedSecret[]): string {
  */
 export function exportAsText(secrets: ParsedSecret[]): string {
   return secrets
-    .map(
-      (s) =>
-        `${s.name}${s.account ? " (" + s.account + ")" : ""}: ${s.secret.toUpperCase()}`
-    )
+    .map((s) => `${s.name}${s.account ? ` (${s.account})` : ""}: ${s.secret.toUpperCase()}`)
     .join("\n");
 }
 
@@ -262,10 +252,7 @@ export type { ExportFormat } from "./types";
 /**
  * Export secrets in the specified format.
  */
-export function exportSecrets(
-  secrets: ParsedSecret[],
-  format: ExportFormat
-): string {
+export function exportSecrets(secrets: ParsedSecret[], format: ExportFormat): string {
   switch (format) {
     case "otpauth-uri":
       return exportAsOtpauthUris(secrets);
@@ -312,7 +299,7 @@ function denormalizeAlgorithm(alg: OtpAlgorithm | string): string {
 
 function escapeCSV(value: string): string {
   if (value.includes(",") || value.includes('"') || value.includes("\n")) {
-    return '"' + value.replace(/"/g, '""') + '"';
+    return `"${value.replace(/"/g, '""')}"`;
   }
   return value;
 }

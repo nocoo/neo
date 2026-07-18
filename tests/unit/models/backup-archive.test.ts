@@ -4,17 +4,17 @@
  * tampered manifest detection, format validation, edge cases.
  */
 
-import { describe, it, expect } from "vitest";
 import { zipSync } from "fflate";
+import { describe, expect, it } from "vitest";
+import type { BackupManifest } from "@/models/backup-archive";
 import {
   createEncryptedZip,
+  generateArchiveFilename,
+  MAX_ARCHIVE_SECRETS,
+  MAX_ARCHIVE_UPLOAD_BYTES,
   openEncryptedZip,
   validateManifest,
-  generateArchiveFilename,
-  MAX_ARCHIVE_UPLOAD_BYTES,
-  MAX_ARCHIVE_SECRETS,
 } from "@/models/backup-archive";
-import type { BackupManifest } from "@/models/backup-archive";
 import { encryptData, generateEncryptionKey } from "@/models/encryption";
 import type { ParsedSecret } from "@/models/types";
 
@@ -204,21 +204,19 @@ describe("validateManifest", () => {
   });
 
   it("rejects wrong format", () => {
-    expect(() =>
-      validateManifest({ ...validManifest, format: "unknown-format" }),
-    ).toThrow(/unexpected format/);
+    expect(() => validateManifest({ ...validManifest, format: "unknown-format" })).toThrow(
+      /unexpected format/,
+    );
   });
 
   it("rejects wrong version", () => {
-    expect(() =>
-      validateManifest({ ...validManifest, version: 99 }),
-    ).toThrow(/unsupported version/);
+    expect(() => validateManifest({ ...validManifest, version: 99 })).toThrow(
+      /unsupported version/,
+    );
   });
 
   it("rejects negative secretCount", () => {
-    expect(() =>
-      validateManifest({ ...validManifest, secretCount: -1 }),
-    ).toThrow(/secretCount/);
+    expect(() => validateManifest({ ...validManifest, secretCount: -1 })).toThrow(/secretCount/);
   });
 
   it("rejects wrong encryption algorithm", () => {
@@ -231,9 +229,7 @@ describe("validateManifest", () => {
   });
 
   it("rejects null manifest", () => {
-    expect(() =>
-      validateManifest(null as unknown as BackupManifest),
-    ).toThrow(/null or undefined/);
+    expect(() => validateManifest(null as unknown as BackupManifest)).toThrow(/null or undefined/);
   });
 });
 
@@ -263,9 +259,7 @@ describe("safety limits", () => {
     const key = await generateEncryptionKey();
     // Create a fake oversized Uint8Array (just needs to exceed the limit)
     const oversized = new Uint8Array(MAX_ARCHIVE_UPLOAD_BYTES + 1);
-    await expect(openEncryptedZip(oversized, key)).rejects.toThrow(
-      /Archive too large/,
-    );
+    await expect(openEncryptedZip(oversized, key)).rejects.toThrow(/Archive too large/);
   });
 
   it("exports MAX_ARCHIVE_UPLOAD_BYTES constant", () => {
@@ -283,9 +277,7 @@ describe("safety limits", () => {
       entries[`file-${i}.txt`] = Uint8Array.from([0x61]);
     }
     const zipBytes = zipSync(entries);
-    await expect(openEncryptedZip(zipBytes, key)).rejects.toThrow(
-      /too many entries/,
-    );
+    await expect(openEncryptedZip(zipBytes, key)).rejects.toThrow(/too many entries/);
   });
 
   it("rejects ZIP missing manifest", async () => {
@@ -293,9 +285,7 @@ describe("safety limits", () => {
     const zipBytes = zipSync({
       "backup.json.enc": Uint8Array.from([0x61]),
     });
-    await expect(openEncryptedZip(zipBytes, key)).rejects.toThrow(
-      /missing manifest\.json/,
-    );
+    await expect(openEncryptedZip(zipBytes, key)).rejects.toThrow(/missing manifest\.json/);
   });
 
   it("rejects ZIP missing payload", async () => {
@@ -303,9 +293,7 @@ describe("safety limits", () => {
     const zipBytes = zipSync({
       "manifest.json": makeManifestBytes(),
     });
-    await expect(openEncryptedZip(zipBytes, key)).rejects.toThrow(
-      /missing backup\.json\.enc/,
-    );
+    await expect(openEncryptedZip(zipBytes, key)).rejects.toThrow(/missing backup\.json\.enc/);
   });
 
   it("rejects payload that decrypts to non-array secrets", async () => {
@@ -315,9 +303,7 @@ describe("safety limits", () => {
       "manifest.json": makeManifestBytes(),
       "backup.json.enc": Uint8Array.from(new TextEncoder().encode(encrypted)),
     });
-    await expect(openEncryptedZip(zipBytes, key)).rejects.toThrow(
-      /no secrets array/,
-    );
+    await expect(openEncryptedZip(zipBytes, key)).rejects.toThrow(/no secrets array/);
   });
 
   it("rejects payload exceeding MAX_ARCHIVE_SECRETS", async () => {
@@ -338,8 +324,6 @@ describe("safety limits", () => {
       "manifest.json": makeManifestBytes(),
       "backup.json.enc": Uint8Array.from(new TextEncoder().encode(encrypted)),
     });
-    await expect(openEncryptedZip(zipBytes, key)).rejects.toThrow(
-      /too many secrets/,
-    );
+    await expect(openEncryptedZip(zipBytes, key)).rejects.toThrow(/too many secrets/);
   });
 });

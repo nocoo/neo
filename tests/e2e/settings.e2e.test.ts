@@ -5,7 +5,7 @@
  * Zero vi.mock — all requests go through Next.js HTTP stack.
  */
 
-import { describe, it, expect, beforeEach } from "bun:test";
+import { beforeEach, describe, expect, it } from "bun:test";
 
 const BASE = process.env.E2E_BASE_URL ?? "http://localhost:17026";
 const SETTINGS_URL = `${BASE}/api/e2e/settings`;

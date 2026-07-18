@@ -2,8 +2,8 @@
  * ExportDialog component tests.
  */
 
-import { describe, it, expect, vi, beforeEach } from "vitest";
-import { render, screen, fireEvent } from "@testing-library/react";
+import { fireEvent, render, screen } from "@testing-library/react";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { ExportDialog } from "@/components/export-dialog";
 
 beforeEach(() => {
@@ -19,7 +19,7 @@ describe("ExportDialog", () => {
         onExport={vi.fn()}
         exportOutput=""
         error={null}
-      />
+      />,
     );
     expect(container.querySelector("[role='dialog']")).toBeNull();
   });
@@ -32,7 +32,7 @@ describe("ExportDialog", () => {
         onExport={vi.fn()}
         exportOutput=""
         error={null}
-      />
+      />,
     );
     expect(screen.getByText("Export Secrets")).toBeDefined();
     expect(screen.getByLabelText("Export Format")).toBeDefined();
@@ -47,7 +47,7 @@ describe("ExportDialog", () => {
         onExport={onExport}
         exportOutput=""
         error={null}
-      />
+      />,
     );
 
     fireEvent.change(screen.getByLabelText("Export Format"), {
@@ -66,7 +66,7 @@ describe("ExportDialog", () => {
         onExport={vi.fn()}
         exportOutput='{"secrets": []}'
         error={null}
-      />
+      />,
     );
     expect(screen.getByText('{"secrets": []}')).toBeDefined();
   });
@@ -79,7 +79,7 @@ describe("ExportDialog", () => {
         onExport={vi.fn()}
         exportOutput="data"
         error={null}
-      />
+      />,
     );
     expect(screen.getByText("Copy")).toBeDefined();
     expect(screen.getByText("Download")).toBeDefined();
@@ -96,7 +96,7 @@ describe("ExportDialog", () => {
         onExport={vi.fn()}
         exportOutput="export-data"
         error={null}
-      />
+      />,
     );
 
     fireEvent.click(screen.getByText("Copy"));
@@ -111,7 +111,7 @@ describe("ExportDialog", () => {
         onExport={vi.fn()}
         exportOutput=""
         error="Export failed"
-      />
+      />,
     );
     expect(screen.getByText("Export failed")).toBeDefined();
   });
@@ -125,7 +125,7 @@ describe("ExportDialog", () => {
         onExport={onExport}
         exportOutput=""
         error={null}
-      />
+      />,
     );
 
     fireEvent.change(screen.getByLabelText("Export Format"), {
@@ -145,7 +145,7 @@ describe("ExportDialog", () => {
         onExport={vi.fn()}
         exportOutput=""
         error={null}
-      />
+      />,
     );
 
     fireEvent.click(screen.getByLabelText("Close dialog"));

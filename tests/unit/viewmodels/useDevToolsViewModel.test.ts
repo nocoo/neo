@@ -2,8 +2,8 @@
  * Developer Tools ViewModel tests.
  */
 
-import { describe, it, expect, vi, beforeEach } from "vitest";
-import { renderHook, act } from "@testing-library/react";
+import { act, renderHook } from "@testing-library/react";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
 // ── Hoisted mocks ────────────────────────────────────────────────────────
 
@@ -47,8 +47,8 @@ vi.mock("@/contexts/dashboard-context", () => ({
   useDashboardActions: vi.fn().mockReturnValue({}),
 }));
 
+import type { ParsedSecret, Secret } from "@/models/types";
 import { useDevToolsViewModel } from "@/viewmodels/useDevToolsViewModel";
-import type { Secret, ParsedSecret } from "@/models/types";
 
 // ── Helpers ──────────────────────────────────────────────────────────────
 
@@ -198,7 +198,7 @@ describe("useDevToolsViewModel", () => {
 
       expect(mockExportSecrets).toHaveBeenCalledWith(
         [expect.objectContaining({ name: "GitHub", account: "user@example.com" })],
-        "aegis"
+        "aegis",
       );
       expect(result.current.exportOutput).toBe("exported-data");
     });
@@ -225,7 +225,7 @@ describe("useDevToolsViewModel", () => {
             counter: 0,
           },
         ],
-        "otpauth-uri"
+        "otpauth-uri",
       );
     });
 
@@ -275,7 +275,7 @@ describe("useDevToolsViewModel", () => {
       expect(mockGenerateTOTP).toHaveBeenCalledWith(
         "JBSWY3DPEHPK3PXP",
         expect.any(Number),
-        expect.objectContaining({ digits: 8, period: 60, algorithm: "SHA-256" })
+        expect.objectContaining({ digits: 8, period: 60, algorithm: "SHA-256" }),
       );
     });
 

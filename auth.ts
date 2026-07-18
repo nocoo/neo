@@ -1,10 +1,10 @@
 import NextAuth from "next-auth";
 import type { Provider } from "next-auth/providers";
-import Google from "next-auth/providers/google";
 import Credentials from "next-auth/providers/credentials";
+import Google from "next-auth/providers/google";
 import { D1Adapter } from "@/lib/auth-adapter";
-import { isD1Configured } from "@/lib/db/d1-client";
 import { isEmailAllowed } from "@/lib/auth-whitelist";
+import { isD1Configured } from "@/lib/db/d1-client";
 
 // Build the providers list. In Playwright E2E mode, add a Credentials
 // provider so tests can authenticate without Google OAuth.
@@ -34,7 +34,7 @@ if (process.env.PLAYWRIGHT === "1" && process.env.NODE_ENV !== "production") {
           image: null,
         };
       },
-    })
+    }),
   );
 }
 

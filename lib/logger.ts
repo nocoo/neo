@@ -35,7 +35,7 @@ const REDACTED = "***REDACTED***";
  * Redact sensitive values from a Headers-like object.
  */
 export function sanitizeHeaders(
-  headers: Headers | Record<string, string> | null | undefined
+  headers: Headers | Record<string, string> | null | undefined,
 ): Record<string, string> {
   const result: Record<string, string> = {};
 
@@ -90,7 +90,7 @@ export class Logger {
     level: LogLevelValue,
     message: string,
     data?: Record<string, unknown> | null,
-    error?: Error | null
+    error?: Error | null,
   ): LogEntry | undefined {
     if (level < this.minLevel) return undefined;
 
@@ -117,11 +117,7 @@ export class Logger {
     return entry;
   }
 
-  private writeToConsole(
-    level: LogLevelValue,
-    message: string,
-    entry: LogEntry
-  ): void {
+  private writeToConsole(level: LogLevelValue, message: string, entry: LogEntry): void {
     const prefix = `[${LEVEL_NAMES[level]}] ${message}`;
 
     switch (level) {
@@ -151,7 +147,7 @@ export class Logger {
   warn(
     message: string,
     data?: Record<string, unknown> | null,
-    error?: Error | null
+    error?: Error | null,
   ): LogEntry | undefined {
     return this.log(LogLevel.WARN, message, data, error);
   }
@@ -159,7 +155,7 @@ export class Logger {
   error(
     message: string,
     data?: Record<string, unknown> | null,
-    error?: Error | null
+    error?: Error | null,
   ): LogEntry | undefined {
     return this.log(LogLevel.ERROR, message, data, error);
   }
@@ -167,7 +163,7 @@ export class Logger {
   fatal(
     message: string,
     data?: Record<string, unknown> | null,
-    error?: Error | null
+    error?: Error | null,
   ): LogEntry | undefined {
     return this.log(LogLevel.FATAL, message, data, error);
   }

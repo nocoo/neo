@@ -2,8 +2,8 @@
  * Offline page tests.
  */
 
-import { describe, it, expect, vi, beforeEach } from "vitest";
-import { render, screen, fireEvent } from "@testing-library/react";
+import { fireEvent, render, screen } from "@testing-library/react";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
 // ── Mocks ────────────────────────────────────────────────────────────────
 
@@ -52,9 +52,7 @@ describe("OfflinePage", () => {
 
   it("renders description text", () => {
     render(<OfflinePage />);
-    expect(
-      screen.getByText(/lost your internet connection/)
-    ).toBeDefined();
+    expect(screen.getByText(/lost your internet connection/)).toBeDefined();
   });
 
   it("renders try again button", () => {
@@ -93,8 +91,6 @@ describe("OfflinePage", () => {
 
   it("shows offline sync message", () => {
     render(<OfflinePage />);
-    expect(
-      screen.getByText(/synced automatically/)
-    ).toBeDefined();
+    expect(screen.getByText(/synced automatically/)).toBeDefined();
   });
 });

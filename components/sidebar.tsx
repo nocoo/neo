@@ -1,33 +1,17 @@
 "use client";
 
-import { useState } from "react";
+import { Archive, ChevronUp, Key, LogOut, PanelLeft, Settings, Trash2, Wrench } from "lucide-react";
+import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import {
-  Key,
-  Archive,
-  Wrench,
-  Settings,
-  LogOut,
-  PanelLeft,
-  ChevronUp,
-  Trash2,
-} from "lucide-react";
-import { cn } from "@/lib/utils";
-import { VERSION } from "@/lib/version";
+import { useState } from "react";
 import { handleSignOut } from "@/actions/auth";
 import { useSidebar } from "@/components/sidebar-context";
-import {
-  Collapsible,
-  CollapsibleTrigger,
-} from "@/components/ui/collapsible";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
-import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Collapsible, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { cn } from "@/lib/utils";
+import { VERSION } from "@/lib/version";
 
 // ── Navigation data model ──
 
@@ -55,9 +39,7 @@ const NAV_GROUPS: NavGroup[] = [
   {
     label: "Backup",
     defaultOpen: true,
-    items: [
-      { href: "/dashboard/backup", label: "Backup", icon: Archive },
-    ],
+    items: [{ href: "/dashboard/backup", label: "Backup", icon: Archive }],
   },
   {
     label: "Settings",
@@ -153,9 +135,7 @@ export function Sidebar({ user }: { user: SidebarUser }) {
     : "U";
 
   function isActive(href: string): boolean {
-    return href === "/dashboard"
-      ? pathname === "/dashboard"
-      : pathname.startsWith(href);
+    return href === "/dashboard" ? pathname === "/dashboard" : pathname.startsWith(href);
   }
 
   // ── Avatar (shared between collapsed/expanded) ──
@@ -175,8 +155,7 @@ export function Sidebar({ user }: { user: SidebarUser }) {
       >
         {/* ── Header / Logo ── */}
         <div className="h-14 flex items-center pl-[22px] pr-3 shrink-0">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="/logo-24.png" alt="Neo" className="h-6 w-6 shrink-0" />
+          <Image src="/logo-24.png" alt="Neo" width={24} height={24} className="h-6 w-6 shrink-0" />
           {!collapsed && (
             <div className="flex items-center justify-between flex-1 min-w-0 ml-3">
               <div className="flex items-center gap-3">
@@ -188,6 +167,7 @@ export function Sidebar({ user }: { user: SidebarUser }) {
                 </span>
               </div>
               <button
+                type="button"
                 onClick={toggle}
                 aria-label="Collapse sidebar"
                 className="flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground hover:text-foreground transition-colors shrink-0"
@@ -202,6 +182,7 @@ export function Sidebar({ user }: { user: SidebarUser }) {
         {collapsed && (
           <div className="flex justify-center shrink-0 mb-2">
             <button
+              type="button"
               onClick={toggle}
               aria-label="Expand sidebar"
               className="flex h-10 w-10 items-center justify-center rounded-lg text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"
@@ -238,28 +219,14 @@ export function Sidebar({ user }: { user: SidebarUser }) {
             </div>
           ) : (
             NAV_GROUPS.map((group) => (
-              <NavGroupSection
-                key={group.label}
-                group={group}
-                isActive={isActive}
-              />
+              <NavGroupSection key={group.label} group={group} isActive={isActive} />
             ))
           )}
         </nav>
 
         {/* ── User section ── */}
-        <div
-          className={cn(
-            "py-3 shrink-0",
-            collapsed ? "px-0" : "px-4",
-          )}
-        >
-          <div
-            className={cn(
-              "flex items-center",
-              collapsed ? "justify-center" : "gap-3",
-            )}
-          >
+        <div className={cn("py-3 shrink-0", collapsed ? "px-0" : "px-4")}>
+          <div className={cn("flex items-center", collapsed ? "justify-center" : "gap-3")}>
             {userAvatar}
             {!collapsed && (
               <>
@@ -267,9 +234,7 @@ export function Sidebar({ user }: { user: SidebarUser }) {
                   <p className="text-sm font-medium text-foreground truncate">
                     {user.name ?? "User"}
                   </p>
-                  <p className="text-xs text-muted-foreground truncate">
-                    {user.email ?? ""}
-                  </p>
+                  <p className="text-xs text-muted-foreground truncate">{user.email ?? ""}</p>
                 </div>
                 <form action={handleSignOut}>
                   <button

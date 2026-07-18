@@ -9,9 +9,9 @@ export default function ToolsLoading() {
     <div className="space-y-6">
       {/* Tool cards grid */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-        {Array.from({ length: 3 }).map((_, i) => (
+        {Array.from({ length: 3 }, (_, i) => i).map((i) => (
           <div
-            key={i}
+            key={`skeleton-${i}`}
             className="rounded-card bg-secondary p-6 space-y-3"
             style={{ animationDelay: `${i * 50}ms` }}
           >

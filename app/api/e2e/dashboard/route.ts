@@ -4,8 +4,8 @@
  */
 
 import { NextResponse } from "next/server";
-import { isE2EMode } from "@/lib/auth-context";
 import { getDashboardData } from "@/actions/dashboard";
+import { isE2EMode } from "@/lib/auth-context";
 
 function guardE2E(): NextResponse | null {
   if (!isE2EMode()) {

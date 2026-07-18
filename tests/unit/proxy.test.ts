@@ -2,7 +2,7 @@
  * Middleware tests — auth guard for /dashboard routes.
  */
 
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
 // ── Hoisted mocks ────────────────────────────────────────────────────────
 
@@ -12,8 +12,8 @@ const { mockAuth } = vi.hoisted(() => {
 
 vi.mock("@/auth", () => ({ auth: mockAuth }));
 
-import { proxy, config } from "@/proxy";
 import { NextRequest } from "next/server";
+import { config, proxy } from "@/proxy";
 
 function createRequest(path: string): NextRequest {
   return new NextRequest(new URL(path, "http://localhost:3000"));

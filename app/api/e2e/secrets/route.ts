@@ -5,16 +5,16 @@
  */
 
 import { NextRequest, NextResponse } from "next/server";
-import { isE2EMode } from "@/lib/auth-context";
 import {
-  getSecrets,
-  getSecretById,
-  createSecret,
-  updateSecret,
-  deleteSecret,
-  getSecretCount,
   batchImportSecrets,
+  createSecret,
+  deleteSecret,
+  getSecretById,
+  getSecretCount,
+  getSecrets,
+  updateSecret,
 } from "@/actions/secrets";
+import { isE2EMode } from "@/lib/auth-context";
 
 function guardE2E(): NextResponse | null {
   if (!isE2EMode()) {

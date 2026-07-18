@@ -14,13 +14,13 @@
  * with a server-wide Worker env var key that is not available here.
  */
 
+import { zipSync } from "fflate";
 import { NextResponse } from "next/server";
 import { getScopedDB } from "@/lib/auth-context";
 import { createEncryptedZip } from "@/models/backup-archive";
+import type { OtpAlgorithm, OtpType } from "@/models/constants";
 import { isEncrypted } from "@/models/encryption";
-import { zipSync } from "fflate";
 import type { ParsedSecret } from "@/models/types";
-import type { OtpType, OtpAlgorithm } from "@/models/constants";
 
 /**
  * Try to extract a secrets array from a backup's JSON data.
@@ -48,9 +48,7 @@ function extractSecrets(data: string): ParsedSecret[] | null {
     "secrets" in (parsed as Record<string, unknown>) &&
     Array.isArray((parsed as Record<string, unknown>).secrets)
   ) {
-    return ((parsed as Record<string, unknown>).secrets as unknown[]).map(
-      toSecret,
-    );
+    return ((parsed as Record<string, unknown>).secrets as unknown[]).map(toSecret);
   }
 
   return null;
@@ -81,8 +79,7 @@ export async function GET() {
     if (!encryptionKey) {
       return NextResponse.json(
         {
-          error:
-            "Set up your encryption key in Settings before exporting backups.",
+          error: "Set up your encryption key in Settings before exporting backups.",
         },
         { status: 400 },
       );
@@ -90,10 +87,7 @@ export async function GET() {
 
     const backups = await db.getLegacyBackups();
     if (backups.length === 0) {
-      return NextResponse.json(
-        { error: "No existing backups to migrate." },
-        { status: 404 },
-      );
+      return NextResponse.json({ error: "No existing backups to migrate." }, { status: 404 });
     }
 
     // Convert each recoverable backup to an encrypted ZIP
@@ -122,22 +116,18 @@ export async function GET() {
         zipEntries[name] = Uint8Array.from(zipBytes);
       } catch {
         skippedUnparseable++;
-        continue;
       }
     }
 
     if (Object.keys(zipEntries).length === 0) {
       const parts: string[] = [];
       if (skippedEncrypted > 0) {
-        parts.push(
-          `${skippedEncrypted} encrypted with an unavailable server key`,
-        );
+        parts.push(`${skippedEncrypted} encrypted with an unavailable server key`);
       }
       if (skippedUnparseable > 0) {
         parts.push(`${skippedUnparseable} with unrecognized format`);
       }
-      const detail =
-        parts.length > 0 ? ` (${parts.join(", ")})` : "";
+      const detail = parts.length > 0 ? ` (${parts.join(", ")})` : "";
       return NextResponse.json(
         {
           error: `No plain-text backups available to migrate${detail}.`,
@@ -164,9 +154,6 @@ export async function GET() {
     });
   } catch (error) {
     console.error("Failed to migrate backups:", error);
-    return NextResponse.json(
-      { error: "Failed to migrate backups" },
-      { status: 500 },
-    );
+    return NextResponse.json({ error: "Failed to migrate backups" }, { status: 500 });
   }
 }

@@ -64,12 +64,12 @@ export interface BackyPushDetail {
  * These should never be used as webhook targets.
  */
 const PRIVATE_IP_PATTERNS = [
-  /^10\./,                           // 10.0.0.0/8 (private)
-  /^172\.(1[6-9]|2[0-9]|3[01])\./,   // 172.16.0.0/12 (private)
-  /^192\.168\./,                     // 192.168.0.0/16 (private)
-  /^127\./,                          // 127.0.0.0/8 (loopback)
-  /^169\.254\./,                     // 169.254.0.0/16 (link-local)
-  /^0\./,                            // 0.0.0.0/8 (current network)
+  /^10\./, // 10.0.0.0/8 (private)
+  /^172\.(1[6-9]|2[0-9]|3[01])\./, // 172.16.0.0/12 (private)
+  /^192\.168\./, // 192.168.0.0/16 (private)
+  /^127\./, // 127.0.0.0/8 (loopback)
+  /^169\.254\./, // 169.254.0.0/16 (link-local)
+  /^0\./, // 0.0.0.0/8 (current network)
   /^100\.(6[4-9]|[7-9][0-9]|1[01][0-9]|12[0-7])\./, // 100.64.0.0/10 (CGNAT)
 ];
 
@@ -145,11 +145,7 @@ export function getBackyEnvironment(): "prod" | "dev" {
  * @param secretCount Number of secrets in the backup
  * @param date        Optional ISO date string (defaults to today)
  */
-export function buildBackyTag(
-  version: string,
-  secretCount: number,
-  date?: string,
-): string {
+export function buildBackyTag(version: string, secretCount: number, date?: string): string {
   const d = date ?? new Date().toISOString().slice(0, 10);
   return `v${version}-${d}-${secretCount}secrets`;
 }

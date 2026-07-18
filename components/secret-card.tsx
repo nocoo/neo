@@ -7,32 +7,128 @@
  * Supports colored backgrounds via user-defined color or deterministic hash.
  */
 
-import { useState, useCallback, useMemo, useEffect, useRef } from "react";
-import { Pencil, Trash2, ClipboardCheck } from "lucide-react";
+import { ClipboardCheck, Pencil, Trash2 } from "lucide-react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import type { Secret, OtpResult } from "@/models/types";
+import type { OtpResult, Secret } from "@/models/types";
 
 // ── Color palette ────────────────────────────────────────────────────────
 
 /** Saturated themes used for auto-hash assignment. */
 export const HASH_THEMES = [
-  { key: "red",      bg: "bg-red-500",           text: "text-white",             accent: "text-red-100",          progressBg: "bg-red-400/40",    progressFill: "bg-white/70",     progressWarn: "bg-yellow-300"  },
-  { key: "emerald",  bg: "bg-emerald-600",       text: "text-white",             accent: "text-emerald-100",      progressBg: "bg-emerald-400/40",progressFill: "bg-white/70",     progressWarn: "bg-yellow-300"  },
-  { key: "blue",     bg: "bg-blue-500",          text: "text-white",             accent: "text-blue-100",         progressBg: "bg-blue-400/40",   progressFill: "bg-white/70",     progressWarn: "bg-yellow-300"  },
-  { key: "purple",   bg: "bg-purple-500",        text: "text-white",             accent: "text-purple-100",       progressBg: "bg-purple-400/40", progressFill: "bg-white/70",     progressWarn: "bg-yellow-300"  },
-  { key: "amber",    bg: "bg-amber-500",         text: "text-white",             accent: "text-amber-100",        progressBg: "bg-amber-400/40",  progressFill: "bg-white/70",     progressWarn: "bg-yellow-300"  },
-  { key: "cyan",     bg: "bg-cyan-600",          text: "text-white",             accent: "text-cyan-100",         progressBg: "bg-cyan-400/40",   progressFill: "bg-white/70",     progressWarn: "bg-yellow-300"  },
-  { key: "pink",     bg: "bg-pink-500",          text: "text-white",             accent: "text-pink-100",         progressBg: "bg-pink-400/40",   progressFill: "bg-white/70",     progressWarn: "bg-yellow-300"  },
-  { key: "indigo",   bg: "bg-indigo-500",        text: "text-white",             accent: "text-indigo-100",       progressBg: "bg-indigo-400/40", progressFill: "bg-white/70",     progressWarn: "bg-yellow-300"  },
-  { key: "teal",     bg: "bg-teal-600",          text: "text-white",             accent: "text-teal-100",         progressBg: "bg-teal-400/40",   progressFill: "bg-white/70",     progressWarn: "bg-yellow-300"  },
-  { key: "orange",   bg: "bg-orange-500",        text: "text-white",             accent: "text-orange-100",       progressBg: "bg-orange-400/40", progressFill: "bg-white/70",     progressWarn: "bg-yellow-300"  },
+  {
+    key: "red",
+    bg: "bg-red-500",
+    text: "text-white",
+    accent: "text-red-100",
+    progressBg: "bg-red-400/40",
+    progressFill: "bg-white/70",
+    progressWarn: "bg-yellow-300",
+  },
+  {
+    key: "emerald",
+    bg: "bg-emerald-600",
+    text: "text-white",
+    accent: "text-emerald-100",
+    progressBg: "bg-emerald-400/40",
+    progressFill: "bg-white/70",
+    progressWarn: "bg-yellow-300",
+  },
+  {
+    key: "blue",
+    bg: "bg-blue-500",
+    text: "text-white",
+    accent: "text-blue-100",
+    progressBg: "bg-blue-400/40",
+    progressFill: "bg-white/70",
+    progressWarn: "bg-yellow-300",
+  },
+  {
+    key: "purple",
+    bg: "bg-purple-500",
+    text: "text-white",
+    accent: "text-purple-100",
+    progressBg: "bg-purple-400/40",
+    progressFill: "bg-white/70",
+    progressWarn: "bg-yellow-300",
+  },
+  {
+    key: "amber",
+    bg: "bg-amber-500",
+    text: "text-white",
+    accent: "text-amber-100",
+    progressBg: "bg-amber-400/40",
+    progressFill: "bg-white/70",
+    progressWarn: "bg-yellow-300",
+  },
+  {
+    key: "cyan",
+    bg: "bg-cyan-600",
+    text: "text-white",
+    accent: "text-cyan-100",
+    progressBg: "bg-cyan-400/40",
+    progressFill: "bg-white/70",
+    progressWarn: "bg-yellow-300",
+  },
+  {
+    key: "pink",
+    bg: "bg-pink-500",
+    text: "text-white",
+    accent: "text-pink-100",
+    progressBg: "bg-pink-400/40",
+    progressFill: "bg-white/70",
+    progressWarn: "bg-yellow-300",
+  },
+  {
+    key: "indigo",
+    bg: "bg-indigo-500",
+    text: "text-white",
+    accent: "text-indigo-100",
+    progressBg: "bg-indigo-400/40",
+    progressFill: "bg-white/70",
+    progressWarn: "bg-yellow-300",
+  },
+  {
+    key: "teal",
+    bg: "bg-teal-600",
+    text: "text-white",
+    accent: "text-teal-100",
+    progressBg: "bg-teal-400/40",
+    progressFill: "bg-white/70",
+    progressWarn: "bg-yellow-300",
+  },
+  {
+    key: "orange",
+    bg: "bg-orange-500",
+    text: "text-white",
+    accent: "text-orange-100",
+    progressBg: "bg-orange-400/40",
+    progressFill: "bg-white/70",
+    progressWarn: "bg-yellow-300",
+  },
 ] as const;
 
 /** Extra themes only available for manual selection (not auto-hash). */
 const MANUAL_ONLY_THEMES = [
-  { key: "white",    bg: "bg-white",             text: "text-gray-800",          accent: "text-gray-500",         progressBg: "bg-gray-200",      progressFill: "bg-gray-500/70",  progressWarn: "bg-yellow-500"  },
-  { key: "black",    bg: "bg-gray-900",          text: "text-white",             accent: "text-gray-400",         progressBg: "bg-gray-700",      progressFill: "bg-white/70",     progressWarn: "bg-yellow-300"  },
+  {
+    key: "white",
+    bg: "bg-white",
+    text: "text-gray-800",
+    accent: "text-gray-500",
+    progressBg: "bg-gray-200",
+    progressFill: "bg-gray-500/70",
+    progressWarn: "bg-yellow-500",
+  },
+  {
+    key: "black",
+    bg: "bg-gray-900",
+    text: "text-white",
+    accent: "text-gray-400",
+    progressBg: "bg-gray-700",
+    progressFill: "bg-white/70",
+    progressWarn: "bg-yellow-300",
+  },
 ] as const;
 
 /** All themes — hash themes + manual-only themes. */
@@ -85,7 +181,14 @@ export interface SecretCardProps {
 
 // ── Component ────────────────────────────────────────────────────────────
 
-export function SecretCard({ secret, otp, onEdit, onDelete, selected, copyTrigger }: SecretCardProps) {
+export function SecretCard({
+  secret,
+  otp,
+  onEdit,
+  onDelete,
+  selected,
+  copyTrigger,
+}: SecretCardProps) {
   const [flipped, setFlipped] = useState(false);
   const prevCopyTrigger = useRef(copyTrigger ?? 0);
 
@@ -118,11 +221,20 @@ export function SecretCard({ secret, otp, onEdit, onDelete, selected, copyTrigge
     }
   }, [copyTrigger, handleCopy]);
 
-  const progressPercent = otp
-    ? ((otp.period - otp.remainingSeconds) / otp.period) * 100
-    : 0;
+  const progressPercent = otp ? ((otp.period - otp.remainingSeconds) / otp.period) * 100 : 0;
+
+  const handleKeyDown = useCallback(
+    (event: React.KeyboardEvent<HTMLDivElement>) => {
+      if (event.key === "Enter" || event.key === " ") {
+        event.preventDefault();
+        handleCopy();
+      }
+    },
+    [handleCopy],
+  );
 
   return (
+    // biome-ignore lint/a11y/useSemanticElements: card contains nested Edit/Delete buttons; a native <button> would be invalid nesting per HTML spec
     <div
       className={cn(
         "cursor-pointer rounded-2xl transition-shadow",
@@ -130,7 +242,11 @@ export function SecretCard({ secret, otp, onEdit, onDelete, selected, copyTrigge
       )}
       style={{ perspective: "800px" }}
       data-testid={`secret-card-${secret.id}`}
+      role="button"
+      tabIndex={0}
+      aria-label={`Copy code for ${secret.name}`}
       onClick={handleCopy}
+      onKeyDown={handleKeyDown}
     >
       {/* Flip container — relative so it sizes to the front face content */}
       <div
@@ -149,13 +265,9 @@ export function SecretCard({ secret, otp, onEdit, onDelete, selected, copyTrigge
           {/* Top row: info */}
           <div className="flex items-start justify-between gap-2">
             <div className="min-w-0 flex-1">
-              <h3 className="text-sm font-semibold truncate leading-tight">
-                {secret.name}
-              </h3>
+              <h3 className="text-sm font-semibold truncate leading-tight">{secret.name}</h3>
               {secret.account && (
-                <p className={cn("text-xs truncate mt-0.5", theme.accent)}>
-                  {secret.account}
-                </p>
+                <p className={cn("text-xs truncate mt-0.5", theme.accent)}>{secret.account}</p>
               )}
               {secret.type !== "totp" && (
                 <span className="text-[10px] uppercase px-1.5 py-0.5 rounded bg-white/20 mt-1 inline-block">
@@ -176,7 +288,7 @@ export function SecretCard({ secret, otp, onEdit, onDelete, selected, copyTrigge
                 <div
                   className={cn(
                     "h-full rounded-full transition-all duration-1000 ease-linear",
-                    otp.remainingSeconds <= 5 ? theme.progressWarn : theme.progressFill
+                    otp.remainingSeconds <= 5 ? theme.progressWarn : theme.progressFill,
                   )}
                   style={{ width: `${100 - progressPercent}%` }}
                 />

@@ -54,9 +54,6 @@ export async function GET() {
     });
   } catch (error) {
     console.error("Failed to create backup archive:", error);
-    return NextResponse.json(
-      { error: "Failed to create backup archive" },
-      { status: 500 },
-    );
+    return NextResponse.json({ error: "Failed to create backup archive" }, { status: 500 });
   }
 }

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useCallback, useRef } from "react";
+import { useCallback, useEffect, useRef } from "react";
 
 /**
  * Lightweight global keyboard shortcut hook.
@@ -8,10 +8,7 @@ import { useEffect, useCallback, useRef } from "react";
  * Listens for a key with Cmd (Mac) or Ctrl (other platforms).
  * Calls `callback` and prevents the browser default.
  */
-export function useHotkey(
-  key: string,
-  callback: () => void,
-) {
+export function useHotkey(key: string, callback: () => void) {
   const callbackRef = useRef(callback);
   callbackRef.current = callback;
 

@@ -1,14 +1,14 @@
 "use client";
 
-import { usePathname } from "next/navigation";
-import { Sidebar } from "@/components/sidebar";
-import { Breadcrumbs, type BreadcrumbItem } from "@/components/breadcrumbs";
-import { ThemeToggle } from "@/components/theme-toggle";
-import { SidebarProvider, useSidebar } from "@/components/sidebar-context";
 import { Menu } from "lucide-react";
+import { usePathname } from "next/navigation";
+import { type BreadcrumbItem, Breadcrumbs } from "@/components/breadcrumbs";
 import { Github } from "@/components/icons/github";
-import { cn } from "@/lib/utils";
 import type { SidebarUser } from "@/components/sidebar";
+import { Sidebar } from "@/components/sidebar";
+import { SidebarProvider, useSidebar } from "@/components/sidebar-context";
+import { ThemeToggle } from "@/components/theme-toggle";
+import { cn } from "@/lib/utils";
 
 export type { SidebarUser };
 
@@ -31,19 +31,10 @@ function usePageBreadcrumbs(): BreadcrumbItem[] {
   }
 
   // Sub-pages — Home → Current
-  return [
-    { label: "Home", href: "/dashboard" },
-    { label: title },
-  ];
+  return [{ label: "Home", href: "/dashboard" }, { label: title }];
 }
 
-function AppShellInner({
-  children,
-  user,
-}: {
-  children: React.ReactNode;
-  user: SidebarUser;
-}) {
+function AppShellInner({ children, user }: { children: React.ReactNode; user: SidebarUser }) {
   const { isMobile, mobileOpen, toggle, setMobileOpen } = useSidebar();
   const breadcrumbs = usePageBreadcrumbs();
 
@@ -55,7 +46,9 @@ function AppShellInner({
       {/* Mobile overlay + sidebar */}
       {isMobile && mobileOpen && (
         <>
-          <div
+          <button
+            type="button"
+            aria-label="Close sidebar overlay"
             className="fixed inset-0 z-40 bg-black/50 backdrop-blur-xs"
             onClick={() => setMobileOpen(false)}
           />
@@ -71,6 +64,7 @@ function AppShellInner({
           <div className="flex items-center gap-3">
             {isMobile && (
               <button
+                type="button"
                 onClick={toggle}
                 aria-label="Open menu"
                 className="flex h-8 w-8 items-center justify-center rounded-lg text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"
@@ -105,13 +99,7 @@ function AppShellInner({
   );
 }
 
-export function AppShell({
-  children,
-  user,
-}: {
-  children: React.ReactNode;
-  user: SidebarUser;
-}) {
+export function AppShell({ children, user }: { children: React.ReactNode; user: SidebarUser }) {
   return (
     <SidebarProvider>
       <AppShellInner user={user}>{children}</AppShellInner>

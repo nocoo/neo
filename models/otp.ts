@@ -19,7 +19,7 @@ export function base32toByteArray(base32: string): Uint8Array {
 
   for (const c of clean) {
     if (BASE32_CHARS.indexOf(c) === -1) {
-      throw new Error("Invalid Base32 character: " + c);
+      throw new Error(`Invalid Base32 character: ${c}`);
     }
   }
 
@@ -104,7 +104,7 @@ export interface OTPOptions {
 export async function generateOTP(
   secret: string,
   loadTime: number,
-  options: OTPOptions = {}
+  options: OTPOptions = {},
 ): Promise<string> {
   const digits = options.digits || 6;
   const period = options.period || 30;
@@ -117,7 +117,6 @@ export async function generateOTP(
     case "HOTP":
       counter = options.counter || 0;
       break;
-    case "TOTP":
     default: {
       const timeForCalculation = loadTime || Math.floor(Date.now() / 1000);
       counter = Math.floor(timeForCalculation / period);
@@ -146,7 +145,7 @@ export async function generateOTP(
     secretUint8,
     { name: "HMAC", hash: { name: hashAlgorithm } },
     false,
-    ["sign"]
+    ["sign"],
   );
 
   const hmacBuffer = await crypto.subtle.sign("HMAC", key, counterBytes);
@@ -156,11 +155,9 @@ export async function generateOTP(
   if (lastByte === undefined) throw new Error("HMAC produced empty output");
   const offset = lastByte & 0xf;
   const truncatedHash = hmacArray.slice(offset, offset + 4);
-  const otpValue =
-    new DataView(new Uint8Array(truncatedHash).buffer).getUint32(0) &
-    0x7fffffff;
+  const otpValue = new DataView(new Uint8Array(truncatedHash).buffer).getUint32(0) & 0x7fffffff;
 
-  const modulus = Math.pow(10, digits);
+  const modulus = 10 ** digits;
   return (otpValue % modulus).toString().padStart(digits, "0");
 }
 
@@ -173,7 +170,7 @@ export async function generateOTP(
 export async function generateTOTP(
   secret: string,
   counter: number,
-  options: OTPOptions = {}
+  options: OTPOptions = {},
 ): Promise<string> {
   try {
     const digits = options.digits || 6;
@@ -201,7 +198,7 @@ export async function generateTOTP(
       keyUint8,
       { name: "HMAC", hash: hashAlgorithm },
       false,
-      ["sign"]
+      ["sign"],
     );
 
     const signature = await crypto.subtle.sign("HMAC", cryptoKey, counterBytes);
@@ -215,13 +212,9 @@ export async function generateTOTP(
     const b1 = hmac[offset + 1] ?? 0;
     const b2 = hmac[offset + 2] ?? 0;
     const b3 = hmac[offset + 3] ?? 0;
-    const binary =
-      ((b0 & 0x7f) << 24) |
-      ((b1 & 0xff) << 16) |
-      ((b2 & 0xff) << 8) |
-      (b3 & 0xff);
+    const binary = ((b0 & 0x7f) << 24) | ((b1 & 0xff) << 16) | ((b2 & 0xff) << 8) | (b3 & 0xff);
 
-    const modulus = Math.pow(10, digits);
+    const modulus = 10 ** digits;
     const otp = binary % modulus;
     return otp.toString().padStart(digits, "0");
   } catch {
@@ -237,7 +230,7 @@ export function generateOTPAuthURL(
   serviceName: string,
   accountName: string,
   secret: string,
-  options: OTPOptions = {}
+  options: OTPOptions = {},
 ): string {
   const digits = options.digits || 6;
   const period = options.period || 30;
@@ -245,7 +238,7 @@ export function generateOTPAuthURL(
   const type = options.type || "TOTP";
   const counter = options.counter || 0;
 
-  const label = serviceName + (accountName ? ":" + accountName : "");
+  const label = serviceName + (accountName ? `:${accountName}` : "");
 
   let scheme: string;
   let params: URLSearchParams;
@@ -261,7 +254,6 @@ export function generateOTPAuthURL(
         counter: counter.toString(),
       });
       break;
-    case "TOTP":
     default:
       scheme = "totp";
       params = new URLSearchParams({

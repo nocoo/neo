@@ -12,10 +12,7 @@ const nextConfig: NextConfig = {
   // The CompressionStream/DecompressionStream APIs are not actually used
   // at runtime (JWE compression is disabled by default), but Next.js
   // still emits warnings during static analysis.
-  webpack: (
-    config: WebpackConfig,
-    { isServer }: { isServer: boolean }
-  ): WebpackConfig => {
+  webpack: (config: WebpackConfig, { isServer }: { isServer: boolean }): WebpackConfig => {
     if (isServer) {
       config.ignoreWarnings = [
         ...(config.ignoreWarnings ?? []),

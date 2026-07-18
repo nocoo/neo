@@ -16,48 +16,32 @@ import { NextResponse } from "next/server";
 import { ScopedDB, verifyBackyPullWebhook } from "@/lib/db/scoped";
 import { VERSION } from "@/lib/version";
 import { createEncryptedZip, generateArchiveFilename } from "@/models/backup-archive";
-import {
-  getBackyEnvironment,
-  buildBackyTag,
-  type BackyHistoryResponse,
-} from "@/models/backy";
+import { type BackyHistoryResponse, buildBackyTag, getBackyEnvironment } from "@/models/backy";
 import type { ParsedSecret } from "@/models/types";
 
 export async function POST(request: Request) {
   const key = request.headers.get("x-webhook-key");
 
   if (!key) {
-    return NextResponse.json(
-      { error: "Missing X-Webhook-Key header" },
-      { status: 401 },
-    );
+    return NextResponse.json({ error: "Missing X-Webhook-Key header" }, { status: 401 });
   }
 
   // Verify credentials
   const result = await verifyBackyPullWebhook(key);
   if (!result) {
-    return NextResponse.json(
-      { error: "Invalid webhook credentials" },
-      { status: 401 },
-    );
+    return NextResponse.json({ error: "Invalid webhook credentials" }, { status: 401 });
   }
 
   // Get user's Backy push config
   const db = new ScopedDB(result.userId);
   const config = await db.getBackySettings();
   if (!config?.webhookUrl || !config?.apiKey) {
-    return NextResponse.json(
-      { error: "Backy push config not configured" },
-      { status: 422 },
-    );
+    return NextResponse.json({ error: "Backy push config not configured" }, { status: 422 });
   }
 
   const encryptionKey = await db.getEncryptionKey();
   if (!encryptionKey) {
-    return NextResponse.json(
-      { error: "No encryption key configured" },
-      { status: 422 },
-    );
+    return NextResponse.json({ error: "No encryption key configured" }, { status: 422 });
   }
 
   const start = Date.now();
@@ -98,7 +82,11 @@ export async function POST(request: Request) {
   if (!res.ok) {
     let body: unknown;
     const text = await res.text().catch(() => "");
-    try { body = JSON.parse(text); } catch { body = text || null; }
+    try {
+      body = JSON.parse(text);
+    } catch {
+      body = text || null;
+    }
     return NextResponse.json(
       {
         error: "Backup push failed",

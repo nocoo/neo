@@ -2,20 +2,20 @@
  * Background sync tests.
  */
 
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import "fake-indexeddb/auto";
 
 import {
-  registerHandler,
-  unregisterHandler,
   clearHandlers,
   getHandler,
+  isSyncSupported,
+  registerHandler,
   replayAll,
   requestSync,
-  isSyncSupported,
   SYNC_TAG,
+  unregisterHandler,
 } from "@/lib/background-sync";
-import { enqueue, deleteDatabase } from "@/lib/offline-queue";
+import { deleteDatabase, enqueue } from "@/lib/offline-queue";
 
 // ── Setup ────────────────────────────────────────────────────────────────
 

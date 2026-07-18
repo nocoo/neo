@@ -8,7 +8,7 @@
  * - 128-bit authentication tag (GCM integrity)
  */
 
-import { AES_KEY_LENGTH, AES_IV_LENGTH, ENCRYPTION_PREFIX } from "./constants";
+import { AES_IV_LENGTH, AES_KEY_LENGTH, ENCRYPTION_PREFIX } from "./constants";
 
 // ── Base64 Helpers ──────────────────────────────────────────────────────────
 
@@ -46,7 +46,7 @@ async function importKey(keyBase64: string): Promise<CryptoKey> {
 
   if (keyData.length !== AES_KEY_LENGTH / 8) {
     throw new Error(
-      `Invalid key length: expected ${AES_KEY_LENGTH / 8} bytes, got ${keyData.length}`
+      `Invalid key length: expected ${AES_KEY_LENGTH / 8} bytes, got ${keyData.length}`,
     );
   }
 
@@ -57,7 +57,7 @@ async function importKey(keyBase64: string): Promise<CryptoKey> {
     keyUint8,
     { name: "AES-GCM", length: AES_KEY_LENGTH },
     false,
-    ["encrypt", "decrypt"]
+    ["encrypt", "decrypt"],
   );
 }
 
@@ -80,7 +80,7 @@ export async function encryptData<T>(data: T, keyBase64: string): Promise<string
   const ciphertext = await crypto.subtle.encrypt(
     { name: "AES-GCM", iv, tagLength: 128 },
     key,
-    plaintext
+    plaintext,
   );
 
   const ivBase64 = arrayBufferToBase64(iv);
@@ -101,7 +101,7 @@ export async function decryptData<T>(encrypted: string, keyBase64: string): Prom
 
   if (parts.length !== 3) {
     throw new Error(
-      `Invalid encrypted data format: expected "version:iv:ciphertext", got ${parts.length} parts`
+      `Invalid encrypted data format: expected "version:iv:ciphertext", got ${parts.length} parts`,
     );
   }
 
@@ -128,7 +128,7 @@ export async function decryptData<T>(encrypted: string, keyBase64: string): Prom
   const plaintext = await crypto.subtle.decrypt(
     { name: "AES-GCM", iv: ivUint8, tagLength: 128 },
     key,
-    ciphertextUint8
+    ciphertextUint8,
   );
 
   const decoder = new TextDecoder();

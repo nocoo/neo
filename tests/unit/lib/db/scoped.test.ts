@@ -2,7 +2,7 @@
  * ScopedDB unit tests — all methods mocked against executeD1Query.
  */
 
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
 // ── Hoisted mocks ────────────────────────────────────────────────────────
 
@@ -41,7 +41,7 @@ describe("ScopedDB", () => {
 
       expect(mockExecuteD1Query).toHaveBeenCalledWith(
         expect.stringContaining("SELECT * FROM secrets WHERE user_id = ?"),
-        [userId]
+        [userId],
       );
       expect(result).toHaveLength(2);
       expect(result[0]!).toHaveProperty("_mapped", "secret");
@@ -55,7 +55,7 @@ describe("ScopedDB", () => {
       expect(result).toHaveProperty("_mapped", "secret");
       expect(mockExecuteD1Query).toHaveBeenCalledWith(
         expect.stringContaining("WHERE id = ? AND user_id = ?"),
-        ["s1", userId]
+        ["s1", userId],
       );
     });
 
@@ -85,7 +85,7 @@ describe("ScopedDB", () => {
 
       expect(mockExecuteD1Query).toHaveBeenCalledWith(
         expect.stringContaining("INSERT INTO secrets"),
-        expect.arrayContaining(["s1", userId, "Test"])
+        expect.arrayContaining(["s1", userId, "Test"]),
       );
       expect(result).toHaveProperty("_mapped", "secret");
     });
@@ -118,7 +118,7 @@ describe("ScopedDB", () => {
       const result = await db.updateSecret("s1", { name: "Updated" });
       expect(mockExecuteD1Query).toHaveBeenCalledWith(
         expect.stringContaining("UPDATE secrets SET"),
-        expect.arrayContaining(["Updated", "s1", userId])
+        expect.arrayContaining(["Updated", "s1", userId]),
       );
       expect(result).toHaveProperty("_mapped", "secret");
     });
@@ -135,14 +135,16 @@ describe("ScopedDB", () => {
       // Should call getSecretById instead of UPDATE
       expect(mockExecuteD1Query).toHaveBeenCalledWith(
         expect.stringContaining("SELECT * FROM secrets WHERE id = ?"),
-        ["s1", userId]
+        ["s1", userId],
       );
       expect(result).toHaveProperty("_mapped", "secret");
     });
 
     it("skips undefined values in update data", async () => {
       mockExecuteD1Query.mockResolvedValue([{ id: "s1" }]);
-      await db.updateSecret("s1", { name: "New", account: undefined } as unknown as Parameters<typeof db.updateSecret>[1]);
+      await db.updateSecret("s1", { name: "New", account: undefined } as unknown as Parameters<
+        typeof db.updateSecret
+      >[1]);
       const sql = mockExecuteD1Query.mock.calls[0]![0];
       expect(sql).toContain("name = ?");
       expect(sql).not.toContain("account = ?");
@@ -156,7 +158,7 @@ describe("ScopedDB", () => {
       expect(result).toBe(true);
       expect(mockExecuteD1Query).toHaveBeenCalledWith(
         expect.stringContaining("UPDATE secrets SET deleted_at = ?"),
-        expect.arrayContaining(["s1", userId])
+        expect.arrayContaining(["s1", userId]),
       );
     });
   });
@@ -179,7 +181,7 @@ describe("ScopedDB", () => {
       await db.getSecretCount();
       expect(mockExecuteD1Query).toHaveBeenCalledWith(
         expect.stringContaining("deleted_at IS NULL"),
-        [userId]
+        [userId],
       );
     });
   });
@@ -193,7 +195,7 @@ describe("ScopedDB", () => {
       expect(result).toHaveLength(1);
       expect(mockExecuteD1Query).toHaveBeenCalledWith(
         expect.stringContaining("deleted_at IS NOT NULL"),
-        [userId]
+        [userId],
       );
     });
   });
@@ -205,7 +207,7 @@ describe("ScopedDB", () => {
       expect(result).toHaveProperty("_mapped", "secret");
       expect(mockExecuteD1Query).toHaveBeenCalledWith(
         expect.stringContaining("SET deleted_at = NULL"),
-        expect.arrayContaining(["s1", userId])
+        expect.arrayContaining(["s1", userId]),
       );
     });
 
@@ -223,28 +225,24 @@ describe("ScopedDB", () => {
       expect(result).toBe(true);
       expect(mockExecuteD1Query).toHaveBeenCalledWith(
         expect.stringContaining("DELETE FROM secrets"),
-        ["s1", userId]
+        ["s1", userId],
       );
       expect(mockExecuteD1Query).toHaveBeenCalledWith(
         expect.stringContaining("deleted_at IS NOT NULL"),
-        ["s1", userId]
+        ["s1", userId],
       );
     });
   });
 
   describe("emptyRecycleBin", () => {
     it("deletes all soft-deleted secrets and returns count", async () => {
-      mockExecuteD1Query
-        .mockResolvedValueOnce([{ count: 3 }])
-        .mockResolvedValueOnce([]);
+      mockExecuteD1Query.mockResolvedValueOnce([{ count: 3 }]).mockResolvedValueOnce([]);
       const result = await db.emptyRecycleBin();
       expect(result).toBe(3);
     });
 
     it("returns 0 when bin is empty", async () => {
-      mockExecuteD1Query
-        .mockResolvedValueOnce([{ count: 0 }])
-        .mockResolvedValueOnce([]);
+      mockExecuteD1Query.mockResolvedValueOnce([{ count: 0 }]).mockResolvedValueOnce([]);
       const result = await db.emptyRecycleBin();
       expect(result).toBe(0);
     });
@@ -325,9 +323,7 @@ describe("ScopedDB", () => {
       // getEncryptionKey calls getUserSettings which calls rowToUserSettings.
       // Our mock rowToUserSettings just spreads the row, so settings.encryptionKey
       // would be undefined. We need the mock to produce the right field name.
-      mockExecuteD1Query.mockResolvedValue([
-        { user_id: userId, encryptionKey: "key123" },
-      ]);
+      mockExecuteD1Query.mockResolvedValue([{ user_id: userId, encryptionKey: "key123" }]);
       const result = await db.getEncryptionKey();
       expect(result).toBe("key123");
     });
@@ -388,9 +384,7 @@ describe("ScopedDB", () => {
 
   describe("upsertBackySettings", () => {
     it("updates existing settings", async () => {
-      mockExecuteD1Query
-        .mockResolvedValueOnce([{ user_id: userId }])
-        .mockResolvedValueOnce([]);
+      mockExecuteD1Query.mockResolvedValueOnce([{ user_id: userId }]).mockResolvedValueOnce([]);
 
       await db.upsertBackySettings({ webhookUrl: "https://new.com", apiKey: "k" });
 
@@ -399,9 +393,7 @@ describe("ScopedDB", () => {
     });
 
     it("inserts when no settings exist", async () => {
-      mockExecuteD1Query
-        .mockResolvedValueOnce([])
-        .mockResolvedValueOnce([]);
+      mockExecuteD1Query.mockResolvedValueOnce([]).mockResolvedValueOnce([]);
 
       await db.upsertBackySettings({ webhookUrl: "https://new.com", apiKey: "k" });
 
@@ -414,9 +406,7 @@ describe("ScopedDB", () => {
 
   describe("getBackyPullWebhook", () => {
     it("returns pull key from settings", async () => {
-      mockExecuteD1Query.mockResolvedValue([
-        { user_id: userId, backyPullKey: "pull-key" },
-      ]);
+      mockExecuteD1Query.mockResolvedValue([{ user_id: userId, backyPullKey: "pull-key" }]);
       const result = await db.getBackyPullWebhook();
       expect(result).toBe("pull-key");
     });
@@ -430,9 +420,7 @@ describe("ScopedDB", () => {
 
   describe("upsertBackyPullWebhook", () => {
     it("updates existing settings", async () => {
-      mockExecuteD1Query
-        .mockResolvedValueOnce([{ user_id: userId }])
-        .mockResolvedValueOnce([]);
+      mockExecuteD1Query.mockResolvedValueOnce([{ user_id: userId }]).mockResolvedValueOnce([]);
 
       await db.upsertBackyPullWebhook("new-pull-key");
 
@@ -441,9 +429,7 @@ describe("ScopedDB", () => {
     });
 
     it("inserts when no settings exist", async () => {
-      mockExecuteD1Query
-        .mockResolvedValueOnce([])
-        .mockResolvedValueOnce([]);
+      mockExecuteD1Query.mockResolvedValueOnce([]).mockResolvedValueOnce([]);
 
       await db.upsertBackyPullWebhook("new-pull-key");
 
@@ -458,7 +444,7 @@ describe("ScopedDB", () => {
       await db.deleteBackyPullWebhook();
       expect(mockExecuteD1Query).toHaveBeenCalledWith(
         expect.stringContaining("SET backy_pull_key = NULL"),
-        [userId]
+        [userId],
       );
     });
   });

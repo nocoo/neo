@@ -2,14 +2,14 @@
  * Protocol handler tests.
  */
 
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import {
-  PROTOCOL,
   HANDLER_URL,
   isProtocolHandlerSupported,
-  registerProtocolHandler,
+  PROTOCOL,
   parseOtpauthParam,
+  registerProtocolHandler,
 } from "@/lib/protocol-handler";
 
 // ── Setup ────────────────────────────────────────────────────────────────
@@ -76,7 +76,7 @@ describe("protocol-handler", () => {
 
   it("parses web+otpauth URI from search params", () => {
     const params = new URLSearchParams(
-      "otpauth=web%2Botpauth%3A%2F%2Ftotp%2FExample%3Fsecret%3DJBSWY3DPEHPK3PXP"
+      "otpauth=web%2Botpauth%3A%2F%2Ftotp%2FExample%3Fsecret%3DJBSWY3DPEHPK3PXP",
     );
     const result = parseOtpauthParam(params);
     expect(result).toBe("otpauth://totp/Example?secret=JBSWY3DPEHPK3PXP");
@@ -94,7 +94,7 @@ describe("protocol-handler", () => {
 
   it("passes through standard otpauth:// URIs", () => {
     const params = new URLSearchParams(
-      "otpauth=otpauth%3A%2F%2Fhotp%2FTest%3Fsecret%3DABC%26counter%3D0"
+      "otpauth=otpauth%3A%2F%2Fhotp%2FTest%3Fsecret%3DABC%26counter%3D0",
     );
     const result = parseOtpauthParam(params);
     expect(result).toBe("otpauth://hotp/Test?secret=ABC&counter=0");

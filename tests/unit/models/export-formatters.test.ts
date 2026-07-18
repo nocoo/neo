@@ -4,35 +4,35 @@
  * and the unified exportSecrets entry.
  */
 
-import { describe, it, expect } from "vitest";
+import { describe, expect, it } from "vitest";
 import {
-  toOtpauthUri,
-  exportAsOtpauthUris,
-  exportAsAegis,
   exportAs2FAS,
+  exportAsAegis,
   exportAsAndOTP,
-  exportAsBitwarden,
-  exportAsLastPass,
-  exportAsProton,
   exportAsAuthenticatorPro,
+  exportAsBitwarden,
+  exportAsCSV,
   exportAsFreeOTPPlus,
   exportAsGenericJSON,
-  exportAsCSV,
+  exportAsLastPass,
+  exportAsOtpauthUris,
+  exportAsProton,
   exportAsText,
   exportSecrets,
+  toOtpauthUri,
 } from "@/models/export-formatters";
 import {
-  parseOtpauthUri,
-  parseAegis,
   parse2FAS,
-  parseBitwarden,
+  parseAegis,
   parseAndOTP,
-  parseLastPass,
-  parseProton,
   parseAuthenticatorPro,
+  parseBitwarden,
   parseFreeOTPPlus,
-  parseGenericJSON,
   parseGenericCSV,
+  parseGenericJSON,
+  parseLastPass,
+  parseOtpauthUri,
+  parseProton,
 } from "@/models/import-parsers";
 import type { ParsedSecret } from "@/models/types";
 
@@ -245,9 +245,7 @@ describe("exportAsCSV", () => {
   });
 
   it("escapes commas in names", () => {
-    const secrets: ParsedSecret[] = [
-      { ...SAMPLE_SECRETS[0]!, name: "Service, Inc." },
-    ];
+    const secrets: ParsedSecret[] = [{ ...SAMPLE_SECRETS[0]!, name: "Service, Inc." }];
     const csv = exportAsCSV(secrets);
     expect(csv).toContain('"Service, Inc."');
   });
@@ -263,9 +261,7 @@ describe("exportAsText", () => {
   });
 
   it("omits parentheses when no account", () => {
-    const secrets: ParsedSecret[] = [
-      { ...SAMPLE_SECRETS[0]!, account: "" },
-    ];
+    const secrets: ParsedSecret[] = [{ ...SAMPLE_SECRETS[0]!, account: "" }];
     const text = exportAsText(secrets);
     expect(text).toBe("GitHub: JBSWY3DPEHPK3PXP");
   });
@@ -298,7 +294,7 @@ describe("exportSecrets", () => {
 
   it("throws for unknown format", () => {
     expect(() =>
-      exportSecrets(SAMPLE_SECRETS, "unknown" as Parameters<typeof exportSecrets>[1])
+      exportSecrets(SAMPLE_SECRETS, "unknown" as Parameters<typeof exportSecrets>[1]),
     ).toThrow("Unsupported export format");
   });
 

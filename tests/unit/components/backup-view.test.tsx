@@ -4,8 +4,8 @@
  * Tests the new archive-based backup flow: download, push to Backy, restore.
  */
 
-import { describe, it, expect, vi, beforeEach } from "vitest";
-import { render, screen, fireEvent, act } from "@testing-library/react";
+import { act, fireEvent, render, screen } from "@testing-library/react";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
 // ── Hoisted mocks ────────────────────────────────────────────────────────
 
@@ -138,7 +138,14 @@ describe("BackupView", () => {
       environment: null,
       total_backups: 1,
       recent_backups: [
-        { id: "b1", tag: "neo/1.0", environment: "production", file_size: 1024, is_single_json: 0, created_at: "2026-03-20T00:00:00Z" },
+        {
+          id: "b1",
+          tag: "neo/1.0",
+          environment: "production",
+          file_size: 1024,
+          is_single_json: 0,
+          created_at: "2026-03-20T00:00:00Z",
+        },
       ],
     };
     render(<BackupView />);

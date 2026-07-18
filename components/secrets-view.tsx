@@ -5,18 +5,18 @@
  * with all the presentation components.
  */
 
-import { useState, useCallback, useRef, useEffect } from "react";
-import { Plus, Upload, Download, Search } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { SecretList } from "@/components/secret-list";
-import { SecretFormDialog } from "@/components/secret-form-dialog";
+import { Download, Plus, Search, Upload } from "lucide-react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { DeleteConfirmDialog } from "@/components/delete-confirm-dialog";
-import { ImportDialog } from "@/components/import-dialog";
 import { ExportDialog } from "@/components/export-dialog";
-import { useSecretsViewModel } from "@/viewmodels/useSecretsViewModel";
-import { useDevToolsViewModel } from "@/viewmodels/useDevToolsViewModel";
+import { ImportDialog } from "@/components/import-dialog";
+import { SecretFormDialog } from "@/components/secret-form-dialog";
+import { SecretList } from "@/components/secret-list";
+import { Button } from "@/components/ui/button";
 import { useHotkey } from "@/hooks/use-hotkey";
 import type { Secret } from "@/models/types";
+import { useDevToolsViewModel } from "@/viewmodels/useDevToolsViewModel";
+import { useSecretsViewModel } from "@/viewmodels/useSecretsViewModel";
 
 // ── Component ────────────────────────────────────────────────────────────
 
@@ -41,7 +41,7 @@ export function SecretsView() {
   // Reset selection when search query changes
   useEffect(() => {
     setSelectedIndex(null);
-  }, [vm.searchQuery]);
+  }, []);
 
   const handleFocusSearch = useCallback(() => {
     searchRef.current?.focus();
@@ -75,7 +75,7 @@ export function SecretsView() {
       const secret = vm.filteredSecrets.find((s) => s.id === id);
       if (secret) setDeletingSecret(secret);
     },
-    [vm.filteredSecrets]
+    [vm.filteredSecrets],
   );
 
   const handleDeleteConfirm = useCallback(async () => {
@@ -117,13 +117,12 @@ export function SecretsView() {
 
       {/* Error banner */}
       {vm.error && (
-        <div className="rounded-lg bg-destructive/10 px-4 py-3 text-sm text-destructive" role="alert">
+        <div
+          className="rounded-lg bg-destructive/10 px-4 py-3 text-sm text-destructive"
+          role="alert"
+        >
           {vm.error}
-          <button
-            type="button"
-            onClick={vm.clearError}
-            className="ml-2 underline cursor-pointer"
-          >
+          <button type="button" onClick={vm.clearError} className="ml-2 underline cursor-pointer">
             Dismiss
           </button>
         </div>

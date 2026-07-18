@@ -15,10 +15,7 @@ const E2E_TEST_USER_ID = "e2e-test-user";
  * Exported so E2E API routes can use the same guard logic.
  */
 export function isE2EMode(): boolean {
-  return (
-    process.env.NODE_ENV !== "production" &&
-    process.env.E2E_SKIP_AUTH === "true"
-  );
+  return process.env.NODE_ENV !== "production" && process.env.E2E_SKIP_AUTH === "true";
 }
 
 /**
