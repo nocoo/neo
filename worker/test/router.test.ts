@@ -2,9 +2,9 @@
  * Router tests.
  */
 
-import { describe, it, expect, beforeEach } from "vitest";
-import { handleRequest } from "../src/router";
+import { beforeEach, describe, expect, it } from "vitest";
 import { clearAllRateLimits } from "../src/rate-limit";
+import { handleRequest } from "../src/router";
 import type { Env } from "../src/types";
 
 // ── D1 mock ──────────────────────────────────────────────────────────────────
@@ -20,9 +20,7 @@ function createMockD1(): D1Database {
             async first<T>(): Promise<T | null> {
               if (sql.includes("COUNT(*)")) {
                 const [key, ts] = params as [string, number];
-                const count = rows.filter(
-                  (r) => r.key === key && r.ts > ts
-                ).length;
+                const count = rows.filter((r) => r.key === key && r.ts > ts).length;
                 return { cnt: count } as T;
               }
               if (sql.includes("MIN(ts)")) {
@@ -42,10 +40,7 @@ function createMockD1(): D1Database {
                 rows.push({ key, ts });
                 return { meta: { changes: 1 } };
               }
-              if (
-                sql.includes("DELETE FROM rate_limits WHERE key = ?") &&
-                !sql.includes("ts")
-              ) {
+              if (sql.includes("DELETE FROM rate_limits WHERE key = ?") && !sql.includes("ts")) {
                 const [key] = params as [string];
                 const before = rows.length;
                 rows = rows.filter((r) => r.key !== key);
@@ -88,7 +83,7 @@ let mockEnv: Env;
 
 function makeRequest(
   path: string,
-  options: { method?: string; body?: unknown; host?: string } = {}
+  options: { method?: string; body?: unknown; host?: string } = {},
 ): Request {
   const { method = "GET", body, host = "localhost:8787" } = options;
   const init: RequestInit = {

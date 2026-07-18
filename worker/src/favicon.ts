@@ -24,19 +24,18 @@ const FAVICON_SOURCES = [
   },
   {
     name: "yandex",
-    url: (domain: string) =>
-      `https://favicon.yandex.net/favicon/${encodeURIComponent(domain)}`,
+    url: (domain: string) => `https://favicon.yandex.net/favicon/${encodeURIComponent(domain)}`,
     timeout: 5000,
   },
   {
     name: "duckduckgo",
-    url: (domain: string) =>
-      `https://icons.duckduckgo.com/ip3/${encodeURIComponent(domain)}.ico`,
+    url: (domain: string) => `https://icons.duckduckgo.com/ip3/${encodeURIComponent(domain)}.ico`,
     timeout: 5000,
   },
 ];
 
-const DOMAIN_REGEX = /^[a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(\.[a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$/;
+const DOMAIN_REGEX =
+  /^[a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(\.[a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$/;
 
 /**
  * Validate a domain string.
@@ -70,10 +69,7 @@ export async function handleFavicon(domain: string): Promise<Response> {
 
       clearTimeout(timeoutId);
 
-      if (
-        response.ok &&
-        (response.headers.get("content-type") || "").startsWith("image/")
-      ) {
+      if (response.ok && (response.headers.get("content-type") || "").startsWith("image/")) {
         return new Response(response.body, {
           status: 200,
           headers: {
@@ -84,8 +80,8 @@ export async function handleFavicon(domain: string): Promise<Response> {
         });
       }
     } catch {
-      // Source failed, try next
-      continue;
+      // Any failure (timeout, network, non-image response) — fall through
+      // to the next source without surfacing the error to the caller.
     }
   }
 

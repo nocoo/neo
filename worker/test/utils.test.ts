@@ -2,7 +2,7 @@
  * Shared utility tests.
  */
 
-import { describe, it, expect } from "vitest";
+import { describe, expect, it } from "vitest";
 import { generateId } from "../src/utils/id";
 
 describe("generateId", () => {

@@ -10,7 +10,7 @@
  *
  * @param prefix - Short prefix (e.g., "bk" for backup, "s" for secret)
  */
-export function generateId(prefix: string = "id"): string {
+export function generateId(prefix = "id"): string {
   const timestamp = Date.now().toString(36);
   const random = Math.random().toString(36).substring(2, 8);
   return `${prefix}_${timestamp}_${random}`;

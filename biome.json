@@ -21,7 +21,8 @@
       "!next-env.d.ts",
       "!drizzle",
       "!migrations",
-      "!worker",
+      "!worker/migrations",
+      "!worker/bun.lock",
       "!bun.lock",
       "!package-lock.json"
     ]

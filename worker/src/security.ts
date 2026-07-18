@@ -60,7 +60,7 @@ export function getAllowedOrigin(request: Request): string | null {
  */
 export function getSecurityHeaders(
   request: Request,
-  options: { includeCSP?: boolean; includeCors?: boolean } = {}
+  options: { includeCSP?: boolean; includeCors?: boolean } = {},
 ): Record<string, string> {
   const headers: Record<string, string> = {
     "X-Frame-Options": "DENY",
@@ -79,7 +79,7 @@ export function getSecurityHeaders(
     if (allowedOrigin) {
       headers["Access-Control-Allow-Origin"] = allowedOrigin;
       headers["Access-Control-Allow-Credentials"] = "true";
-      headers["Vary"] = "Origin";
+      headers.Vary = "Origin";
     }
   }
 

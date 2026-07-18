@@ -20,7 +20,7 @@ function base32toByteArray(base32: string): Uint8Array {
   const clean = base32.toUpperCase().replace(/=/g, "");
   for (const c of clean) {
     if (BASE32_CHARS.indexOf(c) === -1) {
-      throw new Error("Invalid Base32 character: " + c);
+      throw new Error(`Invalid Base32 character: ${c}`);
     }
   }
 
@@ -61,7 +61,7 @@ async function generateOTP(
     algorithm?: string;
     type?: string;
     counter?: number;
-  }
+  },
 ): Promise<string> {
   const digits = options.digits || 6;
   const period = options.period || 30;
@@ -88,18 +88,23 @@ async function generateOTP(
     secretBytes,
     { name: "HMAC", hash: { name: hashAlg } },
     false,
-    ["sign"]
+    ["sign"],
   );
 
   const hmacBuffer = await crypto.subtle.sign("HMAC", key, counterBytes);
   const hmac = Array.from(new Uint8Array(hmacBuffer));
 
-  const offset = hmac[hmac.length - 1] & 0xf;
+  // HMAC-SHA1/256/512 output is at least 20 bytes, so hmac[hmac.length - 1] is
+  // always defined; the assertion satisfies noUncheckedIndexedAccess.
+  const lastByte = hmac[hmac.length - 1];
+  if (lastByte === undefined) {
+    throw new Error("HMAC output was empty");
+  }
+  const offset = lastByte & 0xf;
   const otpValue =
-    new DataView(new Uint8Array(hmac.slice(offset, offset + 4)).buffer).getUint32(0) &
-    0x7fffffff;
+    new DataView(new Uint8Array(hmac.slice(offset, offset + 4)).buffer).getUint32(0) & 0x7fffffff;
 
-  return (otpValue % Math.pow(10, digits)).toString().padStart(digits, "0");
+  return (otpValue % 10 ** digits).toString().padStart(digits, "0");
 }
 
 // ── Validation ──────────────────────────────────────────────────────────────
@@ -123,15 +128,12 @@ export interface OtpRequest {
 
 // ── Handler ─────────────────────────────────────────────────────────────────
 
-export async function handleOtp(
-  body: OtpRequest,
-  _env: Env
-): Promise<Response> {
+export async function handleOtp(body: OtpRequest, _env: Env): Promise<Response> {
   const secret = body.secret;
   if (!secret || !isValidBase32(secret)) {
     return createJsonResponse(
       { error: "Invalid Base32 secret", hint: "POST /otp with { secret: 'YOUR_SECRET' }" },
-      400
+      400,
     );
   }
 
@@ -183,8 +185,11 @@ export async function handleOtp(
     });
   } catch (err) {
     return createJsonResponse(
-      { error: "OTP generation failed", detail: err instanceof Error ? err.message : "Unknown error" },
-      500
+      {
+        error: "OTP generation failed",
+        detail: err instanceof Error ? err.message : "Unknown error",
+      },
+      500,
     );
   }
 }

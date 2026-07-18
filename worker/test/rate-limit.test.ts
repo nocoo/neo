@@ -2,16 +2,16 @@
  * Rate limiting tests (D1-backed).
  */
 
-import { describe, it, expect, beforeEach } from "vitest";
+import { beforeEach, describe, expect, it } from "vitest";
 import {
   checkRateLimit,
-  resetRateLimit,
-  getRateLimitInfo,
-  getClientIdentifier,
-  createRateLimitResponse,
   clearAllRateLimits,
+  createRateLimitResponse,
+  getClientIdentifier,
+  getRateLimitInfo,
   purgeExpiredEntries,
   RATE_LIMIT_PRESETS,
+  resetRateLimit,
 } from "../src/rate-limit";
 
 // ── D1 mock ──────────────────────────────────────────────────────────────────
@@ -28,9 +28,7 @@ function createMockD1(): D1Database {
             async first<T>(): Promise<T | null> {
               if (sql.includes("COUNT(*)")) {
                 const [key, ts] = params as [string, number];
-                const count = rows.filter(
-                  (r) => r.key === key && r.ts > ts
-                ).length;
+                const count = rows.filter((r) => r.key === key && r.ts > ts).length;
                 return { cnt: count } as T;
               }
               if (sql.includes("MIN(ts)")) {
@@ -50,10 +48,7 @@ function createMockD1(): D1Database {
                 rows.push({ key, ts });
                 return { meta: { changes: 1 } };
               }
-              if (
-                sql.includes("DELETE FROM rate_limits WHERE key = ?") &&
-                !sql.includes("ts")
-              ) {
+              if (sql.includes("DELETE FROM rate_limits WHERE key = ?") && !sql.includes("ts")) {
                 const [key] = params as [string];
                 const before = rows.length;
                 rows = rows.filter((r) => r.key !== key);
@@ -242,7 +237,7 @@ describe("RATE_LIMIT_PRESETS", () => {
 
   it("strict is more restrictive than normal", () => {
     expect(RATE_LIMIT_PRESETS.strict.maxRequests).toBeLessThan(
-      RATE_LIMIT_PRESETS.normal.maxRequests
+      RATE_LIMIT_PRESETS.normal.maxRequests,
     );
   });
 });

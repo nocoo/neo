@@ -2,7 +2,7 @@
  * Favicon proxy tests.
  */
 
-import { describe, it, expect } from "vitest";
+import { describe, expect, it } from "vitest";
 import { isValidDomain } from "../src/favicon";
 
 // Note: handleFavicon requires network access, so we only test validation

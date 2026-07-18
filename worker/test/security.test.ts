@@ -2,20 +2,17 @@
  * Security headers tests.
  */
 
-import { describe, it, expect } from "vitest";
+import { describe, expect, it } from "vitest";
 import {
-  isOriginAllowed,
+  createPreflightResponse,
   getAllowedOrigin,
   getSecurityHeaders,
-  createPreflightResponse,
+  isOriginAllowed,
 } from "../src/security";
 
-function makeRequest(
-  origin: string | null,
-  host: string = "example.com"
-): Request {
+function makeRequest(origin: string | null, host = "example.com"): Request {
   const headers: Record<string, string> = { host };
-  if (origin) headers["origin"] = origin;
+  if (origin) headers.origin = origin;
   return new Request("https://example.com/", { headers });
 }
 
@@ -89,7 +86,7 @@ describe("getSecurityHeaders", () => {
     const req = makeRequest("https://example.com", "example.com");
     const headers = getSecurityHeaders(req);
     expect(headers["Access-Control-Allow-Origin"]).toBe("https://example.com");
-    expect(headers["Vary"]).toBe("Origin");
+    expect(headers.Vary).toBe("Origin");
   });
 
   it("omits CORS when origin is not allowed", () => {

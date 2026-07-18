@@ -27,13 +27,13 @@ export interface RateLimitOptions {
 
 // ── Presets ─────────────────────────────────────────────────────────────────
 
-export const RATE_LIMIT_PRESETS: Record<string, RateLimitOptions> = {
+export const RATE_LIMIT_PRESETS = {
   strict: { maxRequests: 5, windowMs: 60_000 },
   normal: { maxRequests: 20, windowMs: 60_000 },
   relaxed: { maxRequests: 100, windowMs: 60_000 },
   api: { maxRequests: 30, windowMs: 60_000 },
   otp: { maxRequests: 60, windowMs: 60_000 },
-};
+} as const satisfies Record<string, RateLimitOptions>;
 
 // ── D1-backed sliding window ────────────────────────────────────────────────
 
@@ -45,7 +45,7 @@ export const RATE_LIMIT_PRESETS: Record<string, RateLimitOptions> = {
 export async function checkRateLimit(
   db: D1Database,
   key: string,
-  options: RateLimitOptions = RATE_LIMIT_PRESETS.api
+  options: RateLimitOptions = RATE_LIMIT_PRESETS.api,
 ): Promise<RateLimitResult> {
   const now = Date.now();
   const windowStart = now - options.windowMs;
@@ -61,10 +61,7 @@ export async function checkRateLimit(
 
   if (allowed) {
     // Record this request
-    await db
-      .prepare("INSERT INTO rate_limits (key, ts) VALUES (?, ?)")
-      .bind(key, now)
-      .run();
+    await db.prepare("INSERT INTO rate_limits (key, ts) VALUES (?, ?)").bind(key, now).run();
   }
 
   // Get earliest timestamp in window for resetAt calculation
@@ -73,9 +70,7 @@ export async function checkRateLimit(
     .bind(key, windowStart)
     .first<{ min_ts: number | null }>();
 
-  const resetAt = earliest?.min_ts
-    ? earliest.min_ts + options.windowMs
-    : now + options.windowMs;
+  const resetAt = earliest?.min_ts ? earliest.min_ts + options.windowMs : now + options.windowMs;
 
   const currentCount = allowed ? count + 1 : count;
 
@@ -90,14 +85,8 @@ export async function checkRateLimit(
 /**
  * Reset rate limit for a key (delete all entries).
  */
-export async function resetRateLimit(
-  db: D1Database,
-  key: string
-): Promise<void> {
-  await db
-    .prepare("DELETE FROM rate_limits WHERE key = ?")
-    .bind(key)
-    .run();
+export async function resetRateLimit(db: D1Database, key: string): Promise<void> {
+  await db.prepare("DELETE FROM rate_limits WHERE key = ?").bind(key).run();
 }
 
 /**
@@ -106,7 +95,7 @@ export async function resetRateLimit(
 export async function getRateLimitInfo(
   db: D1Database,
   key: string,
-  options: RateLimitOptions = RATE_LIMIT_PRESETS.api
+  options: RateLimitOptions = RATE_LIMIT_PRESETS.api,
 ): Promise<RateLimitResult> {
   const now = Date.now();
   const windowStart = now - options.windowMs;
@@ -123,9 +112,7 @@ export async function getRateLimitInfo(
     .bind(key, windowStart)
     .first<{ min_ts: number | null }>();
 
-  const resetAt = earliest?.min_ts
-    ? earliest.min_ts + options.windowMs
-    : now + options.windowMs;
+  const resetAt = earliest?.min_ts ? earliest.min_ts + options.windowMs : now + options.windowMs;
 
   return {
     allowed: count < options.maxRequests,
@@ -139,15 +126,9 @@ export async function getRateLimitInfo(
  * Purge expired entries from the rate_limits table.
  * Call periodically to keep the table size bounded.
  */
-export async function purgeExpiredEntries(
-  db: D1Database,
-  maxWindowMs: number = 60_000
-): Promise<number> {
+export async function purgeExpiredEntries(db: D1Database, maxWindowMs = 60_000): Promise<number> {
   const cutoff = Date.now() - maxWindowMs;
-  const result = await db
-    .prepare("DELETE FROM rate_limits WHERE ts <= ?")
-    .bind(cutoff)
-    .run();
+  const result = await db.prepare("DELETE FROM rate_limits WHERE ts <= ?").bind(cutoff).run();
   return result.meta.changes ?? 0;
 }
 
@@ -183,7 +164,7 @@ export function createRateLimitResponse(info: RateLimitResult): Response {
         "X-RateLimit-Remaining": String(info.remaining),
         "X-RateLimit-Reset": String(Math.floor(info.resetAt / 1000)),
       },
-    }
+    },
   );
 }
 

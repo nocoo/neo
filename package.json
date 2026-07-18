@@ -19,7 +19,7 @@
     "test:e2e:pw:ui": "bun x playwright test --ui",
     "test:e2e:bdd": "bunx playwright test",
     "test:coverage": "vitest run --coverage",
-    "typecheck": "tsc --noEmit",
+    "typecheck": "tsc --noEmit && bun run --cwd worker typecheck",
     "test:security": "bun scripts/run-security.ts",
     "prepare": "husky"
   },
