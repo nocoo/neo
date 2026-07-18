@@ -1,7 +1,17 @@
 #!/usr/bin/env sh
 
 # pre-commit: L1 Unit Tests (with coverage) + G1 Static Analysis (Biome + TypeScript)
-# Runs tests, typecheck, and lint-staged in parallel for speed.
+#
+# Ordering rationale
+# ──────────────────
+# lint-staged stashes and rewrites files as it runs `biome check --write`.
+# If tsc / vitest ran in parallel, they could observe the working tree
+# mid-rewrite and produce results that don't match what actually gets
+# committed. Run lint-staged FIRST so it finishes its stash/apply dance
+# before the read-only gates fire.
+#
+# After lint-staged: TypeScript and Vitest are both read-only and can
+# safely run in parallel to save wall-clock.
 
 STAGED_FILES=$(git diff --cached --name-only)
 
@@ -39,12 +49,21 @@ if [ -z "$CODE_CHANGES" ]; then
   exit 0
 fi
 
+# G1b (sequential — mutates the working tree): Biome strict on staged files
+# only, via lint-staged. Must finish before parallel readers run.
+if [ -n "$BIOME_STAGED" ]; then
+  bunx lint-staged 2>&1
+  if [ $? -ne 0 ]; then
+    echo "❌ pre-commit FAILED: Biome errors in staged files."
+    exit 1
+  fi
+fi
+
 TMP_DIR=$(mktemp -d)
 TEST_EXIT_FILE="$TMP_DIR/test_exit"
 TSC_EXIT_FILE="$TMP_DIR/tsc_exit"
-LINT_EXIT_FILE="$TMP_DIR/lint_exit"
 
-# L1 Unit Tests + coverage (thresholds enforced by vitest.config.ts)
+# L1 Unit Tests + coverage (thresholds enforced by vitest.config.ts) — read-only.
 (
   bun run test:unit:coverage 2>&1
   echo $? > "$TEST_EXIT_FILE"
@@ -53,7 +72,7 @@ TEST_PID=$!
 
 if [ -n "$TSC_AFFECTING" ]; then
   (
-    # G1a: TypeScript strict (whole project — tsc needs complete context)
+    # G1a: TypeScript strict (whole project — tsc needs complete context) — read-only.
     bun run typecheck 2>&1
     echo $? > "$TSC_EXIT_FILE"
   ) &
@@ -63,25 +82,11 @@ else
   TSC_PID=""
 fi
 
-if [ -n "$BIOME_STAGED" ]; then
-  (
-    # G1b: Biome strict on staged files only (via lint-staged)
-    bunx lint-staged 2>&1
-    echo $? > "$LINT_EXIT_FILE"
-  ) &
-  LINT_PID=$!
-else
-  echo 0 > "$LINT_EXIT_FILE"
-  LINT_PID=""
-fi
-
 wait $TEST_PID
 [ -n "$TSC_PID" ] && wait $TSC_PID
-[ -n "$LINT_PID" ] && wait $LINT_PID
 
 TEST_EXIT=$(cat "$TEST_EXIT_FILE")
 TSC_EXIT=$(cat "$TSC_EXIT_FILE")
-LINT_EXIT=$(cat "$LINT_EXIT_FILE")
 rm -rf "$TMP_DIR"
 
 if [ "$TEST_EXIT" -ne 0 ]; then
@@ -90,10 +95,6 @@ if [ "$TEST_EXIT" -ne 0 ]; then
 fi
 if [ "$TSC_EXIT" -ne 0 ]; then
   echo "❌ pre-commit FAILED: TypeScript type check errors."
-  exit 1
-fi
-if [ "$LINT_EXIT" -ne 0 ]; then
-  echo "❌ pre-commit FAILED: Biome errors in staged files."
   exit 1
 fi
 
