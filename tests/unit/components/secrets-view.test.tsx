@@ -150,4 +150,32 @@ describe("SecretsView", () => {
     fireEvent.click(screen.getByTitle("Export"));
     expect(screen.getByText("Export Secrets")).toBeDefined();
   });
+
+  it("resets keyboard selection when search query changes", () => {
+    // Pre-populate the grid with 3 secrets so ArrowDown can select the first.
+    const s1 = { ...sampleSecret, id: "s_1", name: "GitHub" };
+    const s2 = { ...sampleSecret, id: "s_2", name: "GitLab" };
+    const s3 = { ...sampleSecret, id: "s_3", name: "AWS" };
+    mockSecretsVM.filteredSecrets = [s1, s2, s3];
+
+    const { rerender } = render(<SecretsView />);
+
+    // ArrowDown from the search input selects the first card.
+    const searchInput = screen.getByLabelText("Search secrets");
+    fireEvent.keyDown(searchInput, { key: "ArrowDown" });
+
+    // Confirm the first card is selected (SecretCard applies a ring class when selected).
+    const firstCard = screen.getByTestId("secret-card-s_1");
+    expect(firstCard.className).toContain("ring-2");
+
+    // Simulate the user typing a query — the parent effect must clear the selection.
+    mockSecretsVM.searchQuery = "AWS";
+    mockSecretsVM.filteredSecrets = [s3];
+    rerender(<SecretsView />);
+
+    // After the query change, no card should be pre-selected — the effect
+    // reset selectedIndex back to null.
+    const rerenderedCard = screen.getByTestId("secret-card-s_3");
+    expect(rerenderedCard.className).not.toContain("ring-2");
+  });
 });

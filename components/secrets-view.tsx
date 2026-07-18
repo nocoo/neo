@@ -38,10 +38,11 @@ export function SecretsView() {
   // Keyboard navigation state
   const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
 
-  // Reset selection when search query changes
+  // Reset selection when search query changes.
+  // biome-ignore lint/correctness/useExhaustiveDependencies: intentional — the dep triggers the reset; the body doesn't read it.
   useEffect(() => {
     setSelectedIndex(null);
-  }, []);
+  }, [vm.searchQuery]);
 
   const handleFocusSearch = useCallback(() => {
     searchRef.current?.focus();
