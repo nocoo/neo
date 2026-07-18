@@ -1,8 +1,12 @@
+import path from "node:path";
 import withSerwistInit from "@serwist/next";
 import type { NextConfig } from "next";
 
 interface WebpackConfig {
   ignoreWarnings?: Array<{ module?: RegExp; message?: RegExp }>;
+  resolve?: {
+    alias?: Record<string, string>;
+  };
 }
 
 const nextConfig: NextConfig = {
@@ -22,6 +26,17 @@ const nextConfig: NextConfig = {
         },
       ];
     }
+    // TS 7.0.2 removed `baseUrl` (TS5102), which caused Next's tsconfig
+    // loader to drop `paths` on load — leaving the JsConfigPathsPlugin
+    // empty for the webpack builder. Wire the `@/*` alias explicitly here
+    // so `--webpack` build/dev keeps resolving project imports.
+    config.resolve = {
+      ...(config.resolve ?? {}),
+      alias: {
+        ...(config.resolve?.alias ?? {}),
+        "@": path.resolve(__dirname),
+      },
+    };
     return config;
   },
 };
