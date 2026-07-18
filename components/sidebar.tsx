@@ -24,7 +24,7 @@ interface NavItem {
 interface NavGroup {
   label: string;
   items: NavItem[];
-  defaultOpen?: boolean;
+  defaultOpen: boolean;
 }
 
 const NAV_GROUPS: NavGroup[] = [
@@ -68,7 +68,7 @@ function NavGroupSection({
   group: NavGroup;
   isActive: (href: string) => boolean;
 }) {
-  const [open, setOpen] = useState(group.defaultOpen ?? true);
+  const [open, setOpen] = useState(group.defaultOpen);
 
   return (
     <Collapsible open={open} onOpenChange={setOpen}>

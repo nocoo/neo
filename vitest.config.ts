@@ -95,12 +95,12 @@ export default defineConfig({
         // Auth.js adapter (pure D1 delegation, same pattern as scoped.ts)
         "lib/auth-adapter.ts",
       ],
-      // Global thresholds — All files must remain ≥95% on every metric.
+      // Global thresholds — All files must remain ≥95.5% on every metric.
       thresholds: {
-        lines: 95,
-        functions: 95,
-        branches: 95,
-        statements: 95,
+        lines: 95.5,
+        functions: 95.5,
+        branches: 95.5,
+        statements: 95.5,
       },
     },
   },

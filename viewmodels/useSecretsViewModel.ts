@@ -69,7 +69,7 @@ export function useSecretsViewModel(): SecretsViewModel {
   const [error, setError] = useState<string | null>(null);
 
   // Timer for OTP refresh
-  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const intervalRef = useRef<ReturnType<typeof setInterval> | undefined>(undefined);
 
   // ── Filtered secrets ──────────────────────────────────────────────────
 
@@ -127,9 +127,8 @@ export function useSecretsViewModel(): SecretsViewModel {
     intervalRef.current = setInterval(generateAllOtps, 1000);
 
     return () => {
-      if (intervalRef.current) {
-        clearInterval(intervalRef.current);
-      }
+      // intervalRef.current is always assigned above before this cleanup runs.
+      clearInterval(intervalRef.current);
     };
   }, [generateAllOtps]);
 

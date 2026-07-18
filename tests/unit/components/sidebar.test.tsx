@@ -197,4 +197,14 @@ describe("Sidebar — user field fallbacks", () => {
     // truthy branch of `user.image && <AvatarImage>` is exercised by render
     expect(screen.getByText("x@y.z")).toBeDefined();
   });
+
+  it("uses 'User' as avatar alt fallback when name is null but image present", () => {
+    render(
+      <Sidebar user={{ name: null, email: "a@b.com", image: "https://example.com/avatar.png" }} />,
+    );
+    // Exercises `user.name ?? "User"` fallback inside AvatarImage alt.
+    // No assertion on the alt itself (Radix defers rendering until image load)
+    // — just ensure the render path completes without throwing.
+    expect(screen.getByText("a@b.com")).toBeDefined();
+  });
 });

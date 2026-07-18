@@ -171,6 +171,19 @@ describe("useBackupViewModel", () => {
 
       expect(result.current.error).toBeNull();
     });
+
+    it("sets fallback error when fetch throws (catch branch)", async () => {
+      global.fetch = vi.fn().mockRejectedValue(new Error("network"));
+
+      const { result } = renderHook(() => useBackupViewModel());
+      await act(async () => {});
+
+      await act(async () => {
+        await result.current.handleDownloadArchive();
+      });
+
+      expect(result.current.error).toBe("Failed to download backup archive");
+    });
   });
 
   describe("handlePushToBacky", () => {

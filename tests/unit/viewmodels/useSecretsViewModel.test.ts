@@ -315,6 +315,41 @@ describe("useSecretsViewModel", () => {
       // Map should not have changed structure
       expect(result.current.otpMap.size).toBe(mapBefore.size);
     });
+
+    it("refreshOtp is a no-op when the secret is not TOTP (result is null)", async () => {
+      const hotpSecret: Secret = { ...sampleSecret, id: "s_hotp", type: "hotp" };
+      setupMocks([sampleSecret, hotpSecret]);
+      const { result } = renderHook(() => useSecretsViewModel());
+
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(0);
+      });
+
+      const sizeBefore = result.current.otpMap.size;
+
+      await act(async () => {
+        await result.current.refreshOtp("s_hotp");
+      });
+
+      // No otp for the HOTP secret — the falsy-`result` branch is exercised.
+      expect(result.current.otpMap.size).toBe(sizeBefore);
+      expect(result.current.otpMap.get("s_hotp")).toBeUndefined();
+    });
+
+    it("falls back to a 30s period when secret.period is zero", async () => {
+      const zeroPeriodSecret: Secret = { ...sampleSecret, id: "s_zero", period: 0 };
+      setupMocks([zeroPeriodSecret]);
+      mockGenerateTOTP.mockResolvedValue("777777");
+      const { result } = renderHook(() => useSecretsViewModel());
+
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(0);
+      });
+
+      const otpResult = result.current.otpMap.get("s_zero");
+      expect(otpResult).toBeDefined();
+      expect(otpResult!.period).toBe(30);
+    });
   });
 
   describe("handleCreate", () => {

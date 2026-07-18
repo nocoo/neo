@@ -15,8 +15,10 @@ import { AES_IV_LENGTH, AES_KEY_LENGTH, ENCRYPTION_PREFIX } from "./constants";
 function arrayBufferToBase64(buffer: ArrayBuffer | Uint8Array): string {
   const bytes = buffer instanceof Uint8Array ? buffer : new Uint8Array(buffer);
   let binary = "";
-  for (let i = 0; i < bytes.length; i++) {
-    binary += String.fromCharCode(bytes[i] ?? 0);
+  // for..of over Uint8Array yields each byte as a number — avoids indexed
+  // access (safer under noUncheckedIndexedAccess) and stays O(n) memory.
+  for (const byte of bytes) {
+    binary += String.fromCharCode(byte);
   }
   return btoa(binary);
 }

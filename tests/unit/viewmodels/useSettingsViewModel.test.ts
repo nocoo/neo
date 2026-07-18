@@ -362,6 +362,21 @@ describe("useSettingsViewModel", () => {
       expect(success!).toBe(false);
       expect(result.current.error).toBe("Connection failed (401)");
     });
+
+    it("handles thrown error during connection test (catch branch)", async () => {
+      mockTestBackyConnection.mockRejectedValue(new Error("network"));
+
+      const { result } = renderHook(() => useSettingsViewModel());
+      await act(async () => {});
+
+      let success: boolean;
+      await act(async () => {
+        success = await result.current.handleTestBackyConnection();
+      });
+
+      expect(success!).toBe(false);
+      expect(result.current.error).toBe("Connection test failed");
+    });
   });
 
   describe("pull webhook", () => {

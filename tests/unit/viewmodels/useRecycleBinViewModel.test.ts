@@ -105,6 +105,17 @@ describe("useRecycleBinViewModel", () => {
       act(() => result.current.setSearchQuery(""));
       expect(result.current.filteredSecrets).toHaveLength(2);
     });
+
+    it("sorts entries with null deletedAt using 0 fallback", () => {
+      // Two secrets, one with a deletedAt timestamp and one without.
+      // Exercises the `?.getTime() ?? 0` fallback branch inside the sort comparator.
+      const withDate = { ...deletedSecret, deletedAt: new Date("2026-04-01T00:00:00Z") };
+      const withoutDate = { ...deletedSecret2, deletedAt: null };
+      const { result } = renderHook(() => useRecycleBinViewModel([withoutDate, withDate]));
+      // Descending order — the entry with the date wins over the null fallback.
+      expect(result.current.filteredSecrets[0]!.id).toBe(withDate.id);
+      expect(result.current.filteredSecrets[1]!.id).toBe(withoutDate.id);
+    });
   });
 
   describe("handleRestore", () => {
@@ -241,6 +252,16 @@ describe("useRecycleBinViewModel", () => {
         await result.current.refresh();
       });
       expect(result.current.error).toBe("DB error");
+    });
+
+    it("sets fallback error when refresh throws (catch branch)", async () => {
+      mockGetDeletedSecrets.mockRejectedValue(new Error("network"));
+      const { result } = renderHook(() => useRecycleBinViewModel());
+
+      await act(async () => {
+        await result.current.refresh();
+      });
+      expect(result.current.error).toBe("Failed to load deleted secrets");
     });
   });
 

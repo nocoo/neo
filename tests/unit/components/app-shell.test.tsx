@@ -161,4 +161,20 @@ describe("AppShell — mobile mode", () => {
     // mobile sidebar drawer).
     expect(screen.getAllByText("Test User").length).toBeGreaterThanOrEqual(1);
   });
+
+  it("closes the mobile drawer when the overlay button is clicked", () => {
+    render(
+      <AppShell user={defaultUser}>
+        <div>content</div>
+      </AppShell>,
+    );
+    // Open drawer first
+    fireEvent.click(screen.getByLabelText("Open menu"));
+    const overlay = screen.getByLabelText("Close sidebar overlay");
+    expect(overlay).toBeDefined();
+
+    // Clicking the overlay closes the drawer — overlay unmounts.
+    fireEvent.click(overlay);
+    expect(screen.queryByLabelText("Close sidebar overlay")).toBeNull();
+  });
 });
