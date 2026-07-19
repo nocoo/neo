@@ -9,7 +9,7 @@ on:
 
 jobs:
   quality:
-    uses: nocoo/base-ci/.github/workflows/bun-quality.yml@aec4adc1a817c56790d1698329ef9398a15a754a  # v2026.5
+    uses: nocoo/base-ci/.github/workflows/bun-quality.yml@b482fdee98ce1196c809ae158f116caabfc2475b  # v2026.6
     with:
       ignore-scripts: true
       extra-install-dirs: "worker"
