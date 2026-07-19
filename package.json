@@ -58,7 +58,7 @@
     "fake-indexeddb": "^6.2.5",
     "happy-dom": "^20.11.0",
     "husky": "^9.1.7",
-    "lint-staged": "^17.0.8",
+    "lint-staged": "^17.1.0",
     "postcss": "^8.5.19",
     "serwist": "^9.5.11",
     "tailwindcss": "^4.3.3",
