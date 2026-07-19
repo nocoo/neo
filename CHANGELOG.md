@@ -2,6 +2,49 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.2.0] - 2026-07-19
+
+TypeScript 7 上车, ESLint 全面退休, Biome 单一 lint/format 权威; Worker 首次纳入统一门禁。
+
+### Changed
+
+- **TypeScript 6.0.3 → 7.0.2** (root + worker), 加 `@typescript/native-preview` 作 Next 16 兼容 marker
+- **Lint 引擎切换**: ESLint + `typescript-eslint` + `eslint-config-next` → **Biome 2.5.4** (与 pew 选型一致, 但 formatter 开启)
+- **Biome formatter 全项目应用**: 一次性 `biome format --write` 覆盖 142 个文件, 后续变更由 lint-staged 自动 format
+- **Worker 纳入 Biome + TS 门禁**: 之前完全绕过 lint/typecheck, 现在与 root 一体化 (18 个文件通过 biome, TS 7 严格通过)
+
+### Fixed
+
+- 所有 a11y/style/next 相关的 biome 报错 (10+ 处), 全部**正面修复**, 不依赖 disable:
+  - 3 处 `<img>` → `next/image`
+  - `<button>` type 缺失、`useSemanticElements` (`role="list"`→`<ul>`, `role="banner"`→`<header>`)
+  - color picker 从 `role="radio"`+`aria-checked` 迁至 `<fieldset>/<legend>` + `aria-pressed`
+  - loading skeleton 稳定 key, secret-card 键盘可用性 (`role=button` + `onKeyDown` + `tabIndex`)
+- **搜索后键盘选择不重置** (SecretsView): `useEffect` deps 从 `[]` 恢复回 `[vm.searchQuery]`, 补测覆盖 rerender 场景; 加 `biome-ignore` 阻止 `useExhaustiveDependencies` 再次误"修复"
+- **`next --webpack` build 崩溃** (TS 7 移除 `baseUrl` → next 丢 paths 别名): `next.config.ts` webpack hook 显式注册 `@/*` alias
+
+### Infrastructure
+
+- **pre-commit hook 大幅强化**:
+  - lint-staged 串行前置 (writer), tsc + vitest 后置并行 (readers)
+  - **tsc / vitest 在 `git checkout-index` 材料化的 INDEX 快照里跑**, 不再从工作树读, 杜绝"index 有错、工作树修好、hook 放过"的漏洞
+  - 拆开 root / worker lockfile gate (worker 变更 → `bun install --cwd worker --frozen-lockfile`)
+- **CI 升级**:
+  - base-ci `v2026.5 → v2026.6` (修 `worker-tests + extra-install-dirs` 冲突)
+  - `extra-install-dirs: "worker"` + `enable-worker: "true"` — 68 个 worker 测试上 CI
+- **覆盖率阈值 95% → 95.5%** (branches / functions / lines / statements 四项同步), 补 branch 测试; 实际达标: 98.66% lines / 96.19% functions / 95.69% branches / 97.69% statements
+
+### Dev experience
+
+- 新增 `bun run format` (`biome format --write .`) 与 `bun run lint:fix` (`biome check --write ...`)
+- root `typecheck` 现同步跑 worker typecheck (`tsc --noEmit && bun run --cwd worker typecheck`)
+- 新增 `CLAUDE.md` retrospective, 记录本次升级 5 个教训 (build 必跑、biome autofix 需 review、hook 必须验 index、CI 需知子目录、review 通常需多轮)
+
+### Notes
+
+- Worker 独立版本号从 `0.2.3` → `0.2.4` (patch, 内部结构调整无 API 变更)
+- 建议在本地 `rm -rf node_modules && bun install` 清一次陈旧依赖, 让 IDE TS server 切到 7.0.2
+
 ## [1.1.2] - 2026-06-08
 
 Dependency maintenance — sweep all 18 outdated dependencies (7 major + 12 patch/minor).
