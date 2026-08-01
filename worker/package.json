@@ -11,10 +11,10 @@
     "lint": "cd .. && bun run lint"
   },
   "devDependencies": {
-    "@cloudflare/workers-types": "5.20260730.1",
+    "@cloudflare/workers-types": "5.20260731.1",
     "typescript": "^7.0.2",
     "vitest": "^4.1.10",
-    "wrangler": "4.116.0"
+    "wrangler": "4.118.0"
   },
   "overrides": {
     "esbuild": "^0.28.1",
