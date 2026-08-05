@@ -44,3 +44,13 @@ pre-commit 里 tsc + vitest 直接跑在工作树上。这有两个漏洞:
 codex 的第一轮找出 5 个问题 (P1 #1/#2 + P2 #3/#4/#5), 我全修完自认完成。codex 复审又找出 2 个新问题 (CI worker 缺依赖, hook 仍验证工作树) —— 都是**上一轮修复本身引入的**副作用。
 
 **下次**: 每次修复完 code review 意见后, 主动请求 (或想象) 复审。特别是修复涉及自动化 (hooks / CI / lint config) 时, 变更本身会产生新的暴露面, 至少要问一句"我的修复引入了什么新问题"。
+
+<!-- BEGIN:nextjs-agent-rules -->
+
+# This is NOT the Next.js you know
+
+This version has breaking changes — APIs, conventions, and file structure may all differ from your training data. Read the relevant guide in `node_modules/next/dist/docs/` (resolved from this file's directory; in monorepos the `next` package may not be visible from the repo root) before writing any code. Heed deprecation notices.
+
+This block is written and re-added by `next dev` — verify at `node_modules/next/dist/server/lib/generate-agent-files.js`. Removing it from a diff only re-creates the uncommitted change; committing it with your work keeps the tree clean.
+
+<!-- END:nextjs-agent-rules -->
