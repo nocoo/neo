@@ -58,7 +58,7 @@
     "@vitest/coverage-v8": "^4.1.10",
     "drizzle-kit": "^0.31.10",
     "fake-indexeddb": "^6.2.5",
-    "happy-dom": "^20.11.1",
+    "happy-dom": "20.11.2",
     "husky": "^9.1.7",
     "lint-staged": "^17.3.0",
     "postcss": "8.5.26",
