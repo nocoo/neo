@@ -11,7 +11,7 @@
     "lint": "cd .. && bun run lint"
   },
   "devDependencies": {
-    "@cloudflare/workers-types": "5.20260819.1",
+    "@cloudflare/workers-types": "5.20260820.1",
     "typescript": "^7.0.2",
     "vitest": "^4.1.11",
     "wrangler": "4.125.0"
