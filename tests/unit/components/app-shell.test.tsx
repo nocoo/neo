@@ -2,6 +2,7 @@
  * AppShell component tests.
  */
 
+import { ThemeProvider } from "@nocoo/basalt/providers/theme";
 import { fireEvent, render, screen } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -58,11 +59,15 @@ const defaultUser = {
   image: null,
 };
 
+function renderAppShell(ui: React.ReactElement) {
+  return render(<ThemeProvider>{ui}</ThemeProvider>);
+}
+
 // ── Tests ────────────────────────────────────────────────────────────────
 
 describe("AppShell", () => {
   it("renders breadcrumb with page title", () => {
-    render(
+    renderAppShell(
       <AppShell user={defaultUser}>
         <div>content</div>
       </AppShell>,
@@ -74,7 +79,7 @@ describe("AppShell", () => {
 
   it("renders breadcrumbs with Home link for sub-pages", () => {
     mockPathname.mockReturnValue("/dashboard/backup");
-    render(
+    renderAppShell(
       <AppShell user={defaultUser}>
         <div>content</div>
       </AppShell>,
@@ -85,7 +90,7 @@ describe("AppShell", () => {
   });
 
   it("renders GitHub link with aria-label", () => {
-    render(
+    renderAppShell(
       <AppShell user={defaultUser}>
         <div>content</div>
       </AppShell>,
@@ -97,7 +102,7 @@ describe("AppShell", () => {
   });
 
   it("renders ThemeToggle in header", () => {
-    render(
+    renderAppShell(
       <AppShell user={defaultUser}>
         <div>content</div>
       </AppShell>,
@@ -106,7 +111,7 @@ describe("AppShell", () => {
   });
 
   it("renders children in content area", () => {
-    render(
+    renderAppShell(
       <AppShell user={defaultUser}>
         <div data-testid="child">hello</div>
       </AppShell>,
@@ -116,13 +121,23 @@ describe("AppShell", () => {
   });
 
   it("renders sidebar with user info", () => {
-    render(
+    renderAppShell(
       <AppShell user={defaultUser}>
         <div>content</div>
       </AppShell>,
     );
     expect(screen.getByText("Test User")).toBeDefined();
     expect(screen.getByText("test@example.com")).toBeDefined();
+  });
+  it("falls back to default title for unknown pathname", () => {
+    mockPathname.mockReturnValue("/dashboard/unknown");
+    renderAppShell(
+      <AppShell user={defaultUser}>
+        <div>content</div>
+      </AppShell>,
+    );
+    const breadcrumbNav = screen.getByLabelText("Breadcrumb");
+    expect(breadcrumbNav.textContent).toContain("Secrets");
   });
 });
 
@@ -147,7 +162,7 @@ describe("AppShell — mobile mode", () => {
   });
 
   it("renders the mobile menu button and toggles the drawer", () => {
-    render(
+    renderAppShell(
       <AppShell user={defaultUser}>
         <div>content</div>
       </AppShell>,
@@ -163,7 +178,7 @@ describe("AppShell — mobile mode", () => {
   });
 
   it("closes the mobile drawer when the overlay button is clicked", () => {
-    render(
+    renderAppShell(
       <AppShell user={defaultUser}>
         <div>content</div>
       </AppShell>,

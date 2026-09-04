@@ -1,8 +1,15 @@
 "use client";
 
+import { AppHeader } from "@nocoo/basalt/components/app-header";
+import {
+  AppMain,
+  AppSkipLink,
+  AppShell as BasaltAppShell,
+} from "@nocoo/basalt/components/app-shell";
+import { ContentIsland } from "@nocoo/basalt/components/sidebar";
 import { Menu } from "lucide-react";
 import { usePathname } from "next/navigation";
-import { type BreadcrumbItem, Breadcrumbs } from "@/components/breadcrumbs";
+import type { BreadcrumbItem } from "@/components/breadcrumbs";
 import { Github } from "@/components/icons/github";
 import type { SidebarUser } from "@/components/sidebar";
 import { Sidebar } from "@/components/sidebar";
@@ -38,8 +45,36 @@ function AppShellInner({ children, user }: { children: React.ReactNode; user: Si
   const { isMobile, mobileOpen, toggle, setMobileOpen } = useSidebar();
   const breadcrumbs = usePageBreadcrumbs();
 
+  const leadingAction = isMobile ? (
+    <button
+      type="button"
+      onClick={toggle}
+      aria-label="Open menu"
+      className="flex h-8 w-8 items-center justify-center rounded-lg text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"
+    >
+      <Menu className="h-5 w-5" strokeWidth={1.5} />
+    </button>
+  ) : null;
+
+  const headerActions = (
+    <>
+      <a
+        href="https://github.com/nocoo/neo"
+        target="_blank"
+        rel="noopener noreferrer"
+        className="flex h-8 w-8 items-center justify-center rounded-lg text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"
+        aria-label="GitHub repository"
+      >
+        <Github className="h-[18px] w-[18px]" strokeWidth={1.5} />
+      </a>
+      <ThemeToggle />
+    </>
+  );
+
   return (
-    <div className="flex min-h-screen w-full bg-background">
+    <BasaltAppShell>
+      <AppSkipLink />
+
       {/* Desktop sidebar */}
       {!isMobile && <Sidebar user={user} />}
 
@@ -58,44 +93,15 @@ function AppShellInner({ children, user }: { children: React.ReactNode; user: Si
         </>
       )}
 
-      <main className="flex-1 flex flex-col min-h-screen min-w-0">
-        {/* Header */}
-        <header className="flex h-14 items-center justify-between px-4 md:px-6 shrink-0">
-          <div className="flex items-center gap-3">
-            {isMobile && (
-              <button
-                type="button"
-                onClick={toggle}
-                aria-label="Open menu"
-                className="flex h-8 w-8 items-center justify-center rounded-lg text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"
-              >
-                <Menu className="h-5 w-5" strokeWidth={1.5} />
-              </button>
-            )}
-            <Breadcrumbs items={breadcrumbs} />
-          </div>
-          <div className="flex items-center gap-1">
-            <a
-              href="https://github.com/nocoo/neo"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex h-8 w-8 items-center justify-center rounded-lg text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"
-              aria-label="GitHub repository"
-            >
-              <Github className="h-[18px] w-[18px]" strokeWidth={1.5} />
-            </a>
-            <ThemeToggle />
-          </div>
-        </header>
+      <AppMain>
+        <AppHeader leading={leadingAction} breadcrumbs={breadcrumbs} actions={headerActions} />
 
         {/* Content panel */}
-        <div className={cn("flex-1 px-2 pb-2 md:px-3 md:pb-3")}>
-          <div className="h-full rounded-[16px] md:rounded-[20px] bg-card p-3 md:p-5 overflow-y-auto">
-            {children}
-          </div>
+        <div className={cn("flex-1 min-h-0 px-2 pb-2 md:px-3 md:pb-3 flex flex-col")}>
+          <ContentIsland>{children}</ContentIsland>
         </div>
-      </main>
-    </div>
+      </AppMain>
+    </BasaltAppShell>
   );
 }
 

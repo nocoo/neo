@@ -1,58 +1,38 @@
 /**
- * ThemeToggle component tests — covers the cycle() branches.
+ * ThemeToggle component tests — covers the cycle() branches using Basalt ThemeProvider.
  */
 
+import { ThemeProvider } from "@nocoo/basalt/providers/theme";
 import { fireEvent, render, screen } from "@testing-library/react";
-import { beforeEach, describe, expect, it, vi } from "vitest";
-
-// ── Hoisted mocks ────────────────────────────────────────────────────────
-
-const { mockSetTheme, mockUseTheme } = vi.hoisted(() => {
-  const mockSetTheme = vi.fn();
-  const mockUseTheme = vi.fn();
-  return { mockSetTheme, mockUseTheme };
-});
-
-vi.mock("next-themes", () => ({
-  useTheme: mockUseTheme,
-}));
-
+import { beforeEach, describe, expect, it } from "vitest";
 import { ThemeToggle } from "@/components/theme-toggle";
 
 describe("ThemeToggle", () => {
   beforeEach(() => {
-    vi.clearAllMocks();
+    localStorage.clear();
+    document.documentElement.className = "";
   });
 
-  it("cycles from system to light", () => {
-    mockUseTheme.mockReturnValue({
-      theme: "system",
-      setTheme: mockSetTheme,
-      resolvedTheme: "light",
-    });
-    render(<ThemeToggle />);
+  it("cycles theme through system, light, dark", () => {
+    render(
+      <ThemeProvider>
+        <ThemeToggle />
+      </ThemeProvider>,
+    );
 
-    fireEvent.click(screen.getByRole("button", { name: /toggle theme/i }));
-    expect(mockSetTheme).toHaveBeenCalledWith("light");
-  });
+    const toggleBtn = screen.getByRole("button", { name: /toggle theme/i });
+    expect(toggleBtn).toBeDefined();
 
-  it("cycles from light to dark", () => {
-    mockUseTheme.mockReturnValue({
-      theme: "light",
-      setTheme: mockSetTheme,
-      resolvedTheme: "light",
-    });
-    render(<ThemeToggle />);
+    // system -> light
+    fireEvent.click(toggleBtn);
+    expect(localStorage.getItem("theme")).toBe("light");
 
-    fireEvent.click(screen.getByRole("button", { name: /toggle theme/i }));
-    expect(mockSetTheme).toHaveBeenCalledWith("dark");
-  });
+    // light -> dark
+    fireEvent.click(toggleBtn);
+    expect(localStorage.getItem("theme")).toBe("dark");
 
-  it("cycles from dark to system", () => {
-    mockUseTheme.mockReturnValue({ theme: "dark", setTheme: mockSetTheme, resolvedTheme: "dark" });
-    render(<ThemeToggle />);
-
-    fireEvent.click(screen.getByRole("button", { name: /toggle theme/i }));
-    expect(mockSetTheme).toHaveBeenCalledWith("system");
+    // dark -> system
+    fireEvent.click(toggleBtn);
+    expect(localStorage.getItem("theme")).toBe("system");
   });
 });
