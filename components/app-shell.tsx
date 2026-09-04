@@ -28,22 +28,25 @@ const PAGE_TITLES: Record<string, string> = {
   "/dashboard/settings": "Settings",
 };
 
-function usePageBreadcrumbs(): BreadcrumbItem[] {
+function usePageNav(): { breadcrumbs?: BreadcrumbItem[]; title: string } {
   const pathname = usePathname();
   const title = PAGE_TITLES[pathname] ?? "Secrets";
 
-  // Root dashboard page — single breadcrumb
+  // Root dashboard page — no parent breadcrumbs, title is the page title
   if (pathname === "/dashboard") {
-    return [{ label: title }];
+    return { title };
   }
 
-  // Sub-pages — Home → Current
-  return [{ label: "Home", href: "/dashboard" }, { label: title }];
+  // Sub-pages — Home parent breadcrumb + Current page title
+  return {
+    breadcrumbs: [{ label: "Home", href: "/dashboard" }],
+    title,
+  };
 }
 
 function AppShellInner({ children, user }: { children: React.ReactNode; user: SidebarUser }) {
   const { isMobile, mobileOpen, toggle, setMobileOpen } = useSidebar();
-  const breadcrumbs = usePageBreadcrumbs();
+  const { breadcrumbs, title } = usePageNav();
 
   const leadingAction = isMobile ? (
     <button
@@ -73,7 +76,7 @@ function AppShellInner({ children, user }: { children: React.ReactNode; user: Si
 
   return (
     <BasaltAppShell>
-      <AppSkipLink />
+      <AppSkipLink>Skip to main content</AppSkipLink>
 
       {/* Desktop sidebar */}
       {!isMobile && <Sidebar user={user} />}
@@ -94,7 +97,12 @@ function AppShellInner({ children, user }: { children: React.ReactNode; user: Si
       )}
 
       <AppMain>
-        <AppHeader leading={leadingAction} breadcrumbs={breadcrumbs} actions={headerActions} />
+        <AppHeader
+          leading={leadingAction}
+          {...(breadcrumbs ? { breadcrumbs } : {})}
+          title={title}
+          actions={headerActions}
+        />
 
         {/* Content panel */}
         <div className={cn("flex-1 min-h-0 px-2 pb-2 md:px-3 md:pb-3 flex flex-col")}>

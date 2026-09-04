@@ -66,18 +66,18 @@ function renderAppShell(ui: React.ReactElement) {
 // ── Tests ────────────────────────────────────────────────────────────────
 
 describe("AppShell", () => {
-  it("renders breadcrumb with page title", () => {
+  it("renders page title in header", () => {
     renderAppShell(
       <AppShell user={defaultUser}>
         <div>content</div>
       </AppShell>,
     );
-    const breadcrumbNav = screen.getByLabelText("Breadcrumb");
-    expect(breadcrumbNav).toBeDefined();
-    expect(breadcrumbNav.textContent).toContain("Secrets");
+    const title = screen.getByRole("heading", { level: 1 });
+    expect(title).toBeDefined();
+    expect(title.textContent).toBe("Secrets");
   });
 
-  it("renders breadcrumbs with Home link for sub-pages", () => {
+  it("renders breadcrumbs with Home link and page title for sub-pages", () => {
     mockPathname.mockReturnValue("/dashboard/backup");
     renderAppShell(
       <AppShell user={defaultUser}>
@@ -86,7 +86,8 @@ describe("AppShell", () => {
     );
     const breadcrumbNav = screen.getByLabelText("Breadcrumb");
     expect(breadcrumbNav.textContent).toContain("Home");
-    expect(breadcrumbNav.textContent).toContain("Backup");
+    const title = screen.getByRole("heading", { level: 1 });
+    expect(title.textContent).toBe("Backup");
   });
 
   it("renders GitHub link with aria-label", () => {
@@ -136,8 +137,8 @@ describe("AppShell", () => {
         <div>content</div>
       </AppShell>,
     );
-    const breadcrumbNav = screen.getByLabelText("Breadcrumb");
-    expect(breadcrumbNav.textContent).toContain("Secrets");
+    const title = screen.getByRole("heading", { level: 1 });
+    expect(title.textContent).toBe("Secrets");
   });
 });
 
