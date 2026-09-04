@@ -26,9 +26,14 @@ vi.mock("@/actions/auth", () => ({
 
 vi.mock("@/components/ui/collapsible", () => ({
   Collapsible: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
-  CollapsibleTrigger: ({ children, ...props }: { children: React.ReactNode }) => (
-    <button {...props}>{children}</button>
-  ),
+  CollapsibleTrigger: ({
+    children,
+    asChild,
+    ...props
+  }: {
+    children: React.ReactNode;
+    asChild?: boolean;
+  }) => (asChild ? <>{children}</> : <button {...props}>{children}</button>),
   CollapsibleContent: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
 }));
 
