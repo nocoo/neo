@@ -4,6 +4,7 @@
  * ToolsView — developer tools for import/export and OTP testing.
  */
 
+import { LayerCard } from "@nocoo/basalt/components/layer-card";
 import { Download, TestTube, Upload } from "lucide-react";
 import { useCallback, useState } from "react";
 import { ExportDialog } from "@/components/export-dialog";
@@ -55,7 +56,7 @@ export function ToolsView() {
       {/* Tool cards */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
         {/* Import */}
-        <div className="rounded-card bg-secondary p-6 space-y-3">
+        <LayerCard padding="lg" className="space-y-3">
           <div className="flex items-center gap-2">
             <Upload className="h-5 w-5 text-primary" />
             <h2 className="text-lg font-medium">Import</h2>
@@ -66,10 +67,10 @@ export function ToolsView() {
           <Button variant="outline" onClick={() => setShowImport(true)} className="w-full">
             Open Import Tool
           </Button>
-        </div>
+        </LayerCard>
 
         {/* Export */}
-        <div className="rounded-card bg-secondary p-6 space-y-3">
+        <LayerCard padding="lg" className="space-y-3">
           <div className="flex items-center gap-2">
             <Download className="h-5 w-5 text-primary" />
             <h2 className="text-lg font-medium">Export</h2>
@@ -78,10 +79,10 @@ export function ToolsView() {
           <Button variant="outline" onClick={() => setShowExport(true)} className="w-full">
             Open Export Tool
           </Button>
-        </div>
+        </LayerCard>
 
         {/* OTP Tester */}
-        <div className="rounded-card bg-secondary p-6 space-y-3">
+        <LayerCard padding="lg" className="space-y-3">
           <div className="flex items-center gap-2">
             <TestTube className="h-5 w-5 text-primary" />
             <h2 className="text-lg font-medium">OTP Tester</h2>
@@ -134,7 +135,7 @@ export function ToolsView() {
               </div>
             )}
           </div>
-        </div>
+        </LayerCard>
       </div>
 
       {/* Dialogs */}

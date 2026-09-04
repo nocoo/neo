@@ -4,6 +4,7 @@
  * SettingsView — user preferences, encryption key management, and Backy config.
  */
 
+import { LayerCard } from "@nocoo/basalt/components/layer-card";
 import { Check, Copy, Eye, EyeOff, Key, Link, RefreshCw, Shield, Trash2 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
@@ -75,7 +76,7 @@ export function SettingsView() {
       )}
 
       {/* Encryption Key Management */}
-      <div className="rounded-card bg-secondary p-6">
+      <LayerCard padding="lg">
         <div className="flex items-center gap-2 mb-4">
           <Shield className="h-5 w-5 text-primary" />
           <h2 className="text-lg font-medium">Encryption Key</h2>
@@ -161,10 +162,10 @@ export function SettingsView() {
             </Button>
           </div>
         )}
-      </div>
+      </LayerCard>
 
       {/* Backy Configuration */}
-      <div className="rounded-card bg-secondary p-6">
+      <LayerCard padding="lg">
         <div className="flex items-center gap-2 mb-4">
           <Link className="h-5 w-5 text-primary" />
           <h2 className="text-lg font-medium">Backy Integration</h2>
@@ -303,7 +304,7 @@ export function SettingsView() {
             </Button>
           )}
         </div>
-      </div>
+      </LayerCard>
 
       {/* Reload button */}
       <div className="flex justify-end">

@@ -9,6 +9,7 @@
  *   3. Restore — upload ZIP + encryption key → POST /api/backup/restore
  */
 
+import { LayerCard } from "@nocoo/basalt/components/layer-card";
 import {
   AlertTriangle,
   Archive,
@@ -116,7 +117,7 @@ export function BackupView() {
       )}
 
       {/* Create & Download */}
-      <div className="rounded-card bg-secondary p-6">
+      <LayerCard padding="lg">
         <div className="flex items-center gap-2 mb-4">
           <Archive className="h-5 w-5 text-primary" />
           <h2 className="text-lg font-medium">Create & Download</h2>
@@ -133,10 +134,10 @@ export function BackupView() {
           <Download className="h-4 w-4 mr-1" />
           Download Encrypted Archive
         </Button>
-      </div>
+      </LayerCard>
 
       {/* Push to Backy */}
-      <div className="rounded-card bg-secondary p-6">
+      <LayerCard padding="lg">
         <div className="flex items-center gap-2 mb-4">
           <Send className="h-5 w-5 text-primary" />
           <h2 className="text-lg font-medium">Push to Backy</h2>
@@ -211,10 +212,10 @@ export function BackupView() {
             )}
           </div>
         )}
-      </div>
+      </LayerCard>
 
       {/* Restore */}
-      <div className="rounded-card bg-secondary p-6">
+      <LayerCard padding="lg">
         <div className="flex items-center gap-2 mb-4">
           <Upload className="h-5 w-5 text-primary" />
           <h2 className="text-lg font-medium">Restore from Backup</h2>
@@ -281,7 +282,7 @@ export function BackupView() {
             </div>
           )}
         </div>
-      </div>
+      </LayerCard>
     </div>
   );
 }
