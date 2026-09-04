@@ -1,9 +1,10 @@
+import { Button } from "@nocoo/basalt/components/button";
+import { ThemeToggle } from "@nocoo/basalt/components/theme-toggle";
 import { headers } from "next/headers";
 import Image from "next/image";
 import { redirect } from "next/navigation";
 import { auth, signIn } from "@/auth";
 import { Github } from "@/components/icons/github";
-import { ThemeToggle } from "@/components/theme-toggle";
 
 function Barcode() {
   const bars: Array<{ id: string; w: number; dim: boolean }> = [
@@ -69,7 +70,7 @@ export default async function Home({
         >
           <Github className="h-[18px] w-[18px]" strokeWidth={1.5} />
         </a>
-        <ThemeToggle />
+        <ThemeToggle aria-label="Toggle theme" />
       </div>
 
       {/* Radial glow */}
@@ -94,6 +95,7 @@ export default async function Home({
       <div className="flex flex-col items-center animate-fade-up">
         {/* Badge card — bank card flipped vertical: 54/86 */}
         <div
+          data-basalt-surface-root=""
           className="relative aspect-[54/86] w-72 overflow-hidden rounded-2xl bg-card flex flex-col ring-1 ring-black/[0.08] dark:ring-white/[0.06]"
           style={{
             boxShadow: [
@@ -170,9 +172,10 @@ export default async function Home({
                 await signIn("google", { redirectTo });
               }}
             >
-              <button
+              <Button
                 type="submit"
-                className="flex w-full items-center justify-center gap-2.5 rounded-xl bg-secondary px-4 py-3 text-sm font-medium text-foreground transition-colors hover:bg-accent cursor-pointer"
+                variant="secondary"
+                className="w-full rounded-xl py-3 cursor-pointer"
               >
                 <svg className="h-4 w-4" viewBox="0 0 24 24" aria-hidden="true">
                   <title>Google</title>
@@ -194,7 +197,7 @@ export default async function Home({
                   />
                 </svg>
                 Continue with Google
-              </button>
+              </Button>
             </form>
 
             {/* Terms */}
