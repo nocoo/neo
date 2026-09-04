@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import { DM_Sans, Inter } from "next/font/google";
 import { AppProviders } from "@/components/app-providers";
-import { ThemeProvider } from "@/components/theme-provider";
 import { Toaster } from "@/components/ui/sonner";
 import "./globals.css";
 
@@ -36,15 +35,8 @@ export default function RootLayout({
     <html lang="en" suppressHydrationWarning>
       <body className={`${inter.variable} ${dmSans.variable} antialiased`}>
         <AppProviders>
-          <ThemeProvider
-            attribute="class"
-            defaultTheme="system"
-            enableSystem
-            disableTransitionOnChange
-          >
-            {children}
-            <Toaster />
-          </ThemeProvider>
+          {children}
+          <Toaster />
         </AppProviders>
       </body>
     </html>

@@ -8,10 +8,9 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 // ── Hoisted mocks ────────────────────────────────────────────────────────
 
-const { mockPathname, mockHandleSignOut, mockSetTheme } = vi.hoisted(() => ({
+const { mockPathname, mockHandleSignOut } = vi.hoisted(() => ({
   mockPathname: vi.fn().mockReturnValue("/dashboard"),
   mockHandleSignOut: vi.fn(),
-  mockSetTheme: vi.fn(),
 }));
 
 vi.mock("next/navigation", () => ({
@@ -20,14 +19,6 @@ vi.mock("next/navigation", () => ({
 
 vi.mock("@/actions/auth", () => ({
   handleSignOut: mockHandleSignOut,
-}));
-
-vi.mock("next-themes", () => ({
-  useTheme: () => ({
-    theme: "system",
-    setTheme: mockSetTheme,
-    resolvedTheme: "light",
-  }),
 }));
 
 // Mock matchMedia for useIsMobile hook (jsdom doesn't support it)
