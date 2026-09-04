@@ -139,7 +139,7 @@ export default async function Home({
           </div>
 
           {/* Badge content */}
-          <div className="flex flex-1 flex-col items-center px-6 pt-6 pb-14">
+          <div className="flex flex-1 flex-col items-center px-6 pt-6 pb-6">
             {/* Logo avatar */}
             <div className="flex h-24 w-24 items-center justify-center rounded-full bg-secondary dark:bg-background ring-1 ring-border overflow-hidden">
               <Image
@@ -162,6 +162,7 @@ export default async function Home({
 
             {/* Google Sign-in button */}
             <form
+              className="w-full"
               action={async () => {
                 "use server";
                 const h = await headers();
@@ -174,8 +175,9 @@ export default async function Home({
             >
               <Button
                 type="submit"
-                variant="secondary"
-                className="w-full rounded-xl py-3 cursor-pointer"
+                variant="outline"
+                size="lg"
+                className="h-11 w-full rounded-xl cursor-pointer"
               >
                 <svg className="h-4 w-4" viewBox="0 0 24 24" aria-hidden="true">
                   <title>Google</title>
@@ -199,15 +201,10 @@ export default async function Home({
                 Continue with Google
               </Button>
             </form>
-
-            {/* Terms */}
-            <p className="mt-3 text-center text-[10px] leading-relaxed text-muted-foreground/60">
-              Secure authentication via Google OAuth
-            </p>
           </div>
 
           {/* Footer strip */}
-          <div className="absolute bottom-0 left-0 right-0 flex items-center justify-center border-t border-border bg-secondary/50 py-2.5">
+          <div className="flex items-center justify-center border-t border-border bg-secondary/50 py-2.5">
             <div className="flex items-center gap-1.5">
               <div className="h-1.5 w-1.5 rounded-full bg-success animate-pulse" />
               <span className="text-[10px] text-muted-foreground">End-to-end encrypted</span>
