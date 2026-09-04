@@ -33,7 +33,7 @@ vi.mock("@/components/ui/collapsible", () => ({
   }: {
     children: React.ReactNode;
     asChild?: boolean;
-  }) => (asChild ? <>{children}</> : <button {...props}>{children}</button>),
+  }) => (asChild ? children : <button {...props}>{children}</button>),
   CollapsibleContent: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
 }));
 
