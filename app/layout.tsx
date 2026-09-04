@@ -26,6 +26,33 @@ export const metadata: Metadata = {
   },
 };
 
+const themeScript = `(function() {
+  try {
+    var storedTheme = localStorage.getItem('theme');
+    var dark = storedTheme === 'dark' || (storedTheme !== 'light' && window.matchMedia('(prefers-color-scheme: dark)').matches);
+    var el = document.documentElement;
+    el.classList.toggle('dark', dark);
+    el.classList.toggle('light', !dark);
+    el.dataset.mode = dark ? 'dark' : 'light';
+
+    var storedAccent = localStorage.getItem('basalt-accent') || 'purple';
+    var isDark = el.classList.contains('dark');
+    var swatches = {
+      purple: { light: '270 70% 60%', dark: '270 70% 65%', fg: '0 0% 100%' },
+      primary: { light: '217 91% 60%', dark: '217 91% 65%', fg: '0 0% 100%' }
+    };
+    var swatch = swatches[storedAccent] || swatches.purple;
+    var primary = isDark ? swatch.dark : swatch.light;
+    el.style.setProperty('--basalt-primary', primary);
+    el.style.setProperty('--basalt-primary-foreground', swatch.fg);
+    el.style.setProperty('--basalt-ring', primary);
+    el.dataset.accent = storedAccent;
+    if (!localStorage.getItem('basalt-accent')) {
+      localStorage.setItem('basalt-accent', 'purple');
+    }
+  } catch (e) {}
+})();`;
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -33,6 +60,10 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning>
+      <head>
+        {/* biome-ignore lint/security/noDangerouslySetInnerHtml: theme and accent bootstrap script to prevent FOUC */}
+        <script dangerouslySetInnerHTML={{ __html: themeScript }} />
+      </head>
       <body className={`${inter.variable} ${dmSans.variable} antialiased`}>
         <AppProviders>
           {children}

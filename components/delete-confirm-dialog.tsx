@@ -43,7 +43,7 @@ export function DeleteConfirmDialog({
     >
       <div
         data-basalt-surface-root=""
-        className="w-full max-w-sm rounded-basalt-lg bg-background p-6 shadow-lg border border-border"
+        className="w-full max-w-sm rounded-basalt-lg bg-basalt-card p-6 shadow-lg border border-basalt-border"
       >
         <div className="flex items-center gap-3 mb-4">
           <div className="flex h-10 w-10 items-center justify-center rounded-full bg-destructive/10">

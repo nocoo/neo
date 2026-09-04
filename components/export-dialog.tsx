@@ -76,7 +76,7 @@ export function ExportDialog({ open, onClose, onExport, exportOutput, error }: E
     >
       <div
         data-basalt-surface-root=""
-        className="w-full max-w-lg rounded-basalt-lg bg-background p-6 shadow-lg border border-border"
+        className="w-full max-w-lg rounded-basalt-lg bg-basalt-card p-6 shadow-lg border border-basalt-border"
       >
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-lg font-semibold">Export Secrets</h2>
