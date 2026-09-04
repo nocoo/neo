@@ -4,8 +4,8 @@ import { defineConfig } from "vitest/config";
 
 export default defineConfig({
   plugins: [react()],
-  esbuild: {
-    // Optimize esbuild for faster transforms
+  oxc: {
+    // Optimize OXC for faster transforms
     target: "esnext",
     minify: false,
   },

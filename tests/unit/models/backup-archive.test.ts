@@ -172,15 +172,15 @@ describe("wrong key rejection", () => {
 // ── Archive Format Validation ────────────────────────────────────────────────
 
 describe("archive format validation", () => {
-  it("rejects empty Uint8Array", () => {
+  it("rejects empty Uint8Array", async () => {
     const key = "dGVzdGtleXRlc3RrZXl0ZXN0a2V5dGVzdGtleTE="; // dummy
-    expect(openEncryptedZip(new Uint8Array(0), key)).rejects.toThrow();
+    await expect(openEncryptedZip(new Uint8Array(0), key)).rejects.toThrow();
   });
 
-  it("rejects garbage data", () => {
+  it("rejects garbage data", async () => {
     const key = "dGVzdGtleXRlc3RrZXl0ZXN0a2V5dGVzdGtleTE=";
     const garbage = new Uint8Array([1, 2, 3, 4, 5]);
-    expect(openEncryptedZip(garbage, key)).rejects.toThrow();
+    await expect(openEncryptedZip(garbage, key)).rejects.toThrow();
   });
 });
 
