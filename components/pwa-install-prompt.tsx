@@ -58,7 +58,8 @@ export function PwaInstallPrompt() {
 
   return (
     <header
-      className="fixed bottom-4 left-4 right-4 z-50 mx-auto max-w-md rounded-card bg-secondary p-4"
+      data-basalt-surface-root=""
+      className="fixed bottom-4 left-4 right-4 z-50 mx-auto max-w-md rounded-basalt-lg border border-border bg-card p-4 shadow-lg"
       data-testid="pwa-install-prompt"
     >
       <div className="flex items-start gap-3">

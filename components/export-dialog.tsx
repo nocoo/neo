@@ -69,12 +69,13 @@ export function ExportDialog({ open, onClose, onExport, exportOutput, error }: E
 
   return createPortal(
     <div
+      data-basalt-surface-root=""
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/50"
       role="dialog"
       aria-modal="true"
       aria-label="Export secrets"
     >
-      <div className="w-full max-w-lg rounded-lg bg-background p-6 shadow-lg">
+      <div className="w-full max-w-lg rounded-basalt-lg bg-background p-6 shadow-lg border border-border">
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-lg font-semibold">Export Secrets</h2>
           <Button variant="ghost" size="icon" onClick={onClose} aria-label="Close dialog">

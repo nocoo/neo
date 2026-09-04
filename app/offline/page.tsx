@@ -10,7 +10,10 @@ import { Button } from "@/components/ui/button";
 
 export default function OfflinePage() {
   return (
-    <div className="flex min-h-screen items-center justify-center bg-background p-4">
+    <div
+      data-basalt-surface-root=""
+      className="flex min-h-screen items-center justify-center bg-background p-4"
+    >
       <div className="text-center space-y-6 max-w-md">
         <div className="flex justify-center">
           <div className="rounded-full bg-muted p-6">

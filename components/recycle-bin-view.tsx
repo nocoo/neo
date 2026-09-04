@@ -37,12 +37,13 @@ function ConfirmDialog({
 
   return createPortal(
     <div
+      data-basalt-surface-root=""
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/50"
       role="dialog"
       aria-modal="true"
       aria-label={title}
     >
-      <div className="w-full max-w-sm rounded-lg bg-background p-6 shadow-lg">
+      <div className="w-full max-w-sm rounded-basalt-lg bg-background p-6 shadow-lg border border-border">
         <div className="flex items-center gap-3 mb-4">
           <div className="flex h-10 w-10 items-center justify-center rounded-full bg-destructive/10">
             <AlertTriangle className="h-5 w-5 text-destructive" />
