@@ -167,7 +167,7 @@ export function Sidebar({ user }: { user: SidebarUser }) {
                 <span className="text-lg font-semibold text-foreground whitespace-nowrap">
                   neo.
                 </span>
-                <span className="rounded-md bg-secondary px-1.5 py-0.5 text-[10px] font-medium text-muted-foreground leading-none whitespace-nowrap">
+                <span className="rounded-md bg-secondary px-1.5 py-0.5 text-[10px] font-mono font-medium text-muted-foreground leading-none whitespace-nowrap">
                   v{VERSION}
                 </span>
               </div>

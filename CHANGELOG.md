@@ -2,6 +2,41 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.3.0] - 2026-09-05
+
+全面接入 @nocoo/basalt 统一设计系统，重构 UI 组件与 AppShell 架构，更新全链路依赖。
+
+### Added
+
+- **@nocoo/basalt 2.0.3 深度集成**: 引入 BasaltProvider 与紫意 (Purple) 主题风格
+- **Basalt UI 组件库接管**: Button, Avatar, Badge, Collapsible, Dialog, Tooltip, Toaster 全面迁移至 Basalt 原生及 re-export
+- **Basalt Layout & Containers**: 接入 Basalt AppShell、AppHeader、ContentIsland 与 LayerCard，统一页面容器与视觉深度
+- **版本号徽章 Mono 样式**: 站点 Sidebar 顶部版本号 Pill 统一采用 `font-mono font-medium` 规范呈现
+
+### Changed
+
+- **UI 依赖精简**: 移除已由 Basalt 覆盖的 `@radix-ui/*` (`avatar`, `collapsible`, `slot`, `tooltip`)、`class-variance-authority`、`next-themes` 与 `sonner`
+- **登录界面视觉升级**: 对齐 Surety 登录卡片规范，重构垂直居中布局、边距比例及 OAuth 按钮层次
+- **工具与设置页面重构**: Tools、Backup、Settings 模块迁移至 Basalt `LayerCard`
+- **依赖批量升级**:
+  - `next`: 16.3.4
+  - `react` / `react-dom`: 19.2.8
+  - `biome`: 2.5.12
+  - `vitest`: 5.0.0 (root + worker)
+  - `wrangler`: 4.129.0
+  - `@cloudflare/workers-types`: 5.20260904.1
+  - `lucide-react`: 1.41.0
+  - `happy-dom`: 20.14.0
+  - `playwright`: 1.63.0
+
+### Fixed
+
+- **主题 FOUC 消除**: 统一深色/浅色模式初始化流程，消除加载闪烁
+- **Tailwind v4 utility 生成**: `globals.css` 添加 `@source` basalt 路径确保样式完整打包
+- **侧边栏折叠双箭头修复**: `CollapsibleTrigger` 配合 `asChild` 正确透传
+- **对话框 Surface Root 挂载**: 将 `data-basalt-surface-root` 修正挂载至 dialog panel 避免遮罩误渲染
+- **骨架屏服务端渲染**: 移除 Skeleton 组件冗余 `"use client"` 指令
+
 ## [1.2.0] - 2026-07-19
 
 TypeScript 7 上车, ESLint 全面退休, Biome 单一 lint/format 权威; Worker 首次纳入统一门禁。

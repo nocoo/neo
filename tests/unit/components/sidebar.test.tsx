@@ -81,6 +81,7 @@ describe("Sidebar — expanded", () => {
     const versionEl = screen.getByText(/^v\d/);
     expect(versionEl).toBeDefined();
     expect(versionEl.className).toContain("font-medium");
+    expect(versionEl.className).toContain("font-mono");
   });
 
   it("renders collapse toggle button", () => {
