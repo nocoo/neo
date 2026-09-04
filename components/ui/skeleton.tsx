@@ -1,5 +1,3 @@
-"use client";
-
 import { cn } from "@/lib/utils";
 
 export { SkeletonLine } from "@nocoo/basalt/components/skeleton-line";
