@@ -1,0 +1,40 @@
+{
+  "project": "neo",
+  "model": "Azure Foundry gpt-image-2",
+  "nativeSize": [2048, 2048],
+  "study": "https://github.com/nocoo/hexly.ai/tree/main/artwork/logo-family/neo/2026-09-07-02",
+  "finishing": "02",
+  "rawImageSha256": "3450916bc2cea7cebb350e5e292d0c24245f4bf703affba2ae4db6b2092621ed",
+  "previousLogoSha256": "2939c3edb084df9e8e0f823dc1433a87374e4432b6af9c94097c10d7dd36bb2d",
+  "approval": {
+    "decisionSource": "owner-delegated batch acceptance",
+    "ownerReviewedExactBytes": false,
+    "scope": "https://github.com/nocoo/hexly.ai/blob/main/artwork/logo-family/neo/2026-09-07-02/approval-scope.json"
+  },
+  "assets": [
+    {
+      "path": "logo.png",
+      "role": "Canonical transparent foreground",
+      "width": 2048,
+      "height": 2048,
+      "bytes": 3963979,
+      "sha256": "1a223465b47dde344ad6b7a495b42bee2df1bb4ceea67b5614436775d3b7d169"
+    },
+    {
+      "path": "assets/brand/icon.png",
+      "role": "Square tile for platform-managed masking",
+      "width": 2048,
+      "height": 2048,
+      "bytes": 5247608,
+      "sha256": "8dd66f441814c28a2236261ad04416ec38cdea518f7ba5adb6d1182fdc029bfa"
+    },
+    {
+      "path": "assets/brand/icon-rounded.png",
+      "role": "Rounded tile for README and app-controlled surfaces",
+      "width": 2048,
+      "height": 2048,
+      "bytes": 5125157,
+      "sha256": "3a8e4edb8b86c5d518891e87b76788f50ddb7df711ef68de4f50d9bbe443b9b1"
+    }
+  ]
+}

@@ -1,4 +1,4 @@
-<p align="center"><img src="logo.png" width="128" height="128"/></p>
+<p align="center"><img src="assets/brand/icon-rounded.png" width="128" height="128"/></p>
 
 <h1 align="center">Neo</h1>
 

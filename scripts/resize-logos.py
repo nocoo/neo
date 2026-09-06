@@ -1,19 +1,8 @@
 #!/usr/bin/env python3
-"""
-Generate all derived logo assets from the single-source logo.png.
+"""Generate Neo application assets from the adopted family masters.
 
-Usage:
-    python3 scripts/resize-logos.py
-
-Requires: Pillow (`pip install Pillow`)
-
-Outputs:
-    public/logo-24.png       — sidebar icon
-    public/logo-80.png       — login page icon
-    app/icon.png             — 32x32 favicon (Next.js file-based metadata)
-    app/apple-icon.png       — 180x180 Apple touch icon
-    app/favicon.ico          — 16+32 multi-size ICO
-    app/opengraph-image.png  — 1200x630 OG image (RGB, brand background)
+Run with: uv run --with pillow python scripts/resize-logos.py
+The transparent source, square tile and rounded tile share one composition.
 """
 
 from pathlib import Path
@@ -21,80 +10,49 @@ from pathlib import Path
 from PIL import Image
 
 ROOT = Path(__file__).resolve().parent.parent
-LOGO = ROOT / "logo.png"
-
-# Brand background color (dark, matches the logo's black background)
-BRAND_BG = (15, 15, 15)
+SOURCE = ROOT / "logo.png"
+BRAND = ROOT / "assets" / "brand"
 
 
-def resize(src: Image.Image, size: int) -> Image.Image:
-    """Resize preserving RGBA, using LANCZOS resampling."""
-    return src.resize((size, size), Image.LANCZOS)
-
-
-def make_og(src: Image.Image, width: int = 1200, height: int = 630) -> Image.Image:
-    """Create an OG image: brand background, logo centered at ~40% canvas height, RGBA→RGB."""
-    canvas = Image.new("RGB", (width, height), BRAND_BG)
-
-    # Scale logo to ~40% of canvas height
-    logo_h = int(height * 0.4)
-    logo = src.resize((logo_h, logo_h), Image.LANCZOS)
-
-    # Center horizontally, place at ~30% from top (visually centered)
-    x = (width - logo_h) // 2
-    y = (height - logo_h) // 2
-    canvas.paste(logo, (x, y), logo)  # use alpha mask
-
-    return canvas
-
-
-def make_ico(src: Image.Image) -> list[Image.Image]:
-    """Return 16px and 32px RGBA images for ICO embedding."""
-    return [resize(src, 16), resize(src, 32)]
+def save_png(image: Image.Image, relative: str, size: int) -> None:
+    destination = ROOT / relative
+    destination.parent.mkdir(parents=True, exist_ok=True)
+    image.resize((size, size), Image.Resampling.LANCZOS).save(destination, "PNG")
+    print(f"  {relative}: {size}x{size}")
 
 
 def main() -> None:
-    if not LOGO.exists():
-        raise FileNotFoundError(f"Source logo not found: {LOGO}")
+    foreground = Image.open(SOURCE).convert("RGBA")
+    square = Image.open(BRAND / "icon.png").convert("RGBA")
+    rounded = Image.open(BRAND / "icon-rounded.png").convert("RGBA")
+    if foreground.size != (2048, 2048) or square.size != foreground.size or rounded.size != foreground.size:
+        raise ValueError("All approved brand masters must share their 2048-square framing")
+    if square.getchannel("A").getextrema() != (255, 255) or rounded.getpixel((0, 0))[3] != 0:
+        raise ValueError("Square and rounded master roles are inconsistent")
+    save_png(rounded, "public/logo-24.png", 24)
+    save_png(rounded, "public/logo-80.png", 80)
+    save_png(square, "app/icon.png", 32)
+    save_png(square, "app/apple-icon.png", 180)
+    save_png(square, "public/icon-192.png", 192)
+    save_png(square, "public/icon-512.png", 512)
 
-    src = Image.open(LOGO).convert("RGBA")
-    print(f"Source: {LOGO} ({src.size[0]}x{src.size[1]}, {src.mode})")
+    ico_path = ROOT / "app/favicon.ico"
+    ico_path.parent.mkdir(parents=True, exist_ok=True)
+    ico_sizes = [(16, 16), (32, 32), (48, 48)]
+    square.save(ico_path, format="ICO", sizes=ico_sizes)
+    with Image.open(ico_path) as icon:
+        if icon.ico.sizes() != set(ico_sizes):
+            raise ValueError("Favicon is missing an expected embedded resolution")
+    print(f"  {ico_path.relative_to(ROOT)}: 16+32+48 ICO, verified")
 
-    public = ROOT / "public"
-    app = ROOT / "app"
-    public.mkdir(exist_ok=True)
-    app.mkdir(exist_ok=True)
-
-    # -- public/ assets (for <img> usage in components) --
-    for size, name in [(24, "logo-24.png"), (80, "logo-80.png"), (192, "icon-192.png"), (512, "icon-512.png")]:
-        out = public / name
-        resize(src, size).save(out, "PNG")
-        print(f"  ✓ {out.relative_to(ROOT)} ({size}x{size})")
-
-    # -- app/ metadata assets (Next.js file-based conventions) --
-    icon32 = resize(src, 32)
-    out = app / "icon.png"
-    icon32.save(out, "PNG")
-    print(f"  ✓ {out.relative_to(ROOT)} (32x32)")
-
-    apple = resize(src, 180)
-    out = app / "apple-icon.png"
-    apple.save(out, "PNG")
-    print(f"  ✓ {out.relative_to(ROOT)} (180x180)")
-
-    # favicon.ico — multi-size (16 + 32)
-    ico_sizes = make_ico(src)
-    out = app / "favicon.ico"
-    ico_sizes[0].save(out, format="ICO", append_images=ico_sizes[1:], sizes=[(16, 16), (32, 32)])
-    print(f"  ✓ {out.relative_to(ROOT)} (16+32 multi-size)")
-
-    # OG image
-    og = make_og(src)
-    out = app / "opengraph-image.png"
-    og.save(out, "PNG")
-    print(f"  ✓ {out.relative_to(ROOT)} (1200x630)")
-
-    print("\nDone! All assets generated.")
+    og = Image.new("RGB", (1200, 630), (15, 15, 15))
+    logo_size = round(630 * 0.4)
+    mark = rounded.resize((logo_size, logo_size), Image.Resampling.LANCZOS)
+    og.paste(mark, ((1200 - logo_size) // 2, (630 - logo_size) // 2), mark)
+    og_path = ROOT / "app/opengraph-image.png"
+    og_path.parent.mkdir(parents=True, exist_ok=True)
+    og.save(og_path, "PNG")
+    print(f"  {og_path.relative_to(ROOT)}: 1200x630")
 
 
 if __name__ == "__main__":
