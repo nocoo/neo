@@ -142,12 +142,12 @@ export default async function Home({
             {/* Badge content */}
             <div className="flex flex-1 flex-col items-center px-6 pt-6">
               {/* Logo avatar */}
-              <div className="h-24 w-24 overflow-hidden rounded-[23%] shadow-sm">
+              <div className="flex h-24 w-24 items-center justify-center rounded-full bg-secondary dark:bg-background ring-1 ring-border overflow-hidden">
                 <Image
-                  src="/icon-192.png"
+                  src="/logo-80.png"
                   alt="Neo"
-                  width={96}
-                  height={96}
+                  width={80}
+                  height={80}
                   className="h-full w-full object-cover"
                 />
               </div>
