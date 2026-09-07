@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Generate all derived logo assets from the single-source logo.png.
+Generate transparent UI marks and separate install/touch/social presentations.
 
 Usage:
     python3 scripts/resize-logos.py
@@ -23,7 +23,7 @@ from PIL import Image
 ROOT = Path(__file__).resolve().parent.parent
 LOGO = ROOT / "logo.png"
 
-# Brand background color (dark, matches the logo's black background)
+# Existing dark social canvas
 BRAND_BG = (15, 15, 15)
 
 
@@ -48,16 +48,13 @@ def make_og(src: Image.Image, width: int = 1200, height: int = 630) -> Image.Ima
     return canvas
 
 
-def make_ico(src: Image.Image) -> list[Image.Image]:
-    """Return 16px and 32px RGBA images for ICO embedding."""
-    return [resize(src, 16), resize(src, 32)]
-
-
 def main() -> None:
     if not LOGO.exists():
         raise FileNotFoundError(f"Source logo not found: {LOGO}")
 
     src = Image.open(LOGO).convert("RGBA")
+    square = Image.open(ROOT / "assets/brand/icon.png").convert("RGBA")
+    rounded = Image.open(ROOT / "assets/brand/icon-rounded.png").convert("RGBA")
     print(f"Source: {LOGO} ({src.size[0]}x{src.size[1]}, {src.mode})")
 
     public = ROOT / "public"
@@ -68,7 +65,7 @@ def main() -> None:
     # -- public/ assets (for <img> usage in components) --
     for size, name in [(24, "logo-24.png"), (80, "logo-80.png"), (192, "icon-192.png"), (512, "icon-512.png")]:
         out = public / name
-        resize(src, size).save(out, "PNG")
+        resize(square if size >= 192 else src, size).save(out, "PNG")
         print(f"  ✓ {out.relative_to(ROOT)} ({size}x{size})")
 
     # -- app/ metadata assets (Next.js file-based conventions) --
@@ -77,19 +74,18 @@ def main() -> None:
     icon32.save(out, "PNG")
     print(f"  ✓ {out.relative_to(ROOT)} (32x32)")
 
-    apple = resize(src, 180)
+    apple = resize(square, 180).convert("RGB")
     out = app / "apple-icon.png"
     apple.save(out, "PNG")
     print(f"  ✓ {out.relative_to(ROOT)} (180x180)")
 
     # favicon.ico — multi-size (16 + 32)
-    ico_sizes = make_ico(src)
     out = app / "favicon.ico"
-    ico_sizes[0].save(out, format="ICO", append_images=ico_sizes[1:], sizes=[(16, 16), (32, 32)])
+    src.save(out, format="ICO", sizes=[(16, 16), (32, 32)])
     print(f"  ✓ {out.relative_to(ROOT)} (16+32 multi-size)")
 
     # OG image
-    og = make_og(src)
+    og = make_og(rounded)
     out = app / "opengraph-image.png"
     og.save(out, "PNG")
     print(f"  ✓ {out.relative_to(ROOT)} (1200x630)")

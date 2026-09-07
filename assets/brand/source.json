@@ -1,0 +1,37 @@
+{
+  "study": "neo/2026-09-07-03",
+  "finishing": "01",
+  "method": "retained-original",
+  "generationCalls": 0,
+  "nativeDimensions": [2048, 2048],
+  "original": {
+    "path": "source/original.png",
+    "sha256": "2939c3edb084df9e8e0f823dc1433a87374e4432b6af9c94097c10d7dd36bb2d",
+    "width": 2048,
+    "height": 2048,
+    "bytes": 4237355,
+    "repository": "https://github.com/nocoo/neo",
+    "repositoryRevision": "97907273ddd9e52efc4ee9d3d640a51871d81970",
+    "sourcePath": "logo.png",
+    "sourceUrl": "https://github.com/nocoo/neo/blob/97907273ddd9e52efc4ee9d3d640a51871d81970/logo.png"
+  },
+  "masters": {
+    "logo.png": {
+      "sha256": "2939c3edb084df9e8e0f823dc1433a87374e4432b6af9c94097c10d7dd36bb2d",
+      "width": 2048,
+      "height": 2048
+    },
+    "assets/brand/icon.png": {
+      "sha256": "2e836657fb25fd0ebdeff70c249e6042922d59adcce25dc288dc6864dfeb7b32",
+      "width": 2048,
+      "height": 2048
+    },
+    "assets/brand/icon-rounded.png": {
+      "sha256": "a4211243fdde65090cc3432563fba4b504dbfefe4033a6d8b99f92f17756012e",
+      "width": 2048,
+      "height": 2048
+    }
+  },
+  "review": "https://hexly.ai/logos/neo",
+  "archive": "https://github.com/nocoo/hexly.ai/tree/main/artwork/logo-family/neo/2026-09-07-03"
+}
