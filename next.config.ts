@@ -11,6 +11,7 @@ interface WebpackConfig {
 
 const nextConfig: NextConfig = {
   output: "standalone",
+  distDir: process.env.NEXT_DIST_DIR ?? ".next",
   allowedDevOrigins: ["neo.dev.hexly.ai"],
   // Suppress Edge Runtime warnings from next-auth's jose dependency.
   // The CompressionStream/DecompressionStream APIs are not actually used
