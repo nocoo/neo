@@ -1,208 +1,132 @@
-<p align="center"><img src="assets/brand/icon-rounded.png" alt="Neo Logo" width="128" height="128" /></p>
+<p align="center">
+  <img src="assets/brand/icon-rounded.png" alt="Neo" width="128" height="128" />
+</p>
 
 <h1 align="center">Neo</h1>
 
-<p align="center"><strong>全栈 2FA 认证器</strong><br>TOTP/HOTP 管理 · 加密存储 · 离线可用 · 多格式导入导出</p>
+<p align="center">在浏览器中管理双重认证密钥、查看 TOTP 验证码和维护备份。</p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/Next.js-15-black" alt="Next.js 15"/>
-  <img src="https://img.shields.io/badge/React-19-61dafb" alt="React 19"/>
-  <img src="https://img.shields.io/badge/TypeScript-5.7-3178c6" alt="TypeScript"/>
-  <img src="https://img.shields.io/badge/tests-976%20unit%20%2B%2040%20E2E-brightgreen" alt="Tests"/>
-  <img src="https://img.shields.io/badge/license-MIT-blue" alt="License"/>
+  <a href="https://neo.hexly.ai">站点</a> ·
+  <a href="docs/README.en.md">English</a>
 </p>
-
----
 
 ## 这是什么
 
-Neo 是一个全栈 TOTP/HOTP 认证器，基于 Next.js 15 + Cloudflare D1 构建。采用 MVVM 架构，ViewModel 完全解耦视图层，所有密钥操作通过 Server Actions 在服务端完成，数据库按用户隔离。支持 PWA 离线使用、18+ 格式导入导出、AES-GCM 256-bit 加密存储。
+Neo 是一个可自行部署的 Web 认证器。通过 Google 登录后，可以集中管理认证密钥，在浏览器中生成 TOTP 验证码，并在更换认证器时导入、导出数据。服务端使用 Next.js，业务数据存入 Cloudflare D1，并按用户查询。
 
-```
-┌─────────────┐    ┌──────────────┐    ┌────────────────┐
-│   View      │ →  │  ViewModel   │ →  │  Server Action  │
-│  (React)    │    │  (hooks)     │    │  (use server)   │
-└─────────────┘    └──────────────┘    └───────┬────────┘
-                                               │
-                                    ┌──────────▼──────────┐
-                                    │   ScopedDB (D1)     │
-                                    │   per-user isolation │
-                                    └─────────────────────┘
-```
+当前数据库保存的是可由服务端读取的 Base32 密钥。AES-GCM 加密用于导出的备份 ZIP，备份加密密钥也保存在 D1；使用该服务意味着信任部署者及其数据库访问控制。
 
 ## 功能
 
-### 核心
+- 按名称或账号查找密钥，添加、编辑和复制 TOTP 验证码；支持 SHA-1 / SHA-256 / SHA-512、6 / 8 位验证码及 30 / 60 秒周期。
+- 删除后进入回收站，可恢复，也可永久删除或清空回收站。
+- 导入和导出 `otpauth://` URI，以及 Aegis、andOTP、2FAS、Bitwarden 等工具的受支持明文格式；批量导入会检查重复项。
+- 下载 AES-GCM 加密的备份 ZIP，使用对应密钥恢复；可配置 Backy 推送与拉取 webhook，把归档交给 Backy 保存。
+- 在 Tools 页面预览导入结果、转换导出格式和测试 TOTP 参数。
+- 切换中英文与浅色、深色主题；提供 PWA 安装入口和离线回退页面。
 
-- **OTP 引擎** — TOTP/HOTP 生成，支持 SHA-1/256/512 算法，6/8 位验证码，纯 Web Crypto API 实现
-- **密钥管理** — CRUD + 批量导入（≤100 条）+ 重复检测
-- **加密存储** — AES-GCM 256-bit 加密，格式 `v1:<iv>:<ciphertext>`，支持按账户独立加密
-- **导入导出** — 18+ 导入格式，17+ 导出格式（Aegis, andOTP, 2FAS, Bitwarden, Google Authenticator 等）
+数据模型和导入器包含 HOTP 字段，当前主界面只生成 TOTP 验证码。登录、读取最新数据和修改密钥需要网络；PWA 的缓存与离线回退不等于完整的离线密钥管理。加密的第三方导出文件需要先在原工具中转换为受支持格式。
 
-### 基础设施
+## 使用
 
-- **备份系统** — 事件驱动（5 分钟防抖）+ 定时任务（每日 UTC 16:00，hash 去重），保留最近 100 份
-- **PWA** — Service Worker (Serwist)，离线队列 (IndexedDB)，Background Sync，协议处理器 (`web+otpauth://`)
-- **限流** — 滑动窗口 + 固定窗口，5 种预设策略
-- **Favicon 代理** — 瀑布式查询 4 个来源（兼容 Google 不可用的地区）
-- **认证** — NextAuth v5 + Google OAuth，`ALLOWED_EMAILS` 白名单
-- **国际化** — 英文 / 简体中文，客户端切换
+1. 打开[站点](https://neo.hexly.ai)，使用部署者允许的 Google 账号登录。
+2. 在密钥页面添加条目，或打开 Import 粘贴、上传受支持的明文导出内容。
+3. 按名称或账号搜索，在卡片上复制当前 TOTP 验证码。
+4. 需要备份时，先在 Settings 生成并另行保存加密密钥，再到 Backup 下载归档。恢复时需要原归档对应的密钥。
 
-### 开发者工具
-
-- **QR 编解码** — 二维码编码与解码
-- **Base32 编解码** — Base32 编码与解码
-- **密钥强度检查** — 评估 OTP 密钥安全性
-- **随机密钥生成** — 生成符合规范的随机密钥
-- **TOTP 时间步可视化** — 实时展示 TOTP 时间步进度
-
-## 安装
-
-```bash
-# 克隆仓库
-git clone https://github.com/nocoo/neo.git
-cd neo
-
-# 安装依赖
-bun install
-
-# 配置环境变量
-cp .env.example .env.local
-
-# 启动开发服务器（端口 7026）
-bun run dev
-```
-
-## 命令一览
-
-| 命令 | 说明 |
-|------|------|
-| `bun run dev` | 启动开发服务器（Turbopack，端口 7026） |
-| `bun run build` | 生产构建 |
-| `bun run start` | 启动生产服务器 |
-| `bun run lint` | ESLint 检查（`--max-warnings=0`） |
-| `bun run typecheck` | TypeScript 类型检查（`tsc --noEmit`） |
-| `bun run test:run` | 运行全部 Vitest 测试 |
-| `bun run test:unit` | 仅单元测试 |
-| `bun run test:unit:coverage` | 单元测试 + 覆盖率报告 |
-| `bun run test:api` | API E2E 测试 |
-| `bun run test:e2e:pw` | Playwright E2E 测试 |
-| `bun run test:security` | 安全扫描（osv-scanner + gitleaks） |
-
-## 项目结构
-
-```
-neo/
-├── actions/        # Server Actions（secrets, backup, settings, dashboard）
-├── app/            # Next.js App Router 页面和 API 路由
-├── components/     # React 组件（视图 + UI 基础组件）
-├── contexts/       # React Context providers
-├── hooks/          # 自定义 React hooks
-├── i18n/           # 国际化（en, zh-CN）
-├── lib/            # 核心库（db, auth, PWA, logger）
-├── models/         # 领域模型、类型和常量
-├── viewmodels/     # ViewModel hooks（业务逻辑桥接层）
-├── worker/         # Cloudflare Worker 边缘任务
-├── tests/          # Vitest + Playwright 测试套件
-├── drizzle/        # 数据库迁移文件
-├── docs/           # 项目文档
-└── scripts/        # 构建与工具脚本
-```
-
-## 技术栈
-
-| 层 | 技术 |
-|----|------|
-| 框架 | [Next.js 15](https://nextjs.org/) (App Router, Turbopack) |
-| 运行时 | [Bun](https://bun.sh/) |
-| UI | [React 19](https://react.dev/) + [shadcn/ui](https://ui.shadcn.com/) + [Tailwind CSS 3](https://tailwindcss.com/) |
-| 数据库 | [Cloudflare D1](https://developers.cloudflare.com/d1/) (HTTP API) + [Drizzle ORM](https://orm.drizzle.team/) |
-| 认证 | [NextAuth v5](https://authjs.dev/) + Google OAuth |
-| PWA | [Serwist 9](https://serwist.pages.dev/) |
-| Worker | [Cloudflare Workers](https://workers.cloudflare.com/)（Quick OTP, Favicon, Cron） |
-| 测试 | [Vitest 4](https://vitest.dev/) (976 tests) + [Playwright](https://playwright.dev/) (40 E2E specs) |
+Backy 是可选集成。在 Settings 配置 Backy webhook URL 与 API key 后，可手动推送归档。定期备份由 Backy 调用 Neo 的 `/api/backy/pull` 触发，配置方法见[备份说明](docs/02-backup-consolidation.md)。
 
 ## 开发
 
-### 环境要求
-
-- [Bun](https://bun.sh/) >= 1.0
-- Cloudflare D1 数据库（HTTP API 访问）
-- Google OAuth 凭证
-
-### 快速开始
+需要 Bun、Node.js 22.12+、Google OAuth 凭据和可通过 HTTP API 访问的 Cloudflare D1 数据库。
 
 ```bash
-bun install
-bun run dev
+git clone https://github.com/nocoo/neo.git
+cd neo
+bun install --frozen-lockfile
+bun install --cwd worker --frozen-lockfile
 ```
 
-### 环境变量
+仓库没有 `.env.example`。创建 `.env.local`，配置下列变量：
 
-| 变量 | 说明 |
-|------|------|
-| `AUTH_SECRET` | NextAuth 签名密钥 |
-| `AUTH_GOOGLE_ID` | Google OAuth Client ID |
-| `AUTH_GOOGLE_SECRET` | Google OAuth Client Secret |
-| `AUTH_URL` | 应用 URL |
-| `ALLOWED_EMAILS` | 逗号分隔的允许邮箱列表 |
-| `CF_API_TOKEN` | Cloudflare API Token |
-| `CF_ACCOUNT_ID` | Cloudflare Account ID |
-| `CF_D1_DATABASE_ID` | D1 数据库 ID |
-| `ENCRYPTION_KEY` | AES-GCM 256-bit 密钥（可选） |
-| `SENTRY_DSN` | Sentry 错误追踪（可选） |
+| 变量 | 用途 |
+| --- | --- |
+| `AUTH_SECRET` | Auth.js 会话签名密钥 |
+| `AUTH_GOOGLE_ID` / `AUTH_GOOGLE_SECRET` | Google OAuth 客户端凭据 |
+| `AUTH_URL` | 本地填写 `http://localhost:7026`；部署时填写实际站点地址 |
+| `ALLOWED_EMAILS` | 逗号分隔的登录邮箱名单；为空时拒绝所有登录 |
+| `CLOUDFLARE_ACCOUNT_ID` | D1 所属 Cloudflare 账号 |
+| `CLOUDFLARE_D1_DATABASE_ID` | D1 数据库 ID |
+| `CLOUDFLARE_API_TOKEN` | 有权查询目标 D1 的 API token |
 
-### 部署（Railway）
+Google OAuth 的本地回调地址为 `http://localhost:7026/api/auth/callback/google`。在新建 D1 数据库中按顺序执行以下 SQL；应用启动不会自动创建表：
 
-项目包含多阶段 Dockerfile，针对 Railway 优化：
+1. [初始表结构](drizzle/0000_pink_archangel.sql)
+2. [条目颜色字段](drizzle/0001_green_karnak.sql)
+3. [回收站字段](drizzle/0002_recycle_bin.sql)
+4. [备份密钥与 Backy 字段](migrations/0001_add_backy_and_encryption_key.sql)
 
 ```bash
-docker build -t neo .
-docker run -p 7026:7026 --env-file .env neo
+bun run dev       # Webpack 开发服务，http://localhost:7026
+bun run build     # 生产构建，包含 Serwist Service Worker
+bun run start     # 本地启动生产构建，端口 7026
 ```
 
-### Cloudflare Worker
+`bun run typecheck` 同时检查主应用和 `worker/`；`bun run lint` 使用 Biome。主应用也可以使用仓库的 [Dockerfile](Dockerfile) 部署。
 
-边缘 Worker 独立处理轻量任务：
+可选的 `worker/` 提供 `POST /otp`、`GET /favicon/:domain` 和 `/health`。它独立于 Next.js 应用，需要自己的 Wrangler 配置与 D1 限流表。使用 [wrangler.toml.example](worker/wrangler.toml.example) 时，替换 D1 binding，并移除其中遗留的 cron 配置；当前 Worker 没有 `scheduled` 处理函数。准备好配置与 [SQL](worker/migrations/0001_rate_limits.sql) 后，可运行 `bun run --cwd worker dev`。
 
-```bash
-cd worker
-bun install
-bun run dev      # 本地开发（端口 8787）
-bun run deploy   # 部署到 Cloudflare
+```text
+actions/           服务端密钥、设置与备份操作
+app/               Next.js 页面、API 和 Service Worker
+components/        界面组件
+viewmodels/        UI 状态与交互逻辑
+models/            OTP、导入导出、加密归档
+lib/db/            D1 HTTP 客户端与按用户查询
+worker/            可选 OTP 与 favicon 服务
 ```
 
 ## 测试
 
-六维质量体系（L1+L2+L3+G1+G2+D1），详见 [docs/04-quality-system-upgrade.md](./docs/04-quality-system-upgrade.md)。
+从仓库根目录执行：
 
-| 维度 | 工具 | Hook | 状态 |
-|------|------|------|------|
-| **L1** 单元/组件 | Vitest（925 tests，95%+ 覆盖率） | pre-commit | ✅ |
-| **L2** 集成/API | Vitest（51 tests）+ HTTP E2E（34 tests，in-memory DB） | pre-push | ✅ |
-| **L3** 系统/E2E | Playwright（40 specs） | manual/CI | ✅ |
-| **G1** 静态分析 | `tsc --noEmit` + ESLint `--max-warnings=0` | pre-commit | ✅ |
-| **G2** 安全 | osv-scanner + gitleaks | pre-push | ✅ |
+| 测试层 | 命令 |
+| --- | --- |
+| 主应用单元与组件测试 | `bun run test:unit` |
+| Server Action 集成测试 | `bun run test:api` |
+| 本地 HTTP 端到端测试 | `bun run test:e2e` |
+| 浏览器冒烟测试 | `bun run test:e2e:pw` |
+| 独立 Worker 单元测试 | `bun run --cwd worker test` |
 
-**Tier: S** — 全维度绿灯。
+Server Action 测试使用内存存储替代 D1。HTTP 测试自动启动端口 `17026` 的 Next.js 服务，使用测试身份和内存数据库；运行前保持该端口空闲。浏览器测试先执行 `bunx playwright install chromium`，会自动启动端口 `27026` 的服务，当前用例检查登录页加载。以上测试不需要真实 D1 数据或 Google 登录。
 
-```bash
-bun run test:run            # L1 + L2 全部测试
-bun run test:e2e:pw         # L3 Playwright E2E
-bun run lint && bun run typecheck  # G1 静态分析
-bun run test:security       # G2 安全扫描
-```
+## 技术栈
+
+![TypeScript](https://img.shields.io/badge/TypeScript-3178C6?logo=typescript&logoColor=white)
+![Next.js](https://img.shields.io/badge/Next.js-000000?logo=nextdotjs&logoColor=white)
+![React](https://img.shields.io/badge/React-20232A?logo=react&logoColor=61DAFB)
+![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-06B6D4?logo=tailwindcss&logoColor=white)
+![Cloudflare D1](https://img.shields.io/badge/Cloudflare_D1-F38020?logo=cloudflare&logoColor=white)
+![Web Crypto](https://img.shields.io/badge/Web_Crypto-555555)
+
+| 部分 | 实现 |
+| --- | --- |
+| Web 应用 | Next.js App Router、React、Tailwind CSS、Basalt UI |
+| 登录与数据 | Auth.js / NextAuth、Google OAuth、D1 HTTP API；Drizzle 定义 schema |
+| OTP 与备份 | Web Crypto、fflate、Backy webhook |
+| PWA 与可选服务 | Serwist、Cloudflare Workers |
+| 开发与测试 | Bun、Webpack、TypeScript、Biome、Vitest、Playwright |
 
 ## 文档
 
-| # | 文档 | 说明 |
-|---|------|------|
-| 01 | [Modernization Plan](./docs/01-modernization-plan.md) | 现代化改造：目标、架构、测试策略、提交计划 |
-| 02 | [Backup Consolidation](./docs/02-backup-consolidation.md) | 四套备份子系统统一为加密归档 → Backy webhook 流程 |
-| 03 | [Test Coverage Improvement](./docs/03-test-coverage-improvement.md) | 测试基础设施升级至四层标准 |
-| 04 | [Quality System Upgrade](./docs/04-quality-system-upgrade.md) | 四层测试 → 六维质量体系（L1/L2/L3+G1/G2+D1） |
-| 05 | [Quality System V2 Upgrade](./docs/05-quality-system-v2-upgrade.md) | 重审计：L2 mock→真实 HTTP + D1 三层验证 |
+- [文档索引](docs/README.md)
+- [备份归档与 Backy 设计](docs/02-backup-consolidation.md)
+- [数据表定义](lib/db/schema.ts)
+- [变更记录](CHANGELOG.md)
 
-## License
+历史设计文档保留了迁移过程与已替换的方案；当前入口和运行方法以本 README 及源码为准。
+
+## 许可证
 
 [MIT](LICENSE) © 2026
