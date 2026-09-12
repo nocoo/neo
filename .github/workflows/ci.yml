@@ -1,65 +1,35 @@
 name: CI
-
-on:
+'on':
   push:
-    branches: [main]
+    branches:
+      - main
   pull_request:
-    branches: [main]
-  workflow_dispatch:
-
+    branches:
+      - main
+  workflow_dispatch: null
 jobs:
   quality:
-    uses: nocoo/base-ci/.github/workflows/bun-quality.yml@b482fdee98ce1196c809ae158f116caabfc2475b  # v2026.6
+    uses: nocoo/base-ci/.github/workflows/quality.yml@2857469cc5206e7a4988171a1282209617996a67
     with:
-      ignore-scripts: true
-      extra-install-dirs: "worker"
-      pre-command: "bun run build"
-      test-command: "bun run test:coverage"
-      typecheck-command: "bun run typecheck"
-      enable-security: "true"
-      enable-l2: "true"
-      l2-command: "bun run test:api"
-      enable-l3: "true"
-      l3-command: "bun run test:e2e:bdd"
-      l3-browser: "chromium"
-      enable-worker: "true"
-    secrets: inherit
-
+      runtime-version: 1.4.2
+      install-policy: blocked
+      coverage-path: coverage
+      extra-install-dirs: worker
+      prepare-command: bun run build
+      test-command: bun run test:coverage
+      typecheck-command: bun run typecheck
+      l2-command: bun run test:api
+      l3-command: bun run test:e2e:bdd
+      l3-browser: chromium
+      security: true
+      worker: true
+      l2: true
+      l3: true
   release-smoke:
     name: Release Workflow Smoke
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Install actionlint
-        run: |
-          bash <(curl -fsSL https://raw.githubusercontent.com/rhysd/actionlint/main/scripts/download-actionlint.bash)
-          sudo mv actionlint /usr/local/bin/
-
-      - name: Lint release.yml
-        run: actionlint .github/workflows/release.yml
-
-      - name: Assert ssh-deploy is SHA-pinned
-        run: |
-          if grep -q 'appleboy/ssh-action' .github/workflows/release.yml; then
-            echo "::error::release.yml still references appleboy/ssh-action"
-            exit 1
-          fi
-          if ! grep -q 'nocoo/base-ci/.github/actions/ssh-deploy@[a-f0-9]\{40\}' .github/workflows/release.yml; then
-            echo "::error::ssh-deploy must be pinned to a 40-char commit SHA"
-            exit 1
-          fi
-          echo "✅ ssh-deploy SHA-pinned, no appleboy reference"
-
-      - name: Assert base-ci is SHA-pinned
-        run: |
-          if grep -rE 'nocoo/base-ci.*@v[0-9]' .github/workflows/; then
-            echo "::error::Found floating tag reference to base-ci"
-            exit 1
-          fi
-          echo "✅ All base-ci references SHA-pinned"
-
-      - name: yamllint release.yml
-        run: |
-          pip install --quiet yamllint
-          yamllint -d "{extends: default, rules: {line-length: disable, document-start: disable, truthy: disable}}" .github/workflows/release.yml
+    uses: nocoo/base-ci/.github/workflows/workflow-lint.yml@2857469cc5206e7a4988171a1282209617996a67
+    with:
+      required-reusable-workflow: nocoo/base-ci/.github/workflows/deploy-docker.yml
+      yamllint: true
+permissions:
+  contents: read
