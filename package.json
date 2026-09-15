@@ -52,7 +52,7 @@
     "@vitest/coverage-v8": "5.0.0",
     "drizzle-kit": "^0.31.10",
     "fake-indexeddb": "^6.2.5",
-    "happy-dom": "20.14.3",
+    "happy-dom": "20.14.5",
     "husky": "^9.1.7",
     "lint-staged": "17.5.1",
     "postcss": "8.5.28",
