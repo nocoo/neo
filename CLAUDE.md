@@ -1,49 +1,99 @@
-# Retrospective
+# Neo
 
-## 2026-07-19 — TS 7 升级与 Biome 迁移 (5-commit 后又 codex 复审 5-commit)
+Web authenticator for managing TOTP secrets, imports, recycle-bin records and encrypted backups.
+Profile: ts-worker-web (Next.js on a server; D1 accessed over HTTP; optional OTP Worker).
+Direction: [README.md](README.md), [backup contract](docs/02-backup-consolidation.md).
 
-### 教训 1: 大改动必须跑生产 build
+## Sources of Truth
 
-TS 6.0.3 → 7.0.2 那次提交, 我只跑了 `typecheck / lint / test:coverage` 就宣告完成, 没跑 `bun run build`。codex 复审时立刻发现 build 全崩 (所有 `@/*` 路径 unresolved)。
+This file is the contract; hooks, CI and config enforce it. Raise weaker gates to meet it. The framework-owned footer below may be regenerated; preserve the handbook around it.
 
-**根因**: Next 16.2.10 的 `load-jsconfig` 需要 `typescript/lib/typescript.js`, TS 7 已经删除该文件 → next 完全没读 tsconfig → paths 全丢。TS 严格模式下 `baseUrl` 被删除 (TS5102) 也放大了这个问题。
+| Fact | Where |
+| --- | --- |
+| Human docs | [README.md](README.md), [docs/README.md](docs/README.md) |
+| Version | Root `package.json`; Worker is independently versioned |
+| Enforcement | `.husky/`, CI, root/Worker Vitest configs |
+| Environment | Ignored `.env.local`; no root example exists; Worker has `wrangler.toml.example` |
+| Accidents | [Retrospective.md](Retrospective.md) |
 
-**下次**: 涉及 TS、bundler、Next 版本任何一个升级, 必须把 `bun run build` 加入验证清单。type-only 检查通过 ≠ build 通过。
+## Project Invariants
 
-### 教训 2: biome autofix 会改语义, 不能盲信
+- Google authentication and the email allowlist protect per-user D1 records; an empty `ALLOWED_EMAILS` rejects all logins. Never test against real user OTP secrets.
+- Stored Base32 secrets are server-readable. AES-GCM protects exported ZIPs; its key is stored in D1. Do not claim end-to-end encryption or a complete offline vault.
+- Preserve supported TOTP algorithms/digits/periods, import deduplication, recycle-bin versus permanent deletion, and Backy backup scope. HOTP fields do not mean the UI generates HOTP.
+- Optional `worker/` OTP/favicon service is independently configured/deployed. Keep its D1 rate-limit schema; remove legacy cron config when provisioning a new copy because no scheduled handler exists.
+- MVVM: models own OTP/import/backup logic, ViewModels own state without View/DOM imports, actions/routes orchestrate. Preserve Next/Webpack/Serwist compatibility.
+- Always build after TypeScript, Next or bundler upgrades; typechecking alone does not verify Next path resolution or production output.
 
-biome 的 `useExhaustiveDependencies` 对下面这个模式判为 "vm.searchQuery 不必要":
+## Stack / Layout
 
-```tsx
-useEffect(() => { setSelectedIndex(null); }, [vm.searchQuery]);
+| Component | Choice |
+| --- | --- |
+| Web | Next.js/React, TypeScript 7.0.2, Basalt, Serwist |
+| Data | `lib/db/` D1 HTTP client; `drizzle/` and `migrations/` schema |
+| Domain | `actions/`, `models/`, `viewmodels/`, `app/`, `components/` |
+| Quality | Bun, Node 22.12+, Biome, Vitest, Playwright; separate Worker package |
+
+## Commands
+
+Run from root; CI currently pins Bun 1.4.2. Install both packages before typecheck.
+
+```sh
+bun install --frozen-lockfile
+bun install --cwd worker --frozen-lockfile
+bun run dev
+bun run typecheck
+bun run lint
+bun run build
+bun run test:unit:coverage
+bun run test:api
+bun run --cwd worker test
+bun run test:e2e
+bunx playwright install chromium
+bun run test:e2e:pw
+bun run test:security
 ```
 
-它把 deps 自动改成 `[]`。但那个 dep 是**触发时机**, 不是被 body 读的值。改成 `[]` 后 effect 只在 mount 跑一次, 键盘选择在搜索过滤后不重置, 回车/空格会复制错卡片。
+Normal dev needs `AUTH_SECRET`, `AUTH_GOOGLE_ID`, `AUTH_GOOGLE_SECRET`, `AUTH_URL`, `ALLOWED_EMAILS`, `CLOUDFLARE_ACCOUNT_ID`, `CLOUDFLARE_D1_DATABASE_ID`, `CLOUDFLARE_API_TOKEN`; apply README's four schema files to the intended database before use. HTTP tests use `E2E_SKIP_AUTH=true` and in-memory storage; never supply real D1 credentials. Confirm 17026 is free first: the current runner forcibly kills port owners.
 
-**下次**: 在跑 `biome check --write --unsafe` 之前, 先看 diff。有语义变化 (deps、逻辑、类型) 的自动修复要人工过一遍再接受。触发型 effect 加 `biome-ignore` 说明"dep 是触发, body 不读"。
+## Verification
 
-### 教训 3: pre-commit 必须验证 index 快照
+6DQ = L1/L2/L3 + G1/G2 + D1. Status: `enforced`, `planned`, `manual`, `N/A`. No focused/skipped tests; preserve the stricter Web L1 contract of all four metrics ≥95.5% (Worker ≥95%).
 
-pre-commit 里 tsc + vitest 直接跑在工作树上。这有两个漏洞:
+| Piece | Requirement and current reality | Status | Evidence |
+| --- | --- | --- | --- |
+| L1 Web | Four metrics ≥95.5% | enforced | Root Vitest, index-snapshot pre-commit and CI |
+| L1 Worker | Four metrics ≥95% | planned | Worker suite has no coverage gate |
+| L2 | Every endpoint/method over real HTTP and real SQL | planned | Pre-push `test:e2e` uses memory adapter; CI labels mocked `test:api` as L2 |
+| L3 | Authenticated OTP/import/backup journeys | planned | CI Playwright currently checks login-page smoke only |
+| G1 | Both type lanes, zero-warning/error lint, check-only | planned | Types/Biome enforced; lint-staged currently writes before the index snapshot |
+| G2 | Required OSV + gitleaks, both lockfiles | planned | `test:security` scans root lock and upstream range, not pushed refs/all lane locks |
+| D1 | Per-run local database/build/browser state, fail on occupied ports | planned | HTTP uses memory; `.next-e2e` is fixed and runner kills port owners; browser may reuse dev server |
+| Build | Next/Webpack/Serwist output | enforced | CI preparation `build` |
+| Docs | Current runtime and backup contracts | manual | Review linked docs |
 
-1. **并发写竞争**: `lint-staged --write` 会 stash + apply + rewrite, 与 tsc/vitest 并行时它们可能读到中间态。
-2. **index/工作树背离**: 用户把 broken 代码 stage, 又在工作树里修好, hook 读的是"修好后的工作树", 但**commit 只保存 index** —— broken 版本仍然 landed。
+Pre-commit skips heavy gates for docs; code changes run lint-staged before snapshotting the index for unit coverage/types. Pre-push runs HTTP then security against worktree/upstream. Target: check-only index L1/G1 <30s and stdin-ref L2/G2 in parallel <3min. No commit/branch-push bypass, no lowered thresholds.
 
-正解: `git checkout-index --prefix=$SNAP/ -a` 材料化 index, symlink `node_modules`, tsc + vitest 在 snapshot 里跑。pew 只对自定义 gate 用了这招, 主 tsc/vitest 没用 — 是不完整的方案。
+## Resources / Isolation
 
-**下次**: 任何 "验证 commit 内容" 的 hook, 必须操作 index snapshot, 不能操作工作树。
+| Purpose | Port / resource | Current reality |
+| --- | --- | --- |
+| Dev | 7026; real configured D1 | Never a fixture database |
+| L2 | 17026, `.next-e2e`, in-memory adapter | Local HTTP; real-SQL and non-destructive port guard gaps |
+| L3 | 27026 | Login smoke; dedicated state/auth journey gap |
 
-### 教训 4: 子目录也是 CI 的一等公民
+Future D1-backed tests need local Wrangler/Miniflare, per-run SQLite and test context/`_test_marker` before writes/cleanup. Do not create remote `-test` resources. Preserve other worktrees and running servers.
 
-改根 `typecheck` 脚本, 加了 `bun run --cwd worker typecheck`, 本地一切正常。CI 只装了根依赖, worker/node_modules 不存在 → TS2688 找不到 `@cloudflare/workers-types`。
+## Operations / Release
 
-**下次**: 改跨 workspace 的构建脚本时, 同步检查 `.github/workflows/*.yml` 的 `extra-install-dirs`(或等价参数)。CI 的依赖安装与本地开发依赖安装是两回事。
+Use the existing Docker/CI release workflow for an authorized app release; optional Worker deployment is separate. Apply schema before dependent code, verify running `/api/live`, and use [README](README.md) plus [backup guide](docs/02-backup-consolidation.md) for configuration. This repo has no root release script.
 
-### 教训 5: 一次 review 通常不够
+## Retrospective
 
-codex 的第一轮找出 5 个问题 (P1 #1/#2 + P2 #3/#4/#5), 我全修完自认完成。codex 复审又找出 2 个新问题 (CI worker 缺依赖, hook 仍验证工作树) —— 都是**上一轮修复本身引入的**副作用。
+Full prior incidents are in [Retrospective.md](Retrospective.md). Keep only short project rules here; global lessons go to nmem/rules and deterministic checks to hooks/tests.
 
-**下次**: 每次修复完 code review 意见后, 主动请求 (或想象) 复审。特别是修复涉及自动化 (hooks / CI / lint config) 时, 变更本身会产生新的暴露面, 至少要问一句"我的修复引入了什么新问题"。
+- Preserve trigger-only effect dependencies during lint changes; include Worker dependency installation whenever checks cross packages.
+
 
 <!-- BEGIN:nextjs-agent-rules -->
 
