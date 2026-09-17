@@ -1,5 +1,7 @@
 "use client";
 
+import { HeaderTooltip, HexlyLink } from "./header-links";
+
 import { AppHeader } from "@nocoo/basalt/components/app-header";
 import {
   AppMain,
@@ -49,27 +51,32 @@ function AppShellInner({ children, user }: { children: React.ReactNode; user: Si
   const { breadcrumbs, title } = usePageNav();
 
   const leadingAction = isMobile ? (
-    <button
-      type="button"
-      onClick={toggle}
-      aria-label="Open menu"
-      className="flex h-8 w-8 items-center justify-center rounded-lg text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"
-    >
-      <Menu className="h-5 w-5" strokeWidth={1.5} />
-    </button>
+    <HeaderTooltip label="Open navigation menu">
+      <button
+        type="button"
+        onClick={toggle}
+        aria-label="Open menu"
+        className="flex h-8 w-8 items-center justify-center rounded-lg text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"
+      >
+        <Menu className="h-5 w-5" strokeWidth={1.5} />
+      </button>
+    </HeaderTooltip>
   ) : null;
 
   const headerActions = (
     <>
-      <a
-        href="https://github.com/nocoo/neo"
-        target="_blank"
-        rel="noopener noreferrer"
-        className="flex h-8 w-8 items-center justify-center rounded-lg text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"
-        aria-label="GitHub repository"
-      >
-        <Github className="h-[18px] w-[18px]" strokeWidth={1.5} />
-      </a>
+      <HeaderTooltip label="GitHub repository">
+        <a
+          href="https://github.com/nocoo/neo"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="flex h-8 w-8 items-center justify-center rounded-lg text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"
+          aria-label="GitHub repository"
+        >
+          <Github className="h-[18px] w-[18px]" strokeWidth={1.5} />
+        </a>
+      </HeaderTooltip>
+      <HexlyLink />
       <ThemeToggle />
     </>
   );

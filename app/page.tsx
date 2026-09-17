@@ -1,5 +1,6 @@
+import { HeaderTooltip, HexlyLink } from "../components/header-links";
 import { Button } from "@nocoo/basalt/components/button";
-import { ThemeToggle } from "@nocoo/basalt/components/theme-toggle";
+import { ThemeToggle } from "@/components/theme-toggle";
 import { headers } from "next/headers";
 import Image from "next/image";
 import { redirect } from "next/navigation";
@@ -61,15 +62,18 @@ export default async function Home({
     <div className="relative flex min-h-screen flex-col bg-background overflow-hidden">
       {/* Top-right controls */}
       <div className="absolute top-4 right-4 z-10 flex items-center gap-1">
-        <a
-          href="https://github.com/nocoo/neo"
-          target="_blank"
-          rel="noopener noreferrer"
-          className="flex h-8 w-8 items-center justify-center rounded-lg text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"
-          title="GitHub"
-        >
-          <Github className="h-[18px] w-[18px]" strokeWidth={1.5} />
-        </a>
+        <HeaderTooltip label="GitHub repository">
+          <a
+            href="https://github.com/nocoo/neo"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex h-8 w-8 items-center justify-center rounded-lg text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"
+            aria-label="GitHub repository"
+          >
+            <Github className="h-[18px] w-[18px]" strokeWidth={1.5} />
+          </a>
+        </HeaderTooltip>
+        <HexlyLink />
         <ThemeToggle aria-label="Toggle theme" />
       </div>
 
