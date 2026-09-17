@@ -1,7 +1,5 @@
 "use client";
 
-import { HeaderTooltip, HexlyLink } from "./header-links";
-
 import { AppHeader } from "@nocoo/basalt/components/app-header";
 import {
   AppMain,
@@ -18,6 +16,7 @@ import { Sidebar } from "@/components/sidebar";
 import { SidebarProvider, useSidebar } from "@/components/sidebar-context";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { cn } from "@/lib/utils";
+import { HeaderTooltip, HexlyLink } from "./header-links";
 
 export type { SidebarUser };
 

@@ -1,11 +1,11 @@
-import { HeaderTooltip, HexlyLink } from "../components/header-links";
 import { Button } from "@nocoo/basalt/components/button";
-import { ThemeToggle } from "@/components/theme-toggle";
 import { headers } from "next/headers";
 import Image from "next/image";
 import { redirect } from "next/navigation";
 import { auth, signIn } from "@/auth";
 import { Github } from "@/components/icons/github";
+import { ThemeToggle } from "@/components/theme-toggle";
+import { HeaderTooltip, HexlyLink } from "../components/header-links";
 
 function Barcode() {
   const bars: Array<{ id: string; w: number; dim: boolean }> = [
