@@ -2,6 +2,27 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.3.1] - 2026-09-20
+
+### Fixed
+
+- **iOS 主屏幕兼容**：补充 Apple Web App 名称、capable 和默认状态栏声明；独立 viewport 使用 `viewport-fit=cover` 与现有紫色主题，保留页面缩放能力。
+- **屏幕安全区**：顶栏、侧栏/移动抽屉、内容区底部、登录页边缘控件及通知定点避让刘海和 Home 指示条；不增加全局 body padding。桌面通知保留 24 px、移动端保留 16 px 的原始偏移。
+- **移动端可用高度**：AppShell 使用动态视口高度，抽屉跟随容器高度；横屏安全区不会挤压折叠侧栏的控件宽度。
+- **OTP 密钥规范化**：统一处理被验证器接受的密钥格式，保持生成与存储行为一致。
+
+### Changed
+
+- **安装图标重新导出**：沿用最新采用的 2048 px 带底纹方形母版，192/512 px PWA 图标统一为不透明 RGB；Apple touch 保持 180×180 RGB。完整保留源画布，交由系统处理圆角。
+- **图标可复现校验**：现有 Pillow 导出脚本新增 `--check`，核对 Apple touch、PWA、favicon、UI 标志和 Open Graph 全部输出是否与当前母版一致。
+- **近期依赖维护**：更新 Next.js 16.3.5、React 19.3.0、Basalt 2.1.8、Vitest 5.0.1 等已合入的依赖，并完善页面顶部链接与工具提示。
+
+### Tests
+
+- 补充 metadata、viewport、源图 SHA-256、PNG 尺寸/色彩模式、ICO 多尺寸及 manifest 引用检查。
+- 增加测试账号登录后的 PWA 布局回归，覆盖手机横竖屏、Android 和桌面视口，以及零安全区/模拟刘海与 Home 指示条；本地 Chromium、WebKit 均通过，未做 iOS 真机测试。
+- 浏览器测试使用现有测试登录与内存存储，显式清空真实 D1 凭据并拒绝复用占用端口的服务；保持 Web 四项覆盖率 ≥95.5%、Worker ≥95% 的门槛。
+
 ## [1.3.0] - 2026-09-05
 
 全面接入 @nocoo/basalt 统一设计系统，重构 UI 组件与 AppShell 架构，更新全链路依赖。
