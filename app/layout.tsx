@@ -80,7 +80,7 @@ export default function RootLayout({
         <AppProviders>
           {children}
           <Toaster
-            offset={{ bottom: "calc(32px + env(safe-area-inset-bottom, 0px))" }}
+            offset={{ bottom: "calc(24px + env(safe-area-inset-bottom, 0px))" }}
             mobileOffset={{ bottom: "calc(16px + env(safe-area-inset-bottom, 0px))" }}
           />
         </AppProviders>

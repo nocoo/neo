@@ -1,15 +1,26 @@
 import { createHash } from "node:crypto";
 import { readFileSync } from "node:fs";
+import type { ReactNode } from "react";
+import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it, vi } from "vitest";
 import manifest from "@/app/manifest";
 import brandSource from "@/assets/brand/source.json";
+
+const { mockToaster } = vi.hoisted(() => ({
+  mockToaster: vi.fn((_props: Record<string, unknown>) => null),
+}));
+
+vi.mock("@/components/app-providers", () => ({
+  AppProviders: ({ children }: { children: ReactNode }) => children,
+}));
+vi.mock("@/components/ui/sonner", () => ({ Toaster: mockToaster }));
 
 vi.mock("next/font/google", () => ({
   Inter: () => ({ variable: "--font-inter" }),
   DM_Sans: () => ({ variable: "--font-display" }),
 }));
 
-import { metadata, viewport } from "@/app/layout";
+import RootLayout, { metadata, viewport } from "@/app/layout";
 
 function readAsset(path: string): Buffer {
   // Both the normal suite and the pre-commit snapshot run from the repo root.
@@ -30,6 +41,14 @@ function readPng(path: string) {
 }
 
 describe("PWA metadata", () => {
+  it("preserves Sonner's 24px desktop and 16px mobile offsets before the bottom inset", () => {
+    renderToStaticMarkup(RootLayout({ children: null }));
+    expect(mockToaster.mock.lastCall?.[0]).toMatchObject({
+      offset: { bottom: "calc(24px + env(safe-area-inset-bottom, 0px))" },
+      mobileOffset: { bottom: "calc(16px + env(safe-area-inset-bottom, 0px))" },
+    });
+  });
+
   it("declares the installed app name and default Apple status bar without a startup image", () => {
     expect(metadata.appleWebApp).toEqual({
       capable: true,
