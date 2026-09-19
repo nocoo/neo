@@ -61,7 +61,7 @@ export default async function Home({
   return (
     <div className="relative flex min-h-screen flex-col bg-background overflow-hidden">
       {/* Top-right controls */}
-      <div className="absolute top-4 right-4 z-10 flex items-center gap-1">
+      <div className="safe-area-login-actions absolute top-4 right-4 z-10 flex items-center gap-1">
         <HeaderTooltip label="GitHub repository">
           <a
             href="https://github.com/nocoo/neo"
@@ -219,7 +219,7 @@ export default async function Home({
         </div>
       </div>
 
-      <footer className="py-4 text-center">
+      <footer className="safe-area-login-footer py-4 text-center">
         <p className="text-xs text-muted-foreground">
           Powered by{" "}
           <a

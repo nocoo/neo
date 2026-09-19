@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { DM_Sans, Inter } from "next/font/google";
 import { AppProviders } from "@/components/app-providers";
 import { Toaster } from "@/components/ui/sonner";
@@ -19,11 +19,23 @@ export const metadata: Metadata = {
   metadataBase: new URL(process.env.AUTH_URL || "http://localhost:7026"),
   title: "neo - 2FA Manager",
   description: "A modern two-factor authentication manager",
+  appleWebApp: {
+    capable: true,
+    title: "Neo",
+    statusBarStyle: "default",
+  },
   openGraph: {
     title: "neo - 2FA Manager",
     description: "A modern two-factor authentication manager",
     type: "website",
   },
+};
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  viewportFit: "cover",
+  themeColor: "#7c3aed",
 };
 
 const themeScript = `(function() {
@@ -67,7 +79,10 @@ export default function RootLayout({
       <body className={`${inter.variable} ${dmSans.variable} antialiased`}>
         <AppProviders>
           {children}
-          <Toaster />
+          <Toaster
+            offset={{ bottom: "calc(32px + env(safe-area-inset-bottom, 0px))" }}
+            mobileOffset={{ bottom: "calc(16px + env(safe-area-inset-bottom, 0px))" }}
+          />
         </AppProviders>
       </body>
     </html>

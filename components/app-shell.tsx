@@ -81,7 +81,7 @@ function AppShellInner({ children, user }: { children: React.ReactNode; user: Si
   );
 
   return (
-    <BasaltAppShell>
+    <BasaltAppShell className="h-dvh">
       <AppSkipLink>Skip to main content</AppSkipLink>
 
       {/* Desktop sidebar */}
@@ -96,7 +96,7 @@ function AppShellInner({ children, user }: { children: React.ReactNode; user: Si
             className="fixed inset-0 z-40 bg-black/50 backdrop-blur-xs"
             onClick={() => setMobileOpen(false)}
           />
-          <div className="fixed inset-y-0 left-0 z-50 w-[260px]">
+          <div className="fixed inset-y-0 left-0 z-50">
             <Sidebar user={user} />
           </div>
         </>
@@ -104,6 +104,7 @@ function AppShellInner({ children, user }: { children: React.ReactNode; user: Si
 
       <AppMain>
         <AppHeader
+          className="safe-area-header"
           leading={leadingAction}
           {...(breadcrumbs ? { breadcrumbs } : {})}
           title={title}
@@ -111,7 +112,9 @@ function AppShellInner({ children, user }: { children: React.ReactNode; user: Si
         />
 
         {/* Content panel */}
-        <div className={cn("flex-1 min-h-0 px-2 pb-2 md:px-3 md:pb-3 flex flex-col")}>
+        <div
+          className={cn("safe-area-content flex-1 min-h-0 px-2 pb-2 md:px-3 md:pb-3 flex flex-col")}
+        >
           <ContentIsland>{children}</ContentIsland>
         </div>
       </AppMain>

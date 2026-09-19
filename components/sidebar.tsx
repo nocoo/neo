@@ -156,7 +156,8 @@ export function Sidebar({ user }: { user: SidebarUser }) {
   return (
     <TooltipProvider delayDuration={0}>
       <aside
-        className={`sticky top-0 flex h-screen shrink-0 flex-col bg-background overflow-hidden transition-[width] duration-300 ease-in-out ${collapsed ? "w-[68px]" : "w-[260px]"}`}
+        data-collapsed={collapsed}
+        className={`safe-area-sidebar sticky top-0 flex h-full shrink-0 flex-col bg-background overflow-hidden transition-[width] duration-300 ease-in-out ${collapsed ? "w-[68px]" : "w-[260px]"}`}
       >
         {/* ── Header / Logo ── */}
         <div className="h-14 flex items-center pl-[22px] pr-3 shrink-0">
