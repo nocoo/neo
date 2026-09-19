@@ -17,7 +17,7 @@ import { createJsonResponse, createTextResponse } from "./utils/response";
 const BASE32_CHARS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ234567";
 
 function base32toByteArray(base32: string): Uint8Array {
-  const clean = base32.toUpperCase().replace(/=/g, "");
+  const clean = base32.toUpperCase().replace(/[= ]/g, "");
   for (const c of clean) {
     if (BASE32_CHARS.indexOf(c) === -1) {
       throw new Error(`Invalid Base32 character: ${c}`);
@@ -56,23 +56,20 @@ async function generateOTP(
   secret: string,
   time: number,
   options: {
-    digits?: number;
-    period?: number;
-    algorithm?: string;
-    type?: string;
-    counter?: number;
+    digits: number;
+    period: number;
+    algorithm: string;
+    type: string;
+    counter: number;
   },
 ): Promise<string> {
-  const digits = options.digits || 6;
-  const period = options.period || 30;
-  const algorithm = options.algorithm || "SHA1";
-  const type = (options.type || "TOTP").toUpperCase();
+  const { digits, period, algorithm, type } = options;
 
   let counter: number;
   if (type === "HOTP") {
-    counter = options.counter || 0;
+    counter = options.counter;
   } else {
-    counter = Math.floor((time || Math.floor(Date.now() / 1000)) / period);
+    counter = Math.floor(time / period);
   }
 
   const counterBytes = new ArrayBuffer(8);
