@@ -58,16 +58,14 @@ export async function handleFavicon(domain: string): Promise<Response> {
   }
 
   for (const source of FAVICON_SOURCES) {
-    try {
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), source.timeout);
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), source.timeout);
 
+    try {
       const response = await fetch(source.url(domain), {
         signal: controller.signal,
         headers: { "User-Agent": "Neo-Favicon-Proxy/1.0" },
       });
-
-      clearTimeout(timeoutId);
 
       if (response.ok && (response.headers.get("content-type") || "").startsWith("image/")) {
         return new Response(response.body, {
@@ -82,6 +80,8 @@ export async function handleFavicon(domain: string): Promise<Response> {
     } catch {
       // Any failure (timeout, network, non-image response) — fall through
       // to the next source without surfacing the error to the caller.
+    } finally {
+      clearTimeout(timeoutId);
     }
   }
 

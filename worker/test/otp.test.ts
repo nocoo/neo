@@ -2,11 +2,17 @@
  * OTP endpoint tests.
  */
 
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { handleOtp, type OtpRequest } from "../src/otp";
 import type { Env } from "../src/types";
 
 const mockEnv = {} as Env;
+const rfcSecret = "GEZDGNBVGY3TQOJQGEZDGNBVGY3TQOJQ";
+
+afterEach(() => {
+  vi.restoreAllMocks();
+  vi.useRealTimers();
+});
 
 describe("handleOtp", () => {
   it("returns valid OTP for valid secret", async () => {
@@ -113,5 +119,84 @@ describe("handleOtp", () => {
     const response = await handleOtp(body, mockEnv);
     const data = (await response.json()) as Record<string, unknown>;
     expect(data.hint).toContain("POST /otp");
+  });
+});
+
+describe("public OTP protocol contracts", () => {
+  it.each([
+    ["SHA1", rfcSecret, "94287082"],
+    ["SHA256", "GEZDGNBVGY3TQOJQGEZDGNBVGY3TQOJQGEZDGNBVGY3TQOJQGEZA====", "46119246"],
+    [
+      "SHA512",
+      "GEZDGNBVGY3TQOJQGEZDGNBVGY3TQOJQGEZDGNBVGY3TQOJQGEZDGNBVGY3TQOJQGEZDGNBVGY3TQOJQGEZDGNBVGY3TQOJQGEZDGNA=",
+      "90693936",
+    ],
+  ])("matches the RFC 6238 %s vector at 59 seconds", async (algorithm, secret, otp) => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date(59_000));
+    const response = await handleOtp({ secret, algorithm, digits: 8 }, mockEnv);
+    expect(response.status).toBe(200);
+    expect(await response.json()).toMatchObject({
+      otp,
+      type: "TOTP",
+      algorithm,
+      digits: 8,
+      period: 30,
+      remaining: 1,
+    });
+  });
+
+  it.each([
+    [0, "755224"],
+    [1, "287082"],
+    [2, "359152"],
+  ])("matches the RFC 4226 HOTP counter %i vector", async (counter, otp) => {
+    const response = await handleOtp({ secret: rfcSecret, type: "hotp", counter }, mockEnv);
+    expect(response.status).toBe(200);
+    expect(await response.json()).toMatchObject({ otp, type: "HOTP", digits: 6 });
+  });
+
+  it("normalizes accepted grouped, lowercase and padded Base32 consistently", async () => {
+    const secret = `${rfcSecret.toLowerCase().replace(/(.{4})/g, "$1 ")}====`;
+    const response = await handleOtp({ secret, type: "HOTP" }, mockEnv);
+    expect(response.status).toBe(200);
+    expect(await response.json()).toMatchObject({ otp: "755224", type: "HOTP" });
+  });
+
+  it.each([30, 60, 120])("preserves TOTP epoch-zero behavior for period %i", async (period) => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date(0));
+    const response = await handleOtp({ secret: rfcSecret, period }, mockEnv);
+    expect(response.status).toBe(200);
+    expect(await response.json()).toMatchObject({ otp: "755224", period, remaining: period });
+  });
+
+  it("returns an error instead of an OTP when crypto rejects an operation", async () => {
+    vi.spyOn(crypto.subtle, "importKey").mockRejectedValueOnce(new Error("test crypto failure"));
+    const response = await handleOtp({ secret: rfcSecret }, mockEnv);
+    expect(response.status).toBe(500);
+    const data = await response.json();
+    expect(data).toEqual({ error: "OTP generation failed", detail: "test crypto failure" });
+    expect(JSON.stringify(data)).not.toContain(rfcSecret);
+  });
+
+  it("does not expose a non-Error crypto failure value", async () => {
+    vi.spyOn(crypto.subtle, "importKey").mockRejectedValueOnce("private backend detail");
+    const response = await handleOtp({ secret: rfcSecret }, mockEnv);
+    expect(response.status).toBe(500);
+    expect(await response.json()).toEqual({
+      error: "OTP generation failed",
+      detail: "Unknown error",
+    });
+  });
+
+  it("rejects an empty crypto result rather than generating a token", async () => {
+    vi.spyOn(crypto.subtle, "sign").mockResolvedValueOnce(new ArrayBuffer(0));
+    const response = await handleOtp({ secret: rfcSecret }, mockEnv);
+    expect(response.status).toBe(500);
+    expect(await response.json()).toEqual({
+      error: "OTP generation failed",
+      detail: "HMAC output was empty",
+    });
   });
 });

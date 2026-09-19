@@ -2,7 +2,8 @@
  * Router tests.
  */
 
-import { beforeEach, describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import worker from "../src/index";
 import { clearAllRateLimits } from "../src/rate-limit";
 import { handleRequest } from "../src/router";
 import type { Env } from "../src/types";
@@ -102,9 +103,54 @@ beforeEach(async () => {
   await clearAllRateLimits(mockDB);
 });
 
+afterEach(() => vi.unstubAllGlobals());
+
 // ── Tests ────────────────────────────────────────────────────────────────────
 
 describe("handleRequest", () => {
+  it("serves health through the exported Worker entry without touching D1", async () => {
+    const prepare = vi.fn(() => {
+      throw new Error("health must not access D1");
+    });
+    const env = { DB: { prepare }, ENVIRONMENT: "test" } as unknown as Env;
+    const response = await worker.fetch(makeRequest("/health"), env, {} as ExecutionContext);
+    expect(response.status).toBe(200);
+    expect(await response.json()).toMatchObject({ status: "ok" });
+    expect(response.headers.get("X-Frame-Options")).toBe("DENY");
+    expect(prepare).not.toHaveBeenCalled();
+  });
+
+  it("routes favicon requests and preserves both image and security headers", async () => {
+    const fetchMock = vi.fn<typeof fetch>().mockResolvedValue(
+      new Response("image-fixture", {
+        headers: { "Content-Type": "image/png" },
+      }),
+    );
+    vi.stubGlobal("fetch", fetchMock);
+    const response = await handleRequest(makeRequest("/favicon/example.com"), mockEnv);
+    expect(response.status).toBe(200);
+    expect(await response.text()).toBe("image-fixture");
+    expect(response.headers.get("X-Favicon-Source")).toBe("google");
+    expect(response.headers.get("Cache-Control")).toBe("public, max-age=86400");
+    expect(response.headers.get("X-Content-Type-Options")).toBe("nosniff");
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+  });
+
+  it("applies the API quota to favicon requests and secures the 429 response", async () => {
+    const fetchMock = vi.fn<typeof fetch>();
+    vi.stubGlobal("fetch", fetchMock);
+    for (let i = 0; i < 30; i++) {
+      expect((await handleRequest(makeRequest("/favicon/invalid@domain"), mockEnv)).status).toBe(
+        400,
+      );
+    }
+    const response = await handleRequest(makeRequest("/favicon/invalid@domain"), mockEnv);
+    expect(response.status).toBe(429);
+    expect(response.headers.get("X-RateLimit-Limit")).toBe("30");
+    expect(response.headers.get("X-Frame-Options")).toBe("DENY");
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+
   it("routes POST /otp to OTP handler", async () => {
     const req = makeRequest("/otp", {
       method: "POST",

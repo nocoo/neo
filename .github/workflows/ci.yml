@@ -23,6 +23,7 @@ jobs:
       l3-browser: chromium
       security: true
       worker: true
+      worker-command: bun run test:coverage
       l2: true
       l3: true
   release-smoke:

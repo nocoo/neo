@@ -48,6 +48,7 @@ bun run build
 bun run test:unit:coverage
 bun run test:api
 bun run --cwd worker test
+bun run --cwd worker test:coverage
 bun run test:e2e
 bunx playwright install chromium
 bun run test:e2e:pw
@@ -63,7 +64,7 @@ Normal dev needs `AUTH_SECRET`, `AUTH_GOOGLE_ID`, `AUTH_GOOGLE_SECRET`, `AUTH_UR
 | Piece | Requirement and current reality | Status | Evidence |
 | --- | --- | --- | --- |
 | L1 Web | Four metrics ≥95.5% | enforced | Root Vitest, index-snapshot pre-commit and CI |
-| L1 Worker | Four metrics ≥95% | planned | Worker suite has no coverage gate |
+| L1 Worker | Four metrics ≥95% | enforced | Worker Vitest coverage thresholds; CI Worker job runs `test:coverage` |
 | L2 | Every endpoint/method over real HTTP and real SQL | planned | Pre-push `test:e2e` uses memory adapter; CI labels mocked `test:api` as L2 |
 | L3 | Authenticated OTP/import/backup journeys | planned | CI Playwright currently checks login-page smoke only |
 | G1 | Both type lanes, zero-warning/error lint, check-only | planned | Types/Biome enforced; lint-staged currently writes before the index snapshot |
