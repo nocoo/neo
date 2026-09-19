@@ -2,7 +2,7 @@
  * Rate limiting tests (D1-backed).
  */
 
-import { beforeEach, describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import {
   checkRateLimit,
   clearAllRateLimits,
@@ -271,5 +271,55 @@ describe("purgeExpiredEntries", () => {
     // Purge with window=0 (everything is expired)
     const purged = await purgeExpiredEntries(db, 0);
     expect(purged).toBe(2);
+  });
+});
+
+describe("empty-window and response boundaries", () => {
+  afterEach(() => vi.useRealTimers());
+
+  it("handles absent D1 rows and reads quota without recording another request", async () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date(100_000));
+    const first = vi.fn().mockResolvedValue(null);
+    const run = vi.fn().mockResolvedValue({ meta: {} });
+    const bind = vi.fn().mockReturnValue({ first, run });
+    const emptyDb = { prepare: vi.fn().mockReturnValue({ bind, run }) } as unknown as D1Database;
+    expect(await checkRateLimit(emptyDb, "empty")).toEqual({
+      allowed: true,
+      remaining: 29,
+      limit: 30,
+      resetAt: 160_000,
+    });
+    expect(run).toHaveBeenCalledTimes(1);
+    expect(await getRateLimitInfo(emptyDb, "empty")).toEqual({
+      allowed: true,
+      remaining: 30,
+      limit: 30,
+      resetAt: 160_000,
+    });
+    expect(run).toHaveBeenCalledTimes(1);
+    expect(await purgeExpiredEntries(emptyDb)).toBe(0);
+    expect(bind).toHaveBeenLastCalledWith(40_000);
+  });
+
+  it("does not emit a negative retry interval for an expired limit", async () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date(100_000));
+    const response = createRateLimitResponse({
+      allowed: false,
+      remaining: 0,
+      limit: 30,
+      resetAt: 99_000,
+    });
+    expect(response.status).toBe(429);
+    expect(response.headers.get("Retry-After")).toBe("0");
+    expect(await response.json()).toEqual({ error: "Too many requests", retryAfter: 0 });
+  });
+
+  it("treats an empty forwarded client as unknown", () => {
+    const request = new Request("https://example.com", {
+      headers: { "x-forwarded-for": " , 203.0.113.1" },
+    });
+    expect(getClientIdentifier(request)).toBe("unknown");
   });
 });

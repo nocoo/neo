@@ -32,6 +32,18 @@ describe("isOriginAllowed", () => {
     expect(isOriginAllowed("https://evil.com", req)).toBe(false);
   });
 
+  it("rejects origin matching without a Host header", () => {
+    expect(isOriginAllowed("https://example.com", new Request("https://example.com"))).toBe(false);
+  });
+
+  it("rejects malformed origins", () => {
+    expect(isOriginAllowed("not-a-url", makeRequest(null))).toBe(false);
+  });
+
+  it("does not grant localhost access to a production Host", () => {
+    expect(isOriginAllowed("http://localhost:3000", makeRequest(null))).toBe(false);
+  });
+
   it("rejects empty origin", () => {
     const req = makeRequest(null);
     expect(isOriginAllowed("", req)).toBe(false);
@@ -99,6 +111,14 @@ describe("getSecurityHeaders", () => {
     const req = makeRequest(null);
     const headers = getSecurityHeaders(req, { includeCSP: false });
     expect(headers["Content-Security-Policy"]).toBeUndefined();
+  });
+
+  it("omits credentialed CORS when explicitly disabled while preserving security headers", () => {
+    const request = makeRequest("https://example.com");
+    const headers = getSecurityHeaders(request, { includeCors: false });
+    expect(headers["Access-Control-Allow-Origin"]).toBeUndefined();
+    expect(headers["Access-Control-Allow-Credentials"]).toBeUndefined();
+    expect(headers["X-Frame-Options"]).toBe("DENY");
   });
 });
 
