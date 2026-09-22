@@ -6,7 +6,7 @@ Direction: [README.md](README.md), [backup contract](docs/02-backup-consolidatio
 
 ## Sources of Truth
 
-This file is the contract; hooks, CI and config enforce it. Raise weaker gates to meet it. The framework-owned footer below may be regenerated; preserve the handbook around it.
+Maintain root `AGENTS.md` as the only project handbook; do not create legacy aliases or copies. This file is the contract; hooks, CI and config enforce it. Raise weaker gates to meet it. The framework-owned footer below may be regenerated; preserve the handbook around it.
 
 | Fact | Where |
 | --- | --- |
@@ -59,21 +59,21 @@ Normal dev needs `AUTH_SECRET`, `AUTH_GOOGLE_ID`, `AUTH_GOOGLE_SECRET`, `AUTH_UR
 
 ## Verification
 
-6DQ = L1/L2/L3 + G1/G2 + D1. Status: `enforced`, `planned`, `manual`, `N/A`. No focused/skipped tests; preserve the stricter Web L1 contract of all four metrics ≥95.5% (Worker ≥95%).
+6DQ retains its name with unified L1, L2/L3, G2 and D1; former G1 merged into L1 on 2026-09-21. Follow the maintained `system0-6dq-l1` contract. Status: `enforced`, `planned`, `manual`, `N/A`. No focused/skipped tests; preserve the stricter Web L1 contract of all four metrics ≥95.5% (Worker ≥95%).
 
 | Piece | Requirement and current reality | Status | Evidence |
 | --- | --- | --- | --- |
-| L1 Web | Four metrics ≥95.5% | enforced | Root Vitest, index-snapshot pre-commit and CI |
-| L1 Worker | Four metrics ≥95% | enforced | Worker Vitest coverage thresholds; CI Worker job runs `test:coverage` |
+| L1 Web coverage | Four metrics ≥95.5% | enforced | Root Vitest, index-snapshot pre-commit and CI |
+| L1 Worker coverage | Four metrics ≥95% | enforced | Worker Vitest coverage thresholds; CI Worker job runs `test:coverage` |
 | L2 | Every endpoint/method over real HTTP and real SQL | planned | Pre-push `test:e2e` uses memory adapter; CI labels mocked `test:api` as L2 |
 | L3 | Authenticated OTP/import/backup journeys | planned | CI Playwright currently checks login-page smoke only |
-| G1 | Both type lanes, zero-warning/error lint, check-only | planned | Types/Biome enforced; lint-staged currently writes before the index snapshot |
+| Complete L1 | Coverage above plus strict types, zero-warning/error check-only lint, installed index-snapshot hooks and proven rejection | planned | Types/Biome are wired; lint-staged writes before the index snapshot. Complete check-only, rejection and <30s timing evidence remain incomplete |
 | G2 | Required OSV + gitleaks, both lockfiles | planned | `test:security` scans root lock and upstream range, not pushed refs/all lane locks |
 | D1 | Per-run local database/build/browser state, fail on occupied ports | planned | HTTP uses memory; `.next-e2e` is fixed and runner kills port owners; browser may reuse dev server |
 | Build | Next/Webpack/Serwist output | enforced | CI preparation `build` |
 | Docs | Current runtime and backup contracts | manual | Review linked docs |
 
-Pre-commit skips heavy gates for docs; code changes run lint-staged before snapshotting the index for unit coverage/types. Pre-push runs HTTP then security against worktree/upstream. Target: check-only index L1/G1 <30s and stdin-ref L2/G2 in parallel <3min. No commit/branch-push bypass, no lowered thresholds.
+Pre-commit skips heavy gates for docs; code changes run lint-staged before snapshotting the index for unit coverage/types. Pre-push runs HTTP then security against worktree/upstream. Target: check-only index L1 <30s and stdin-ref L2/G2 in parallel <3min. No commit/branch-push bypass, no lowered thresholds.
 
 ## Resources / Isolation
 
