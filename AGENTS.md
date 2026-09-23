@@ -67,7 +67,7 @@ Normal dev needs `AUTH_SECRET`, `AUTH_GOOGLE_ID`, `AUTH_GOOGLE_SECRET`, `AUTH_UR
 | L1 Worker coverage | Four metrics ≥95% | enforced | Worker Vitest coverage thresholds; CI Worker job runs `test:coverage` |
 | L2 | Every endpoint/method over real HTTP and real SQL | planned | Pre-push `test:e2e` uses memory adapter; CI labels mocked `test:api` as L2 |
 | L3 | Authenticated OTP/import/backup journeys | planned | CI Playwright currently checks login-page smoke only |
-| Complete L1 | Coverage above plus strict types, zero-warning/error check-only lint, installed index-snapshot hooks and proven rejection | planned | Types/Biome are wired; lint-staged writes before the index snapshot. Complete check-only, rejection and <30s timing evidence remain incomplete |
+| Complete L1 | Coverage above plus strict types, zero-warning/error check-only lint, installed index-snapshot hooks and proven rejection | planned | Types/Biome and check-only lint-staged are wired before the index snapshot. Full rejection and <30s timing evidence remain incomplete |
 | G2 | Required OSV + gitleaks, both lockfiles | planned | `test:security` scans root lock and upstream range, not pushed refs/all lane locks |
 | D1 | Per-run local database/build/browser state, fail on occupied ports | planned | HTTP uses memory; `.next-e2e` is fixed and runner kills port owners; browser may reuse dev server |
 | Build | Next/Webpack/Serwist output | enforced | CI preparation `build` |

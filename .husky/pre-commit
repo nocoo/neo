@@ -14,10 +14,7 @@
 #
 # Ordering
 # ────────
-# lint-staged is a writer (biome check --write mutates the working tree
-# via git stash/restore). Run it FIRST, in the working tree, so it
-# finishes before the snapshot is taken. Then take the snapshot from
-# the fresh index and run the read-only gates in parallel.
+# Run check-only lint-staged commands before taking the index snapshot.
 
 STAGED_FILES=$(git diff --cached --name-only)
 
@@ -55,9 +52,7 @@ if [ -z "$CODE_CHANGES" ]; then
   exit 0
 fi
 
-# G1b (mutates the working tree): Biome strict on staged files only, via
-# lint-staged. Runs against the working tree so autofixes can be re-staged.
-# Must finish before we snapshot the index.
+# G1b: check-only Biome on staged files before snapshotting the index.
 if [ -n "$BIOME_STAGED" ]; then
   bunx lint-staged 2>&1
   if [ $? -ne 0 ]; then
