@@ -31,7 +31,7 @@
     "drizzle-orm": "^0.45.3",
     "fflate": "^0.8.3",
     "lucide-react": "1.47.0",
-    "next": "16.3.5",
+    "next": "16.3.6",
     "next-auth": "^5.0.0-beta.32",
     "react": "19.3.0",
     "react-dom": "19.3.0",
@@ -64,7 +64,7 @@
   },
   "lint-staged": {
     "*.{ts,tsx,mts,cts,js,jsx,mjs,cjs,json}": [
-      "biome check --write --error-on-warnings --max-diagnostics=500 --no-errors-on-unmatched"
+      "biome check --error-on-warnings --max-diagnostics=500 --no-errors-on-unmatched"
     ]
   },
   "browserslist": [
