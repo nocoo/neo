@@ -25,7 +25,7 @@
   },
   "dependencies": {
     "@auth/core": "^0.41.3",
-    "@nocoo/basalt": "2.1.8",
+    "@nocoo/basalt": "2.2.0",
     "@serwist/next": "^9.5.12",
     "clsx": "^2.1.1",
     "drizzle-orm": "^0.45.3",
@@ -75,7 +75,7 @@
   ],
   "overrides": {
     "@babel/core": "^7.29.6",
-    "brace-expansion": "^5.0.9",
+    "brace-expansion": "5.0.12",
     "browserslist": "4.28.7",
     "cookie": "^0.7.0",
     "esbuild": "^0.28.1",
