@@ -46,3 +46,7 @@ pre-commit 里 tsc + vitest 直接跑在工作树上。这有两个漏洞:
 codex 的第一轮找出 5 个问题 (P1 #1/#2 + P2 #3/#4/#5), 我全修完自认完成。codex 复审又找出 2 个新问题 (CI worker 缺依赖, hook 仍验证工作树) —— 都是**上一轮修复本身引入的**副作用。
 
 **下次**: 每次修复完 code review 意见后, 主动请求 (或想象) 复审。特别是修复涉及自动化 (hooks / CI / lint config) 时, 变更本身会产生新的暴露面, 至少要问一句"我的修复引入了什么新问题"。
+
+## 2026-10-04 — Keep dependency scope and security evidence explicit
+
+The root app and optional Worker have independent Bun manifests and locks. Validate both and update paired Vitest/coverage packages in every issue-listed scope; a root-only scan misses Worker requests. Current strict scans no longer need the two expired advisory waivers, so remove them without relaxing any gate. The existing local HTTP runner can kill fixed-port owners: this duty rejects any occupied test port before invocation, removes ambient production credentials and uses only its owned checkout and memory adapter. This operational guard does not certify a complete race-free SQL/browser isolation lane. Preserve the Next/Webpack/Serwist path and verify a real build after Next updates.
