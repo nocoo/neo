@@ -2,6 +2,17 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.3.2] - 2026-10-13
+
+### Changed
+
+- Release the Next.js 16.3.8 security update and the dependency patches merged since v1.3.1, including Sharp, PostCSS, source-map-js and Basalt 2.2.0.
+- Update the development and Worker toolchain, and keep dependency hook checks read-only.
+
+### Fixed
+
+- Compare the application version with the authoritative package manifest in the version regression test instead of a duplicated release number.
+
 ## [1.3.1] - 2026-09-20
 
 ### Fixed

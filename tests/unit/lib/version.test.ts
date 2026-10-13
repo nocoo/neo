@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { VERSION } from "@/lib/version";
+import packageJson from "../../../package.json";
 
 describe("version", () => {
   it("exports a version string", () => {
@@ -8,6 +9,6 @@ describe("version", () => {
   });
 
   it("matches package.json version", () => {
-    expect(VERSION).toBe("1.3.1");
+    expect(VERSION).toBe(packageJson.version);
   });
 });
