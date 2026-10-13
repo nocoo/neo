@@ -26,7 +26,7 @@
   "dependencies": {
     "@auth/core": "^0.41.3",
     "@nocoo/basalt": "2.2.0",
-    "@serwist/next": "^9.5.12",
+    "@serwist/next": "9.5.13",
     "clsx": "^2.1.1",
     "drizzle-orm": "0.45.4",
     "fflate": "^0.8.3",
