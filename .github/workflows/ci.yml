@@ -9,7 +9,7 @@ name: CI
   workflow_dispatch: null
 jobs:
   quality:
-    uses: nocoo/base-ci/.github/workflows/quality.yml@2857469cc5206e7a4988171a1282209617996a67
+    uses: nocoo/base-ci/.github/workflows/quality.yml@0394178ebcff0418c442d84a84119220f31f8987 # v2026.9
     with:
       runtime-version: 1.4.2
       install-policy: blocked
@@ -28,7 +28,7 @@ jobs:
       l3: true
   release-smoke:
     name: Release Workflow Smoke
-    uses: nocoo/base-ci/.github/workflows/workflow-lint.yml@2857469cc5206e7a4988171a1282209617996a67
+    uses: nocoo/base-ci/.github/workflows/workflow-lint.yml@0394178ebcff0418c442d84a84119220f31f8987 # v2026.9
     with:
       required-reusable-workflow: nocoo/base-ci/.github/workflows/deploy-docker.yml
       yamllint: true
