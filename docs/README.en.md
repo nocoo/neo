@@ -50,18 +50,17 @@ bun install --cwd worker --frozen-lockfile
 
 The repository has no `.env.example`. Create `.env.local` and configure:
 
-| Variable | Purpose |
-| --- | --- |
-| `AUTH_SECRET` | Auth.js session signing secret |
-| `AUTH_GOOGLE_ID` / `AUTH_GOOGLE_SECRET` | Google OAuth client credentials |
-| `AUTH_URL` | `http://localhost:7026` locally; the actual site URL when deployed |
-| `ALLOWED_EMAILS` | Comma-separated login allowlist; an empty list rejects all logins |
-| `CLOUDFLARE_ACCOUNT_ID` | Cloudflare account containing D1 |
-| `CLOUDFLARE_D1_DATABASE_ID` | D1 database ID |
-| `CLOUDFLARE_API_TOKEN` | API token authorized to query the target D1 |
+| Variable                                | Purpose                                                            |
+| --------------------------------------- | ------------------------------------------------------------------ |
+| `AUTH_SECRET`                           | Auth.js session signing secret                                     |
+| `AUTH_GOOGLE_ID` / `AUTH_GOOGLE_SECRET` | Google OAuth client credentials                                    |
+| `AUTH_URL`                              | `http://localhost:7026` locally; the actual site URL when deployed |
+| `ALLOWED_EMAILS`                        | Comma-separated login allowlist; an empty list rejects all logins  |
+| `CLOUDFLARE_ACCOUNT_ID`                 | Cloudflare account containing D1                                   |
+| `CLOUDFLARE_D1_DATABASE_ID`             | D1 database ID                                                     |
+| `CLOUDFLARE_API_TOKEN`                  | API token authorized to query the target D1                        |
 
 Set the local Google OAuth callback to `http://localhost:7026/api/auth/callback/google`. Apply these SQL files in order to a new D1 database; the application does not create tables on startup:
-
 1. [Initial schema](../drizzle/0000_pink_archangel.sql)
 2. [Entry color field](../drizzle/0001_green_karnak.sql)
 3. [Recycle bin field](../drizzle/0002_recycle_bin.sql)
@@ -91,13 +90,13 @@ worker/            Optional OTP and favicon service
 
 Run from the repository root:
 
-| Test layer | Command |
-| --- | --- |
-| Main app unit and component tests | `bun run test:unit` |
-| Server Action integration tests | `bun run test:api` |
-| Local HTTP end-to-end tests | `bun run test:e2e` |
-| Browser smoke test | `bun run test:e2e:pw` |
-| Separate Worker unit tests | `bun run --cwd worker test` |
+| Test layer                        | Command                     |
+| --------------------------------- | --------------------------- |
+| Main app unit and component tests | `bun run test:unit`         |
+| Server Action integration tests   | `bun run test:api`          |
+| Local HTTP end-to-end tests       | `bun run test:e2e`          |
+| Browser smoke test                | `bun run test:e2e:pw`       |
+| Separate Worker unit tests        | `bun run --cwd worker test` |
 
 Server Action tests replace D1 with in-memory storage. HTTP tests start Next.js on port `17026` with a test identity and an in-memory database; keep that port free before running. For browser tests, first run `bunx playwright install chromium`. They start a server on port `27026`; the current case checks login-page loading. These tests do not require real D1 data or Google sign-in.
 
@@ -110,13 +109,13 @@ Server Action tests replace D1 with in-memory storage. HTTP tests start Next.js 
 ![Cloudflare D1](https://img.shields.io/badge/Cloudflare_D1-F38020?logo=cloudflare&logoColor=white)
 ![Web Crypto](https://img.shields.io/badge/Web_Crypto-555555)
 
-| Area | Implementation |
-| --- | --- |
-| Web app | Next.js App Router, React, Tailwind CSS, Basalt UI |
-| Authentication and data | Auth.js / NextAuth, Google OAuth, D1 HTTP API; Drizzle schema definitions |
-| OTP and backups | Web Crypto, fflate, Backy webhooks |
-| PWA and optional service | Serwist, Cloudflare Workers |
-| Development and testing | Bun, Webpack, TypeScript, Biome, Vitest, Playwright |
+| Area                     | Implementation                                                            |
+| ------------------------ | ------------------------------------------------------------------------- |
+| Web app                  | Next.js App Router, React, Tailwind CSS, Basalt UI                        |
+| Authentication and data  | Auth.js / NextAuth, Google OAuth, D1 HTTP API; Drizzle schema definitions |
+| OTP and backups          | Web Crypto, fflate, Backy webhooks                                        |
+| PWA and optional service | Serwist, Cloudflare Workers                                               |
+| Development and testing  | Bun, Webpack, TypeScript, Biome, Vitest, Playwright                       |
 
 ## Documentation
 

@@ -9,14 +9,14 @@ Upgrade neo from the legacy four-layer testing architecture to the six-dimension
 
 ## Current State Assessment
 
-| Dimension | Current | Target | Gap |
-|-----------|---------|--------|-----|
-| **L1 Unit/Component** | ✅ 937 tests, 95%+ coverage, pre-commit gated | ✅ Same | Minor: expand thresholds beyond `models/**` |
-| **L2 Integration/API** | ⚠️ 65 API tests via vitest (mock HTTP import handler) | ✅ Real HTTP E2E + D1 isolation | Tests exist but use mock imports, not real HTTP; no test resource isolation |
-| **L3 System/E2E** | ✅ Playwright 3 specs, 35+ tests | ✅ Same | Good — already functional |
-| **G1 Static Analysis** | ⚠️ ESLint --max-warnings=0, strict: true | ✅ Full strict (promote unused-vars to error) | `no-unused-vars` is `warn` not `error`; no `tsc --noEmit` in hook |
-| **G2 Security/Perf** | ❌ None | ✅ osv-scanner + gitleaks in pre-push | Completely missing |
-| **D1 Test Isolation** | ❌ None | ⚠️ N/A or minimal | Worker has D1 binding but no `-test` instance; main app uses D1 via HTTP (mock in tests) |
+| Dimension              | Current                                               | Target                                        | Gap                                                                                      |
+| ---------------------- | ----------------------------------------------------- | --------------------------------------------- | ---------------------------------------------------------------------------------------- |
+| **L1 Unit/Component**  | ✅ 937 tests, 95%+ coverage, pre-commit gated         | ✅ Same                                       | Minor: expand thresholds beyond `models/**`                                              |
+| **L2 Integration/API** | ⚠️ 65 API tests via vitest (mock HTTP import handler) | ✅ Real HTTP E2E + D1 isolation               | Tests exist but use mock imports, not real HTTP; no test resource isolation              |
+| **L3 System/E2E**      | ✅ Playwright 3 specs, 35+ tests                      | ✅ Same                                       | Good — already functional                                                                |
+| **G1 Static Analysis** | ⚠️ ESLint --max-warnings=0, strict: true              | ✅ Full strict (promote unused-vars to error) | `no-unused-vars` is `warn` not `error`; no `tsc --noEmit` in hook                        |
+| **G2 Security/Perf**   | ❌ None                                               | ✅ osv-scanner + gitleaks in pre-push         | Completely missing                                                                       |
+| **D1 Test Isolation**  | ❌ None                                               | ⚠️ N/A or minimal                             | Worker has D1 binding but no `-test` instance; main app uses D1 via HTTP (mock in tests) |
 
 ### Current Tier: **B** (L1+G1 basic pass, but G1 not fully strict, G2/D1 absent)
 
@@ -53,11 +53,11 @@ Upgrade neo from the legacy four-layer testing architecture to the six-dimension
 
 ### Hook Mapping Gaps
 
-| Hook | Current | Target |
-|------|---------|--------|
+| Hook           | Current                                      | Target                                                                |
+| -------------- | -------------------------------------------- | --------------------------------------------------------------------- |
 | **pre-commit** | `test:unit:coverage` + `lint-staged(eslint)` | L1(`test:unit:coverage`) + G1(`tsc --noEmit` + `lint-staged(eslint)`) |
-| **pre-push** | `test:api` | L2(`test:api`) ‖ G2(`run-security.ts`) |
-| **manual/CI** | `test:e2e:pw` | L3(`test:e2e:pw`) |
+| **pre-push**   | `test:api`                                   | L2(`test:api`) ‖ G2(`run-security.ts`)                                |
+| **manual/CI**  | `test:e2e:pw`                                | L3(`test:e2e:pw`)                                                     |
 
 ---
 
@@ -129,11 +129,11 @@ bun run test:api
 
 #### Atomic commits for Step 1
 
-| # | Commit Message | Files |
-|---|----------------|-------|
-| 1 | `refactor: promote no-unused-vars from warn to error` | `eslint.config.mjs` + any fix files |
-| 2 | `feat: add tsc --noEmit typecheck to pre-commit hook` | `package.json`, `.husky/pre-commit` |
-| 3 | `chore: update hook comments to quality system naming` | `.husky/pre-commit`, `.husky/pre-push` |
+| #   | Commit Message                                         | Files                                  |
+| --- | ------------------------------------------------------ | -------------------------------------- |
+| 1   | `refactor: promote no-unused-vars from warn to error`  | `eslint.config.mjs` + any fix files    |
+| 2   | `feat: add tsc --noEmit typecheck to pre-commit hook`  | `package.json`, `.husky/pre-commit`    |
+| 3   | `chore: update hook comments to quality system naming` | `.husky/pre-commit`, `.husky/pre-push` |
 
 ---
 
@@ -224,10 +224,10 @@ brew install osv-scanner gitleaks
 
 #### Atomic commits for Step 2
 
-| # | Commit Message | Files |
-|---|----------------|-------|
-| 4 | `feat: add G2 security gate script (osv-scanner + gitleaks)` | `scripts/run-security.ts`, `package.json` |
-| 5 | `feat: wire G2 security gate into pre-push hook` | `.husky/pre-push` |
+| #   | Commit Message                                               | Files                                     |
+| --- | ------------------------------------------------------------ | ----------------------------------------- |
+| 4   | `feat: add G2 security gate script (osv-scanner + gitleaks)` | `scripts/run-security.ts`, `package.json` |
+| 5   | `feat: wire G2 security gate into pre-push hook`             | `.husky/pre-push`                         |
 
 ---
 
@@ -263,6 +263,7 @@ ENVIRONMENT = "test"
 ```
 
 > **Note**: The actual `neo-db-test` D1 database must be created on Cloudflare:
+>
 > ```bash
 > wrangler d1 create neo-db-test
 > ```
@@ -276,9 +277,9 @@ For tier evaluation purposes:
 
 #### Atomic commits for Step 3
 
-| # | Commit Message | Files |
-|---|----------------|-------|
-| 6 | `feat: add D1 test isolation config to worker wrangler.toml` | `worker/wrangler.toml` |
+| #   | Commit Message                                               | Files                  |
+| --- | ------------------------------------------------------------ | ---------------------- |
+| 6   | `feat: add D1 test isolation config to worker wrangler.toml` | `worker/wrangler.toml` |
 
 ---
 
@@ -323,9 +324,9 @@ thresholds: {
 
 #### Atomic commits for Step 4
 
-| # | Commit Message | Files |
-|---|----------------|-------|
-| 7 | `feat: expand coverage thresholds to viewmodels, actions, lib` | `vitest.config.ts` |
+| #   | Commit Message                                                 | Files              |
+| --- | -------------------------------------------------------------- | ------------------ |
+| 7   | `feat: expand coverage thresholds to viewmodels, actions, lib` | `vitest.config.ts` |
 
 ---
 
@@ -372,10 +373,10 @@ Replace the old testing matrix with the new six-dimension quality system table.
 
 #### Atomic commits for Step 5
 
-| # | Commit Message | Files |
-|---|----------------|-------|
-| 8 | `docs: add quality system upgrade document` | `docs/04-quality-system-upgrade.md`, `docs/README.md` |
-| 9 | `docs: update README testing section to quality system` | `README.md` |
+| #   | Commit Message                                          | Files                                                 |
+| --- | ------------------------------------------------------- | ----------------------------------------------------- |
+| 8   | `docs: add quality system upgrade document`             | `docs/04-quality-system-upgrade.md`, `docs/README.md` |
+| 9   | `docs: update README testing section to quality system` | `README.md`                                           |
 
 ---
 
@@ -405,14 +406,14 @@ bun run test:e2e:pw
 
 ### Expected Tier After Upgrade
 
-| Dimension | Status | Notes |
-|-----------|--------|-------|
-| L1 | ✅ | 937+ tests, 95%+ coverage, expanded thresholds |
-| L2 | ✅ | 65 API E2E tests, pre-push gated |
-| L3 | ✅ | 35+ Playwright specs, manual/CI |
-| G1 | ✅ | `tsc --noEmit` + ESLint `error` severity + `--max-warnings=0` |
-| G2 | ✅ | osv-scanner + gitleaks in pre-push |
-| D1 | ⚠️ N/A | Main app: HTTP-mocked; Worker: config added, real DB deferred |
+| Dimension | Status | Notes                                                         |
+| --------- | ------ | ------------------------------------------------------------- |
+| L1        | ✅     | 937+ tests, 95%+ coverage, expanded thresholds                |
+| L2        | ✅     | 65 API E2E tests, pre-push gated                              |
+| L3        | ✅     | 35+ Playwright specs, manual/CI                               |
+| G1        | ✅     | `tsc --noEmit` + ESLint `error` severity + `--max-warnings=0` |
+| G2        | ✅     | osv-scanner + gitleaks in pre-push                            |
+| D1        | ⚠️ N/A | Main app: HTTP-mocked; Worker: config added, real DB deferred |
 
 **Target Tier: A** (L1+L2+G1 fully green, D1 = N/A counts as green, G2+L3 also green → effectively **S** if all pass)
 
@@ -420,17 +421,17 @@ bun run test:e2e:pw
 
 ## Commit Summary
 
-| # | Message | Dimension |
-|---|---------|-----------|
-| 1 | `refactor: promote no-unused-vars from warn to error` | G1 |
-| 2 | `feat: add tsc --noEmit typecheck to pre-commit hook` | G1 |
-| 3 | `chore: update hook comments to quality system naming` | G1 |
-| 4 | `feat: add G2 security gate script (osv-scanner + gitleaks)` | G2 |
-| 5 | `feat: wire G2 security gate into pre-push hook` | G2 |
-| 6 | `feat: add D1 test isolation config to worker wrangler.toml` | D1 |
-| 7 | `feat: expand coverage thresholds to viewmodels, actions, lib` | L1 |
-| 8 | `docs: add quality system upgrade document` | docs |
-| 9 | `docs: update README testing section to quality system` | docs |
+| #   | Message                                                        | Dimension |
+| --- | -------------------------------------------------------------- | --------- |
+| 1   | `refactor: promote no-unused-vars from warn to error`          | G1        |
+| 2   | `feat: add tsc --noEmit typecheck to pre-commit hook`          | G1        |
+| 3   | `chore: update hook comments to quality system naming`         | G1        |
+| 4   | `feat: add G2 security gate script (osv-scanner + gitleaks)`   | G2        |
+| 5   | `feat: wire G2 security gate into pre-push hook`               | G2        |
+| 6   | `feat: add D1 test isolation config to worker wrangler.toml`   | D1        |
+| 7   | `feat: expand coverage thresholds to viewmodels, actions, lib` | L1        |
+| 8   | `docs: add quality system upgrade document`                    | docs      |
+| 9   | `docs: update README testing section to quality system`        | docs      |
 
 Total: **9 atomic commits**.
 
@@ -438,12 +439,12 @@ Total: **9 atomic commits**.
 
 ## Execution Log (2026-03-23)
 
-| Step | Status | Notes |
-|------|--------|-------|
-| Step 1: G1 Strict Lint | ✅ Done | `no-unused-vars` → error, `tsc --noEmit` in pre-commit, hook comments updated. Also fixed all TS type errors in 10 test files (assertSuccess/assertError helpers, OtpAlgorithm literals, Date types, mock properties). |
-| Step 2: G2 Security Gate | ✅ Done | `scripts/run-security.ts` created, wired into pre-push. Fixed 3 CVEs (next→15.5.14, cookie/esbuild via overrides). 1 remaining next canary CVE ignored in `.osv-scanner.toml`. |
-| Step 3: D1 Test Isolation | ✅ Done | `[env.test]` added to `worker/wrangler.toml.example` with `neo-db-test` (ID: `2e9696e2`). Local `wrangler.toml` also configured (gitignored). |
-| Step 4: Coverage Thresholds | ✅ Done | Expanded to viewmodels ≥90%, actions ≥85%, lib ≥80%. All passing. |
-| Step 5: Documentation | ✅ Done | docs index updated, README testing section updated. |
+| Step                        | Status  | Notes                                                                                                                                                                                                                  |
+| --------------------------- | ------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Step 1: G1 Strict Lint      | ✅ Done | `no-unused-vars` → error, `tsc --noEmit` in pre-commit, hook comments updated. Also fixed all TS type errors in 10 test files (assertSuccess/assertError helpers, OtpAlgorithm literals, Date types, mock properties). |
+| Step 2: G2 Security Gate    | ✅ Done | `scripts/run-security.ts` created, wired into pre-push. Fixed 3 CVEs (next→15.5.14, cookie/esbuild via overrides). 1 remaining next canary CVE ignored in `.osv-scanner.toml`.                                         |
+| Step 3: D1 Test Isolation   | ✅ Done | `[env.test]` added to `worker/wrangler.toml.example` with `neo-db-test` (ID: `2e9696e2`). Local `wrangler.toml` also configured (gitignored).                                                                          |
+| Step 4: Coverage Thresholds | ✅ Done | Expanded to viewmodels ≥90%, actions ≥85%, lib ≥80%. All passing.                                                                                                                                                      |
+| Step 5: Documentation       | ✅ Done | docs index updated, README testing section updated.                                                                                                                                                                    |
 
 ### Final Tier: **S** (all six dimensions green, D1=N/A counts as green)

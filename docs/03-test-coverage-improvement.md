@@ -4,34 +4,34 @@ Elevate Neo's test infrastructure to fully align with the **Four-Layer Testing A
 
 ## Current State
 
-| Metric | Current | Target |
-|--------|---------|--------|
-| Total tests | 934 (869 main + 65 worker) | — |
-| Statement coverage | 83.99% | ≥ 90% |
-| Branch coverage | 78.00% | ≥ 80% |
-| Threshold enforcement | `models/**` only | All production layers |
-| Playwright E2E | 38 specs | Cover all CRUD flows |
-| Worker coverage | Not tracked | Tracked + thresholds |
+| Metric                | Current                    | Target                |
+| --------------------- | -------------------------- | --------------------- |
+| Total tests           | 934 (869 main + 65 worker) | —                     |
+| Statement coverage    | 83.99%                     | ≥ 90%                 |
+| Branch coverage       | 78.00%                     | ≥ 80%                 |
+| Threshold enforcement | `models/**` only           | All production layers |
+| Playwright E2E        | 38 specs                   | Cover all CRUD flows  |
+| Worker coverage       | Not tracked                | Tracked + thresholds  |
 
 ### Layer-by-Layer Assessment
 
-| Layer | Status | Gap |
-|-------|--------|-----|
-| **L1 — UT** | ✅ 934 tests, pre-commit hook | Coverage < 90% globally; threshold only on models |
-| **L2 — Lint** | ⚠️ `eslint --max-warnings=0` in lint-staged | `@typescript-eslint/no-unused-vars` is `warn` not `error`; no strict TS plugin |
-| **L3 — API E2E** | ⚠️ 2 files covering ~45 tests | Missing Backy actions, legacy backup actions |
-| **L4 — BDD E2E** | ✅ 38 Playwright specs | Covers auth, secrets, dashboard pages |
+| Layer            | Status                                      | Gap                                                                            |
+| ---------------- | ------------------------------------------- | ------------------------------------------------------------------------------ |
+| **L1 — UT**      | ✅ 934 tests, pre-commit hook               | Coverage < 90% globally; threshold only on models                              |
+| **L2 — Lint**    | ⚠️ `eslint --max-warnings=0` in lint-staged | `@typescript-eslint/no-unused-vars` is `warn` not `error`; no strict TS plugin |
+| **L3 — API E2E** | ⚠️ 2 files covering ~45 tests               | Missing Backy actions, legacy backup actions                                   |
+| **L4 — BDD E2E** | ✅ 38 Playwright specs                      | Covers auth, secrets, dashboard pages                                          |
 
 ### Coverage Gaps (files at 0% or near-zero)
 
-| File | Lines | Why it matters |
-|------|-------|----------------|
-| `lib/db/scoped.ts` | 326 | Core data-access layer; every action depends on it |
-| `lib/db/d1-client.ts` | 102 | HTTP transport to Cloudflare D1 |
-| `lib/auth-adapter.ts` | 238 | Auth.js adapter — user/session lifecycle |
-| `lib/auth-context.ts` | 43 | Server-side auth helpers (getSession, getScopedDB) |
-| `middleware.ts` | 39 | Route protection for `/dashboard/**` |
-| `app/**/page.tsx` (6 files) | ~320 total | Page-level rendering, mostly thin wrappers |
+| File                        | Lines      | Why it matters                                     |
+| --------------------------- | ---------- | -------------------------------------------------- |
+| `lib/db/scoped.ts`          | 326        | Core data-access layer; every action depends on it |
+| `lib/db/d1-client.ts`       | 102        | HTTP transport to Cloudflare D1                    |
+| `lib/auth-adapter.ts`       | 238        | Auth.js adapter — user/session lifecycle           |
+| `lib/auth-context.ts`       | 43         | Server-side auth helpers (getSession, getScopedDB) |
+| `middleware.ts`             | 39         | Route protection for `/dashboard/**`               |
+| `app/**/page.tsx` (6 files) | ~320 total | Page-level rendering, mostly thin wrappers         |
 
 ---
 
@@ -42,7 +42,6 @@ Elevate Neo's test infrastructure to fully align with the **Four-Layer Testing A
 **Goal**: Make the coverage config accurately reflect what we want to protect.
 
 **Changes to `vitest.config.ts`**:
-
 1. Add thresholds for all production layers:
 
 ```ts
@@ -80,7 +79,6 @@ include: [
 ```
 
 > Note: `app/**/page.tsx` are thin server components — keep them in include but do not enforce thresholds. `lib/db/schema.ts` and `models/types.ts` remain excluded (pure types).
-
 3. Move `lib/auth-adapter.ts` to coverage **exclude** — it's a thin Auth.js adapter whose 12 methods are prescribed by the interface; testing them requires a live D1 or heavy integration mock with diminishing returns.
 
 **Commit**: `refactor: expand coverage thresholds to all production layers`
@@ -97,16 +95,16 @@ include: [
 
 **Test groups**:
 
-| Group | Methods | Test count (est.) |
-|-------|---------|-------------------|
-| Secrets CRUD | `getSecrets`, `getSecretById`, `createSecret`, `updateSecret`, `deleteSecret`, `getSecretCount` | ~18 |
-| User Settings | `getUserSettings`, `upsertUserSettings` | ~6 |
-| Encryption | `getEncryptionKey`, `setEncryptionKey` | ~4 |
-| Backy Settings | `getBackySettings`, `upsertBackySettings` | ~6 |
-| Backy Pull Webhook | `getBackyPullWebhook`, `upsertBackyPullWebhook`, `deleteBackyPullWebhook` | ~6 |
-| Legacy Backup | `getLegacyBackupCount`, `getLegacyBackups` | ~4 |
-| Standalone | `verifyBackyPullWebhook` | ~2 |
-| Edge cases | User-scoping isolation, empty results, SQL error propagation | ~6 |
+| Group              | Methods                                                                                         | Test count (est.) |
+| ------------------ | ----------------------------------------------------------------------------------------------- | ----------------- |
+| Secrets CRUD       | `getSecrets`, `getSecretById`, `createSecret`, `updateSecret`, `deleteSecret`, `getSecretCount` | ~18               |
+| User Settings      | `getUserSettings`, `upsertUserSettings`                                                         | ~6                |
+| Encryption         | `getEncryptionKey`, `setEncryptionKey`                                                          | ~4                |
+| Backy Settings     | `getBackySettings`, `upsertBackySettings`                                                       | ~6                |
+| Backy Pull Webhook | `getBackyPullWebhook`, `upsertBackyPullWebhook`, `deleteBackyPullWebhook`                       | ~6                |
+| Legacy Backup      | `getLegacyBackupCount`, `getLegacyBackups`                                                      | ~4                |
+| Standalone         | `verifyBackyPullWebhook`                                                                        | ~2                |
+| Edge cases         | User-scoping isolation, empty results, SQL error propagation                                    | ~6                |
 
 **Mock approach**: Create a `MockD1Database` that implements the D1 `prepare → bind → first/all/run` chain and captures the SQL + params for assertion.
 
@@ -122,12 +120,12 @@ include: [
 
 **Test groups**:
 
-| Group | Function | Test count (est.) |
-|-------|----------|-------------------|
-| Credentials | `getD1Credentials` — returns env vars, throws on missing | ~3 |
-| Headers | `getD1Headers` — constructs Bearer header | ~2 |
-| Execute query | `executeD1Query` — success, D1 error, network error, timeout, unique constraint | ~8 |
-| Config check | `isD1Configured` — all present, partial, none | ~3 |
+| Group         | Function                                                                        | Test count (est.) |
+| ------------- | ------------------------------------------------------------------------------- | ----------------- |
+| Credentials   | `getD1Credentials` — returns env vars, throws on missing                        | ~3                |
+| Headers       | `getD1Headers` — constructs Bearer header                                       | ~2                |
+| Execute query | `executeD1Query` — success, D1 error, network error, timeout, unique constraint | ~8                |
+| Config check  | `isD1Configured` — all present, partial, none                                   | ~3                |
 
 **Mock approach**: Mock `global.fetch` to simulate D1 API responses.
 
@@ -143,13 +141,13 @@ include: [
 
 **File**: `tests/unit/lib/auth-context.test.ts`
 
-| Test | Description |
-|------|-------------|
-| `getSession` returns cached session | Mock `auth()`, call twice, assert single invocation |
-| `getScopedDB` returns ScopedDB for authed user | Mock session with userId |
-| `getScopedDB` returns null for unauthenticated | Mock null session |
-| `getAuthContext` returns { db, userId } | Happy path |
-| `requireAuth` returns userId | Happy path + null case |
+| Test                                           | Description                                         |
+| ---------------------------------------------- | --------------------------------------------------- |
+| `getSession` returns cached session            | Mock `auth()`, call twice, assert single invocation |
+| `getScopedDB` returns ScopedDB for authed user | Mock session with userId                            |
+| `getScopedDB` returns null for unauthenticated | Mock null session                                   |
+| `getAuthContext` returns { db, userId }        | Happy path                                          |
+| `requireAuth` returns userId                   | Happy path + null case                              |
 
 **Commit**: `test: add unit tests for auth-context`
 
@@ -157,13 +155,13 @@ include: [
 
 **File**: `tests/unit/middleware.test.ts`
 
-| Test | Description |
-|------|-------------|
-| `/` — passes through | No redirect |
-| `/dashboard` — authed — passes through | Session present |
-| `/dashboard` — unauthed — redirects to `/?callbackUrl=` | 302 redirect |
-| `/dashboard/settings` — unauthed — redirects | Nested route |
-| Static assets — skipped by matcher | `_next/static`, images, etc. |
+| Test                                                    | Description                  |
+| ------------------------------------------------------- | ---------------------------- |
+| `/` — passes through                                    | No redirect                  |
+| `/dashboard` — authed — passes through                  | Session present              |
+| `/dashboard` — unauthed — redirects to `/?callbackUrl=` | 302 redirect                 |
+| `/dashboard/settings` — unauthed — redirects            | Nested route                 |
+| Static assets — skipped by matcher                      | `_next/static`, images, etc. |
 
 **Mock approach**: Mock `next-auth` `auth` and test the middleware function directly with `NextRequest`.
 
@@ -176,7 +174,6 @@ include: [
 **Goal**: Achieve zero-tolerance lint with strict TypeScript checking.
 
 **Changes to `eslint.config.mjs`**:
-
 1. Promote `@typescript-eslint/no-unused-vars` from `warn` → `error`:
 
 ```js
@@ -202,13 +199,13 @@ rules: {
 
 **Actions to cover**:
 
-| Action | Source file | Test count (est.) |
-|--------|-------------|-------------------|
-| `getBackySettings` | `actions/backy.ts` | ~3 |
-| `upsertBackySettings` | `actions/backy.ts` | ~4 |
-| `getBackyPullWebhook` | `actions/backy.ts` | ~3 |
-| `upsertBackyPullWebhook` | `actions/backy.ts` | ~4 |
-| `deleteBackyPullWebhook` | `actions/backy.ts` | ~2 |
+| Action                   | Source file        | Test count (est.) |
+| ------------------------ | ------------------ | ----------------- |
+| `getBackySettings`       | `actions/backy.ts` | ~3                |
+| `upsertBackySettings`    | `actions/backy.ts` | ~4                |
+| `getBackyPullWebhook`    | `actions/backy.ts` | ~3                |
+| `upsertBackyPullWebhook` | `actions/backy.ts` | ~4                |
+| `deleteBackyPullWebhook` | `actions/backy.ts` | ~2                |
 
 **Prerequisite**: `MockScopedDB` in `tests/api/setup.ts` needs to implement the Backy methods (currently may be stubs). Extend it.
 
@@ -255,16 +252,16 @@ export default defineConfig({
 
 ## Commit Sequence
 
-| # | Commit message | Phase | Impact |
-|---|----------------|-------|--------|
-| 1 | `refactor: expand coverage thresholds to all production layers` | 1 | Config only; may fail CI if current coverage is below new thresholds — run after Phase 2-4 |
-| 2 | `test: add unit tests for ScopedDB` | 2 | Biggest coverage jump (~326 lines from 0% → 90%) |
-| 3 | `test: add unit tests for D1 HTTP client` | 3 | ~102 lines from 8% → 90% |
-| 4 | `test: add unit tests for auth-context` | 4a | ~43 lines from 0% → 90% |
-| 5 | `test: add unit tests for middleware route protection` | 4b | ~39 lines from 0% → 90% |
-| 6 | `refactor: promote unused-vars lint rule to error` | 5 | Lint strictness |
-| 7 | `test: add API E2E tests for Backy actions` | 6 | L3 completeness |
-| 8 | `test: add coverage tracking to worker package` | 7 | Worker visibility |
+| #   | Commit message                                                  | Phase | Impact                                                                                     |
+| --- | --------------------------------------------------------------- | ----- | ------------------------------------------------------------------------------------------ |
+| 1   | `refactor: expand coverage thresholds to all production layers` | 1     | Config only; may fail CI if current coverage is below new thresholds — run after Phase 2-4 |
+| 2   | `test: add unit tests for ScopedDB`                             | 2     | Biggest coverage jump (~326 lines from 0% → 90%)                                           |
+| 3   | `test: add unit tests for D1 HTTP client`                       | 3     | ~102 lines from 8% → 90%                                                                   |
+| 4   | `test: add unit tests for auth-context`                         | 4a    | ~43 lines from 0% → 90%                                                                    |
+| 5   | `test: add unit tests for middleware route protection`          | 4b    | ~39 lines from 0% → 90%                                                                    |
+| 6   | `refactor: promote unused-vars lint rule to error`              | 5     | Lint strictness                                                                            |
+| 7   | `test: add API E2E tests for Backy actions`                     | 6     | L3 completeness                                                                            |
+| 8   | `test: add coverage tracking to worker package`                 | 7     | Worker visibility                                                                          |
 
 **Recommended execution order**: 2 → 3 → 4 → 5 → 1 (activate thresholds after tests are in place) → 6 → 7 → 8
 
@@ -272,24 +269,24 @@ export default defineConfig({
 
 ## Expected Outcome
 
-| Metric | Before | After |
-|--------|--------|-------|
-| Statement coverage | 83.99% | ~92%+ |
-| `lib/db/` coverage | 4.04% | ~90% |
-| `middleware.ts` coverage | 0% | ~90% |
-| `lib/auth-context.ts` coverage | 0% | ~90% |
-| Enforced threshold layers | 1 (`models/**`) | 4 (`models`, `viewmodels`, `actions`, `lib`) |
-| Lint strictness | `warn` on unused vars | `error` on unused vars |
-| Worker coverage | Not tracked | Tracked with 85% threshold |
-| API E2E actions covered | 11 | 16+ |
+| Metric                         | Before                | After                                        |
+| ------------------------------ | --------------------- | -------------------------------------------- |
+| Statement coverage             | 83.99%                | ~92%+                                        |
+| `lib/db/` coverage             | 4.04%                 | ~90%                                         |
+| `middleware.ts` coverage       | 0%                    | ~90%                                         |
+| `lib/auth-context.ts` coverage | 0%                    | ~90%                                         |
+| Enforced threshold layers      | 1 (`models/**`)       | 4 (`models`, `viewmodels`, `actions`, `lib`) |
+| Lint strictness                | `warn` on unused vars | `error` on unused vars                       |
+| Worker coverage                | Not tracked           | Tracked with 85% threshold                   |
+| API E2E actions covered        | 11                    | 16+                                          |
 
 ---
 
 ## Out of Scope
 
-| Item | Reason |
-|------|--------|
+| Item                        | Reason                                                                                                        |
+| --------------------------- | ------------------------------------------------------------------------------------------------------------- |
 | `lib/auth-adapter.ts` tests | Auth.js adapter with 12 prescribed interface methods; requires live D1 or heavy integration mock; ROI too low |
-| `app/**/page.tsx` tests | Thin server components (15 lines each) that delegate to views; covered by Playwright E2E |
-| CI pipeline setup | Separate initiative; current husky hooks provide local enforcement |
-| Additional Playwright specs | Current 38 specs cover auth + all pages; expand only when new user flows are added |
+| `app/**/page.tsx` tests     | Thin server components (15 lines each) that delegate to views; covered by Playwright E2E                      |
+| CI pipeline setup           | Separate initiative; current husky hooks provide local enforcement                                            |
+| Additional Playwright specs | Current 38 specs cover auth + all pages; expand only when new user flows are added                            |

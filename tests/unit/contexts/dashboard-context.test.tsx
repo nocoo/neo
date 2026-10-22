@@ -49,14 +49,12 @@ const initialData = {
   encryptionEnabled: true,
 };
 
-function createWrapper(props?: { initialData?: typeof initialData }) {
-  return function Wrapper({ children }: { children: ReactNode }) {
-    return (
-      <DashboardProvider {...(props?.initialData ? { initialData: props.initialData } : {})}>
-        {children}
-      </DashboardProvider>
-    );
-  };
+function DashboardProviderWithInitialData({ children }: { children: ReactNode }) {
+  return <DashboardProvider initialData={initialData}>{children}</DashboardProvider>;
+}
+
+function DashboardProviderWithoutInitialData({ children }: { children: ReactNode }) {
+  return <DashboardProvider>{children}</DashboardProvider>;
 }
 
 // ── Tests ───────────────────────────────────────────────────────────────
@@ -64,7 +62,7 @@ function createWrapper(props?: { initialData?: typeof initialData }) {
 describe("DashboardProvider", () => {
   it("provides initial data via state hook", () => {
     const { result } = renderHook(() => useDashboardState(), {
-      wrapper: createWrapper({ initialData }),
+      wrapper: DashboardProviderWithInitialData,
     });
 
     expect(result.current.secrets).toHaveLength(1);
@@ -74,7 +72,7 @@ describe("DashboardProvider", () => {
 
   it("starts loading when no initial data", () => {
     const { result } = renderHook(() => useDashboardState(), {
-      wrapper: createWrapper(),
+      wrapper: DashboardProviderWithoutInitialData,
     });
 
     expect(result.current.loading).toBe(true);
@@ -84,7 +82,7 @@ describe("DashboardProvider", () => {
 describe("useDashboardActions", () => {
   it("adds secret via handleSecretCreated", () => {
     const { result: stateResult } = renderHook(() => useDashboardService(), {
-      wrapper: createWrapper({ initialData }),
+      wrapper: DashboardProviderWithInitialData,
     });
 
     const newSecret = { ...sampleSecret, id: "s_test_2", name: "GitLab" };
@@ -99,7 +97,7 @@ describe("useDashboardActions", () => {
 
   it("removes secret via handleSecretDeleted", () => {
     const { result } = renderHook(() => useDashboardService(), {
-      wrapper: createWrapper({ initialData }),
+      wrapper: DashboardProviderWithInitialData,
     });
 
     act(() => {
@@ -111,7 +109,7 @@ describe("useDashboardActions", () => {
 
   it("updates secret via handleSecretUpdated", () => {
     const { result } = renderHook(() => useDashboardService(), {
-      wrapper: createWrapper({ initialData }),
+      wrapper: DashboardProviderWithInitialData,
     });
 
     const updated = { ...sampleSecret, name: "GitHub Enterprise" };
@@ -125,7 +123,7 @@ describe("useDashboardActions", () => {
 
   it("replaces all secrets via handleSecretsReloaded", () => {
     const { result } = renderHook(() => useDashboardService(), {
-      wrapper: createWrapper({ initialData }),
+      wrapper: DashboardProviderWithInitialData,
     });
 
     const newSecrets = [
@@ -158,7 +156,7 @@ describe("context hooks", () => {
 
   it("useDashboardService returns both state and actions", () => {
     const { result } = renderHook(() => useDashboardService(), {
-      wrapper: createWrapper({ initialData }),
+      wrapper: DashboardProviderWithInitialData,
     });
 
     // State fields
