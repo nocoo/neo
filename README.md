@@ -50,18 +50,17 @@ bun install --cwd worker --frozen-lockfile
 
 仓库没有 `.env.example`。创建 `.env.local`，配置下列变量：
 
-| 变量 | 用途 |
-| --- | --- |
-| `AUTH_SECRET` | Auth.js 会话签名密钥 |
-| `AUTH_GOOGLE_ID` / `AUTH_GOOGLE_SECRET` | Google OAuth 客户端凭据 |
-| `AUTH_URL` | 本地填写 `http://localhost:7026`；部署时填写实际站点地址 |
-| `ALLOWED_EMAILS` | 逗号分隔的登录邮箱名单；为空时拒绝所有登录 |
-| `CLOUDFLARE_ACCOUNT_ID` | D1 所属 Cloudflare 账号 |
-| `CLOUDFLARE_D1_DATABASE_ID` | D1 数据库 ID |
-| `CLOUDFLARE_API_TOKEN` | 有权查询目标 D1 的 API token |
+| 变量                                    | 用途                                                     |
+| --------------------------------------- | -------------------------------------------------------- |
+| `AUTH_SECRET`                           | Auth.js 会话签名密钥                                     |
+| `AUTH_GOOGLE_ID` / `AUTH_GOOGLE_SECRET` | Google OAuth 客户端凭据                                  |
+| `AUTH_URL`                              | 本地填写 `http://localhost:7026`；部署时填写实际站点地址 |
+| `ALLOWED_EMAILS`                        | 逗号分隔的登录邮箱名单；为空时拒绝所有登录               |
+| `CLOUDFLARE_ACCOUNT_ID`                 | D1 所属 Cloudflare 账号                                  |
+| `CLOUDFLARE_D1_DATABASE_ID`             | D1 数据库 ID                                             |
+| `CLOUDFLARE_API_TOKEN`                  | 有权查询目标 D1 的 API token                             |
 
 Google OAuth 的本地回调地址为 `http://localhost:7026/api/auth/callback/google`。在新建 D1 数据库中按顺序执行以下 SQL；应用启动不会自动创建表：
-
 1. [初始表结构](drizzle/0000_pink_archangel.sql)
 2. [条目颜色字段](drizzle/0001_green_karnak.sql)
 3. [回收站字段](drizzle/0002_recycle_bin.sql)
@@ -91,13 +90,13 @@ worker/            可选 OTP 与 favicon 服务
 
 从仓库根目录执行：
 
-| 测试层 | 命令 |
-| --- | --- |
-| 主应用单元与组件测试 | `bun run test:unit` |
-| Server Action 集成测试 | `bun run test:api` |
-| 本地 HTTP 端到端测试 | `bun run test:e2e` |
-| 浏览器冒烟测试 | `bun run test:e2e:pw` |
-| 独立 Worker 单元测试 | `bun run --cwd worker test` |
+| 测试层                 | 命令                        |
+| ---------------------- | --------------------------- |
+| 主应用单元与组件测试   | `bun run test:unit`         |
+| Server Action 集成测试 | `bun run test:api`          |
+| 本地 HTTP 端到端测试   | `bun run test:e2e`          |
+| 浏览器冒烟测试         | `bun run test:e2e:pw`       |
+| 独立 Worker 单元测试   | `bun run --cwd worker test` |
 
 Server Action 测试使用内存存储替代 D1。HTTP 测试自动启动端口 `17026` 的 Next.js 服务，使用测试身份和内存数据库；运行前保持该端口空闲。浏览器测试先执行 `bunx playwright install chromium`，会自动启动端口 `27026` 的服务，当前用例检查登录页加载。以上测试不需要真实 D1 数据或 Google 登录。
 
@@ -110,13 +109,13 @@ Server Action 测试使用内存存储替代 D1。HTTP 测试自动启动端口 
 ![Cloudflare D1](https://img.shields.io/badge/Cloudflare_D1-F38020?logo=cloudflare&logoColor=white)
 ![Web Crypto](https://img.shields.io/badge/Web_Crypto-555555)
 
-| 部分 | 实现 |
-| --- | --- |
-| Web 应用 | Next.js App Router、React、Tailwind CSS、Basalt UI |
-| 登录与数据 | Auth.js / NextAuth、Google OAuth、D1 HTTP API；Drizzle 定义 schema |
-| OTP 与备份 | Web Crypto、fflate、Backy webhook |
-| PWA 与可选服务 | Serwist、Cloudflare Workers |
-| 开发与测试 | Bun、Webpack、TypeScript、Biome、Vitest、Playwright |
+| 部分           | 实现                                                               |
+| -------------- | ------------------------------------------------------------------ |
+| Web 应用       | Next.js App Router、React、Tailwind CSS、Basalt UI                 |
+| 登录与数据     | Auth.js / NextAuth、Google OAuth、D1 HTTP API；Drizzle 定义 schema |
+| OTP 与备份     | Web Crypto、fflate、Backy webhook                                  |
+| PWA 与可选服务 | Serwist、Cloudflare Workers                                        |
+| 开发与测试     | Bun、Webpack、TypeScript、Biome、Vitest、Playwright                |
 
 ## 文档
 

@@ -107,14 +107,15 @@ describe("SidebarProvider", () => {
   });
 });
 
+function BareSidebarConsumer() {
+  useSidebar();
+  return null;
+}
+
 describe("useSidebar", () => {
   it("throws when used outside a provider", () => {
-    function Bare() {
-      useSidebar();
-      return null;
-    }
     const spy = vi.spyOn(console, "error").mockImplementation(() => {});
-    expect(() => render(<Bare />)).toThrow(/SidebarProvider/);
+    expect(() => render(<BareSidebarConsumer />)).toThrow(/SidebarProvider/);
     spy.mockRestore();
   });
 });

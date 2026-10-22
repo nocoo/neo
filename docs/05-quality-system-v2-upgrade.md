@@ -14,14 +14,14 @@ HTTP requests. The spec mandates: _"真实网络调用，非 mock import handler
 
 ## Honest Re-Assessment
 
-| Dimension | Declared (doc 04) | Actual | Gap |
-|-----------|-------------------|--------|-----|
-| **L1** Unit/Component | ✅ Tier S | ✅ **True** | 937+ tests, 95%+ coverage, 4-layer thresholds, pre-commit gated |
-| **L2** Integration/API | ✅ Tier S | ❌ **Non-compliant** | `tests/api/` uses `import { createSecret } from "@/actions/secrets"` + `MockScopedDB` (in-memory arrays). Zero `fetch()` calls, no dev server, no HTTP layer |
-| **L3** System/E2E | ✅ Tier S | ✅ **True** | 35+ Playwright specs with real browser + real HTTP to dev server |
-| **G1** Static Analysis | ✅ Tier S | ✅ **True** | `tsc --noEmit` (strict) + ESLint `error` severity + `--max-warnings=0` in pre-commit |
-| **G2** Security | ✅ Tier S | ✅ **True** | `osv-scanner` + `gitleaks` in pre-push |
-| **D1** Test Isolation | ⚠️ N/A | ⚠️ **Partial** | `wrangler.toml.example` has `[env.test]` but no three-layer verification mechanism (no `verify-test-bindings.ts`, no runtime `RESOURCE_ENV` check, no `_test_marker` table) |
+| Dimension              | Declared (doc 04) | Actual               | Gap                                                                                                                                                                         |
+| ---------------------- | ----------------- | -------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **L1** Unit/Component  | ✅ Tier S         | ✅ **True**          | 937+ tests, 95%+ coverage, 4-layer thresholds, pre-commit gated                                                                                                             |
+| **L2** Integration/API | ✅ Tier S         | ❌ **Non-compliant** | `tests/api/` uses `import { createSecret } from "@/actions/secrets"` + `MockScopedDB` (in-memory arrays). Zero `fetch()` calls, no dev server, no HTTP layer                |
+| **L3** System/E2E      | ✅ Tier S         | ✅ **True**          | 35+ Playwright specs with real browser + real HTTP to dev server                                                                                                            |
+| **G1** Static Analysis | ✅ Tier S         | ✅ **True**          | `tsc --noEmit` (strict) + ESLint `error` severity + `--max-warnings=0` in pre-commit                                                                                        |
+| **G2** Security        | ✅ Tier S         | ✅ **True**          | `osv-scanner` + `gitleaks` in pre-push                                                                                                                                      |
+| **D1** Test Isolation  | ⚠️ N/A            | ⚠️ **Partial**       | `wrangler.toml.example` has `[env.test]` but no three-layer verification mechanism (no `verify-test-bindings.ts`, no runtime `RESOURCE_ENV` check, no `_test_marker` table) |
 
 ### True Tier: **B** (L1 + G1 pass; L2 fails → cannot reach A)
 
@@ -51,14 +51,14 @@ vitest process
 
 **Specific gaps**:
 
-| # | Gap | Resolution |
-|---|-----|------------|
-| 1 | No `run-e2e.ts` script | Create `scripts/run-e2e.ts` — auto-start dev server on port 17026, wait for ready, run tests, auto-stop |
-| 2 | No real HTTP test client | Use `fetch()` or lightweight HTTP client in tests against `http://localhost:17026` |
-| 3 | Auth in test mode | Reuse Playwright's Credentials provider approach — POST to `/api/auth/callback/e2e-credentials` (provider id is `e2e-credentials`, not `credentials`) to get session cookie |
-| 4 | 0/8 Route Handlers tested | All route handlers (`/api/backup/*`, `/api/backy/pull`, `/api/health`, `/api/live`) need HTTP-level tests |
-| 5 | 0/7 Backy actions tested | Backy actions need integration coverage via their HTTP trigger paths |
-| 6 | Port convention | Spec: dev=7026, API E2E=17026, BDD E2E=27026 (current Playwright uses 27026 ✅) |
+| #   | Gap                       | Resolution                                                                                                                                                                  |
+| --- | ------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1   | No `run-e2e.ts` script    | Create `scripts/run-e2e.ts` — auto-start dev server on port 17026, wait for ready, run tests, auto-stop                                                                     |
+| 2   | No real HTTP test client  | Use `fetch()` or lightweight HTTP client in tests against `http://localhost:17026`                                                                                          |
+| 3   | Auth in test mode         | Reuse Playwright's Credentials provider approach — POST to `/api/auth/callback/e2e-credentials` (provider id is `e2e-credentials`, not `credentials`) to get session cookie |
+| 4   | 0/8 Route Handlers tested | All route handlers (`/api/backup/*`, `/api/backy/pull`, `/api/health`, `/api/live`) need HTTP-level tests                                                                   |
+| 5   | 0/7 Backy actions tested  | Backy actions need integration coverage via their HTTP trigger paths                                                                                                        |
+| 6   | Port convention           | Spec: dev=7026, API E2E=17026, BDD E2E=27026 (current Playwright uses 27026 ✅)                                                                                             |
 
 ### D1: Config-only → Three-Layer Verification
 
@@ -66,11 +66,11 @@ vitest process
 
 **Spec requires** (memory `af0daa0f`):
 
-| # | Verification Layer | Current | Target |
-|---|-------------------|---------|--------|
-| 1 | Build-time binding verification | ❌ Missing | `scripts/verify-test-bindings.ts` — parse `wrangler.toml [env.test]`, assert all bindings contain `-test` suffix, non-zero exit blocks pipeline |
-| 2 | Runtime resource name check | ❌ Missing | Test setup checks `RESOURCE_ENV === "test"`, throws if mismatch |
-| 3 | Test data marker table | ❌ Missing | `_test_marker` table in test D1 (`key=env, value=test`), verified before any reset |
+| #   | Verification Layer              | Current    | Target                                                                                                                                          |
+| --- | ------------------------------- | ---------- | ----------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1   | Build-time binding verification | ❌ Missing | `scripts/verify-test-bindings.ts` — parse `wrangler.toml [env.test]`, assert all bindings contain `-test` suffix, non-zero exit blocks pipeline |
+| 2   | Runtime resource name check     | ❌ Missing | Test setup checks `RESOURCE_ENV === "test"`, throws if mismatch                                                                                 |
+| 3   | Test data marker table          | ❌ Missing | `_test_marker` table in test D1 (`key=env, value=test`), verified before any reset                                                              |
 
 **D1 applicability assessment**:
 
@@ -80,7 +80,6 @@ vitest process
 > (`https://api.cloudflare.com/client/v4/accounts/{id}/d1/database/{id}/query`).
 > The three env vars `CLOUDFLARE_ACCOUNT_ID`, `CLOUDFLARE_D1_DATABASE_ID`, `CLOUDFLARE_API_TOKEN`
 > determine which database the main app connects to. **This is the primary D1 risk surface.**
-
 - Main app: Direct D1 HTTP API access via `d1-client.ts` → D1 fully applicable, **primary risk**
 - Worker: Direct D1 binding via `wrangler.toml` → D1 fully applicable
 - Decision: D1 verification applies to **both** the main app and the Worker:
@@ -180,10 +179,10 @@ try {
 
 #### Atomic commits
 
-| # | Commit Message | Files |
-|---|----------------|-------|
-| 1 | `feat: add L2 run-e2e.ts script for auto dev server management` | `scripts/run-e2e.ts` |
-| 2 | `refactor: remap test:api to true HTTP E2E, preserve mock tests as test:api:mock` | `package.json` |
+| #   | Commit Message                                                                    | Files                |
+| --- | --------------------------------------------------------------------------------- | -------------------- |
+| 1   | `feat: add L2 run-e2e.ts script for auto dev server management`                   | `scripts/run-e2e.ts` |
+| 2   | `refactor: remap test:api to true HTTP E2E, preserve mock tests as test:api:mock` | `package.json`       |
 
 ---
 
@@ -208,26 +207,24 @@ export async function getSessionCookie(): Promise<string> {
   const cookies = csrfRes.headers.getSetCookie();
 
   // 2. Sign in with Credentials provider (id: "e2e-credentials")
-  const signinRes = await fetch(
-    `${BASE_URL}/api/auth/callback/e2e-credentials`,
-    {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/x-www-form-urlencoded",
-        Cookie: cookies.join("; "),
-      },
-      body: new URLSearchParams({
-        csrfToken,
-        email: "e2e@test.local",
-      }),
-      redirect: "manual",
-    }
-  );
+  const signinRes = await fetch(`${BASE_URL}/api/auth/callback/e2e-credentials`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/x-www-form-urlencoded",
+      Cookie: cookies.join("; "),
+    },
+    body: new URLSearchParams({
+      csrfToken,
+      email: "e2e@test.local",
+    }),
+    redirect: "manual",
+  });
 
   // 3. Collect session cookie from redirect
   const allCookies = signinRes.headers.getSetCookie();
-  const sessionCookie = allCookies
-    .find((c) => c.startsWith("authjs.session-token=") || c.startsWith("__Secure-authjs.session-token="));
+  const sessionCookie = allCookies.find(
+    (c) => c.startsWith("authjs.session-token=") || c.startsWith("__Secure-authjs.session-token="),
+  );
 
   if (!sessionCookie) {
     throw new Error("Failed to acquire session cookie for E2E");
@@ -239,9 +236,9 @@ export async function getSessionCookie(): Promise<string> {
 
 #### Atomic commit
 
-| # | Commit Message | Files |
-|---|----------------|-------|
-| 3 | `feat: add E2E auth helper for session cookie acquisition` | `tests/api-e2e/helpers/auth.ts` |
+| #   | Commit Message                                             | Files                           |
+| --- | ---------------------------------------------------------- | ------------------------------- |
+| 3   | `feat: add E2E auth helper for session cookie acquisition` | `tests/api-e2e/helpers/auth.ts` |
 
 ---
 
@@ -286,9 +283,9 @@ Both must be updated to recognize `E2E_API=1`.
 
 #### Atomic commit
 
-| # | Commit Message | Files |
-|---|----------------|-------|
-| 4 | `feat: enable Credentials provider and skip D1 adapter for E2E_API mode` | `auth.ts` |
+| #   | Commit Message                                                           | Files     |
+| --- | ------------------------------------------------------------------------ | --------- |
+| 4   | `feat: enable Credentials provider and skip D1 adapter for E2E_API mode` | `auth.ts` |
 
 ---
 
@@ -310,16 +307,17 @@ Both must be updated to recognize `E2E_API=1`.
 >      exercise the full create-read-export-import lifecycle over real HTTP.
 >   2. **Playwright L3 tests** — these exercise the full user flow including Server Action calls
 >      through the browser, which IS real HTTP (browser → Next.js → Server Action → D1).
-> - This is a legitimate L2 scope reduction: the spec says "100% API endpoint coverage" — we
->   cover all **application-owned HTTP route handlers** with dedicated test cases, with two
->   explicit exclusions:
->   - `/api/auth/[...nextauth]` — framework-owned (handlers generated by `NextAuth()`, not
->     application code; correctness is the responsibility of the `next-auth` library).
->   - `/api/health/db` — infrastructure-only endpoint introduced by this plan for D1 test
->     marker verification. It is exercised indirectly via `globalSetup.ts` (called once before
->     every test run), not via a dedicated L2 test case, because its sole purpose is to gate
->     test execution, not to serve application functionality.
->   Server Actions are covered by L1+ (mock) and L3 (Playwright).
+
+This is a legitimate L2 scope reduction: the spec says "100% API endpoint coverage" — we cover all
+**application-owned HTTP route handlers** with dedicated test cases, with two explicit exclusions:
+- `/api/auth/[...nextauth]` — framework-owned (handlers generated by `NextAuth()`, not application
+  code; correctness is the responsibility of the `next-auth` library).
+- `/api/health/db` — infrastructure-only endpoint introduced by this plan for D1 test marker
+  verification. It is exercised indirectly via `globalSetup.ts` (called once before every test
+  run), not via a dedicated L2 test case, because its sole purpose is to gate test execution, not
+  to serve application functionality.
+
+Server Actions are covered by L1+ (mock) and L3 (Playwright).
 
 **Directory**: `tests/api-e2e/` (new, separate from `tests/api/` mock-based tests)
 
@@ -327,22 +325,22 @@ Both must be updated to recognize `E2E_API=1`.
 
 **File**: `tests/api-e2e/health.e2e.test.ts`
 
-| Test | Method | Endpoint | Auth | Assertions |
-|------|--------|----------|------|------------|
-| GET /api/health returns 200 + ok | GET | `/api/health` | None | `{ status: "ok", timestamp }` |
-| GET /api/live returns 200 + version | GET | `/api/live` | None | `{ status: "ok", version, timestamp }` |
+| Test                                | Method | Endpoint      | Auth | Assertions                             |
+| ----------------------------------- | ------ | ------------- | ---- | -------------------------------------- |
+| GET /api/health returns 200 + ok    | GET    | `/api/health` | None | `{ status: "ok", timestamp }`          |
+| GET /api/live returns 200 + version | GET    | `/api/live`   | None | `{ status: "ok", version, timestamp }` |
 
 #### 4b. Backup & Restore endpoints (session-authenticated)
 
 **File**: `tests/api-e2e/backup.e2e.test.ts`
 
-| Test | Method | Endpoint | Auth | Assertions |
-|------|--------|----------|------|------------|
-| GET /api/backup/archive returns ZIP | GET | `/api/backup/archive` | Session cookie | Content-Type: application/zip, non-empty body |
-| POST /api/backup/restore with valid ZIP | POST | `/api/backup/restore` | Session cookie | 200 + secrets restored |
-| POST /api/backup/restore without auth → 401 | POST | `/api/backup/restore` | None | 401 |
-| GET /api/backup/archive without auth → 401 | GET | `/api/backup/archive` | None | 401 |
-| Round-trip: create secrets → archive → restore → verify | Mixed | archive + restore | Session cookie | Data integrity across export/import |
+| Test                                                    | Method | Endpoint              | Auth           | Assertions                                    |
+| ------------------------------------------------------- | ------ | --------------------- | -------------- | --------------------------------------------- |
+| GET /api/backup/archive returns ZIP                     | GET    | `/api/backup/archive` | Session cookie | Content-Type: application/zip, non-empty body |
+| POST /api/backup/restore with valid ZIP                 | POST   | `/api/backup/restore` | Session cookie | 200 + secrets restored                        |
+| POST /api/backup/restore without auth → 401             | POST   | `/api/backup/restore` | None           | 401                                           |
+| GET /api/backup/archive without auth → 401              | GET    | `/api/backup/archive` | None           | 401                                           |
+| Round-trip: create secrets → archive → restore → verify | Mixed  | archive + restore     | Session cookie | Data integrity across export/import           |
 
 #### 4c. Backy webhook endpoints (X-Webhook-Key authenticated)
 
@@ -354,29 +352,29 @@ Both must be updated to recognize `E2E_API=1`.
 > For testing, the Backy webhook URL must be pointed at a mock server or the test must accept
 > that the push will fail (and assert the error shape).
 
-| Test | Method | Endpoint | Auth | Assertions |
-|------|--------|----------|------|------------|
-| HEAD /api/backy/pull with valid key → 200 | HEAD | `/api/backy/pull` | X-Webhook-Key | 200 |
-| HEAD /api/backy/pull with invalid key → 401 | HEAD | `/api/backy/pull` | Bad key | 401 |
-| POST /api/backy/pull with valid key → JSON metadata | POST | `/api/backy/pull` | X-Webhook-Key | 200 + `{ ok: true, message, stats }` (requires mock Backy server or pre-configured webhook) |
-| POST /api/backy/pull without key → 401 | POST | `/api/backy/pull` | None | 401 |
+| Test                                                | Method | Endpoint          | Auth          | Assertions                                                                                  |
+| --------------------------------------------------- | ------ | ----------------- | ------------- | ------------------------------------------------------------------------------------------- |
+| HEAD /api/backy/pull with valid key → 200           | HEAD   | `/api/backy/pull` | X-Webhook-Key | 200                                                                                         |
+| HEAD /api/backy/pull with invalid key → 401         | HEAD   | `/api/backy/pull` | Bad key       | 401                                                                                         |
+| POST /api/backy/pull with valid key → JSON metadata | POST   | `/api/backy/pull` | X-Webhook-Key | 200 + `{ ok: true, message, stats }` (requires mock Backy server or pre-configured webhook) |
+| POST /api/backy/pull without key → 401              | POST   | `/api/backy/pull` | None          | 401                                                                                         |
 
 #### 4d. Backup migrate endpoint (session-authenticated, legacy)
 
 **File**: `tests/api-e2e/backup.e2e.test.ts` (same file as 4b)
 
-| Test | Method | Endpoint | Auth | Assertions |
-|------|--------|----------|------|------------|
-| GET /api/backup/migrate without auth → 401 | GET | `/api/backup/migrate` | None | 401 |
-| GET /api/backup/migrate with auth → ZIP or empty | GET | `/api/backup/migrate` | Session cookie | Content-Type check, handles no-legacy-data gracefully |
+| Test                                             | Method | Endpoint              | Auth           | Assertions                                            |
+| ------------------------------------------------ | ------ | --------------------- | -------------- | ----------------------------------------------------- |
+| GET /api/backup/migrate without auth → 401       | GET    | `/api/backup/migrate` | None           | 401                                                   |
+| GET /api/backup/migrate with auth → ZIP or empty | GET    | `/api/backup/migrate` | Session cookie | Content-Type check, handles no-legacy-data gracefully |
 
 #### Atomic commits
 
-| # | Commit Message | Files |
-|---|----------------|-------|
-| 5 | `test: add L2 health & live HTTP E2E tests` | `tests/api-e2e/health.e2e.test.ts` |
-| 6 | `test: add L2 backup & restore HTTP E2E tests` | `tests/api-e2e/backup.e2e.test.ts` |
-| 7 | `test: add L2 backy webhook HTTP E2E tests` | `tests/api-e2e/backy.e2e.test.ts` |
+| #   | Commit Message                                 | Files                              |
+| --- | ---------------------------------------------- | ---------------------------------- |
+| 5   | `test: add L2 health & live HTTP E2E tests`    | `tests/api-e2e/health.e2e.test.ts` |
+| 6   | `test: add L2 backup & restore HTTP E2E tests` | `tests/api-e2e/backup.e2e.test.ts` |
+| 7   | `test: add L2 backy webhook HTTP E2E tests`    | `tests/api-e2e/backy.e2e.test.ts`  |
 
 ---
 
@@ -444,9 +442,9 @@ Update `scripts/run-e2e.ts` to use this config:
 
 #### Atomic commit
 
-| # | Commit Message | Files |
-|---|----------------|-------|
-| 14 | `feat: add vitest config and globalSetup for true HTTP API E2E tests` | `vitest.config.api-e2e.ts`, `tests/api-e2e/globalSetup.ts`, `scripts/run-e2e.ts` |
+| #   | Commit Message                                                        | Files                                                                            |
+| --- | --------------------------------------------------------------------- | -------------------------------------------------------------------------------- |
+| 14  | `feat: add vitest config and globalSetup for true HTTP API E2E tests` | `vitest.config.api-e2e.ts`, `tests/api-e2e/globalSetup.ts`, `scripts/run-e2e.ts` |
 
 ---
 
@@ -468,9 +466,9 @@ No file change needed — `test:api` already remapped in Step 1 to `bun scripts/
 
 #### Atomic commit
 
-| # | Commit Message | Files |
-|---|----------------|-------|
-| 15 | `chore: update pre-push hook comment to reflect true HTTP L2` | `.husky/pre-push` |
+| #   | Commit Message                                                | Files             |
+| --- | ------------------------------------------------------------- | ----------------- |
+| 15  | `chore: update pre-push hook comment to reflect true HTTP L2` | `.husky/pre-push` |
 
 ---
 
@@ -535,7 +533,7 @@ export async function verifyTestDatabase(): Promise<void> {
   if (!res.ok) {
     throw new Error(
       `D1 test database verification failed (HTTP ${res.status}). ` +
-      `Ensure CLOUDFLARE_D1_DATABASE_ID_TEST points to a database with a _test_marker table.`
+        `Ensure CLOUDFLARE_D1_DATABASE_ID_TEST points to a database with a _test_marker table.`,
     );
   }
 
@@ -543,7 +541,7 @@ export async function verifyTestDatabase(): Promise<void> {
   if (data.env !== "test") {
     throw new Error(
       `D1 isolation violation: _test_marker.env="${data.env}", expected "test". ` +
-      `Refusing to run API E2E tests against a non-test database.`
+        `Refusing to run API E2E tests against a non-test database.`,
     );
   }
 
@@ -571,7 +569,7 @@ import { executeD1Query } from "@/lib/db/d1-client";
 export async function GET() {
   try {
     const rows = await executeD1Query<{ value: string }>(
-      "SELECT value FROM _test_marker WHERE key = 'env' LIMIT 1"
+      "SELECT value FROM _test_marker WHERE key = 'env' LIMIT 1",
     );
     const env = rows[0]?.value;
 
@@ -636,7 +634,7 @@ export function verifyTestEnvironment(env: { ENVIRONMENT?: string }): void {
   if (env.ENVIRONMENT !== "test") {
     throw new Error(
       `D1 isolation violation: ENVIRONMENT="${env.ENVIRONMENT}", expected "test". ` +
-      `Refusing to run tests against non-test resources.`
+        `Refusing to run tests against non-test resources.`,
     );
   }
 }
@@ -658,14 +656,14 @@ INSERT OR IGNORE INTO _test_marker (key, value) VALUES ('env', 'test');
 
 #### Atomic commits
 
-| # | Commit Message | Files |
-|---|----------------|-------|
-| 8 | `feat: add D1 test database isolation to run-e2e.ts (hard-fail without test DB)` | `scripts/run-e2e.ts` |
-| 9 | `feat: add /api/health/db endpoint for D1 test marker verification` | `app/api/health/db/route.ts` |
-| 10 | `feat: add D1 test database runtime verification helper` | `tests/api-e2e/helpers/verify-d1.ts` |
-| 11 | `feat: add D1 build-time binding verification script (worker)` | `worker/scripts/verify-test-bindings.ts` |
-| 12 | `feat: add D1 runtime environment verification helper (worker)` | `worker/test/helpers/verify-env.ts` |
-| 13 | `feat: add D1 test marker table migration for neo-db-test` | `worker/migrations/test/0001_test_marker.sql` |
+| #   | Commit Message                                                                   | Files                                         |
+| --- | -------------------------------------------------------------------------------- | --------------------------------------------- |
+| 8   | `feat: add D1 test database isolation to run-e2e.ts (hard-fail without test DB)` | `scripts/run-e2e.ts`                          |
+| 9   | `feat: add /api/health/db endpoint for D1 test marker verification`              | `app/api/health/db/route.ts`                  |
+| 10  | `feat: add D1 test database runtime verification helper`                         | `tests/api-e2e/helpers/verify-d1.ts`          |
+| 11  | `feat: add D1 build-time binding verification script (worker)`                   | `worker/scripts/verify-test-bindings.ts`      |
+| 12  | `feat: add D1 runtime environment verification helper (worker)`                  | `worker/test/helpers/verify-env.ts`           |
+| 13  | `feat: add D1 test marker table migration for neo-db-test`                       | `worker/migrations/test/0001_test_marker.sql` |
 
 ---
 
@@ -696,36 +694,36 @@ After implementation, update to reflect true current state.
 
 #### Atomic commits
 
-| # | Commit Message | Files |
-|---|----------------|-------|
-| 16 | `docs: add quality system v2 upgrade document` | `docs/05-quality-system-v2-upgrade.md`, `docs/README.md` |
-| 17 | `docs: add errata to doc 04 re L2 non-compliance` | `docs/04-quality-system-upgrade.md` |
-| 18 | `docs: update README quality system table post-upgrade` | `README.md` |
+| #   | Commit Message                                          | Files                                                    |
+| --- | ------------------------------------------------------- | -------------------------------------------------------- |
+| 16  | `docs: add quality system v2 upgrade document`          | `docs/05-quality-system-v2-upgrade.md`, `docs/README.md` |
+| 17  | `docs: add errata to doc 04 re L2 non-compliance`       | `docs/04-quality-system-upgrade.md`                      |
+| 18  | `docs: update README quality system table post-upgrade` | `README.md`                                              |
 
 ---
 
 ## Commit Summary
 
-| # | Message | Dimension | Phase |
-|---|---------|-----------|-------|
-| 1 | `feat: add L2 run-e2e.ts script for auto dev server management` | L2 | Infrastructure |
-| 2 | `refactor: remap test:api to true HTTP E2E, preserve mock tests as test:api:mock` | L2 | Infrastructure |
-| 3 | `feat: add E2E auth helper for session cookie acquisition` | L2 | Infrastructure |
-| 4 | `feat: enable Credentials provider and skip D1 adapter for E2E_API mode` | L2+D1 | Infrastructure |
-| 5 | `test: add L2 health & live HTTP E2E tests` | L2 | Tests |
-| 6 | `test: add L2 backup & restore HTTP E2E tests` | L2 | Tests |
-| 7 | `test: add L2 backy webhook HTTP E2E tests` | L2 | Tests |
-| 8 | `feat: add D1 test database isolation to run-e2e.ts (hard-fail without test DB)` | D1 | Verification |
-| 9 | `feat: add /api/health/db endpoint for D1 test marker verification` | D1 | Verification |
-| 10 | `feat: add D1 test database runtime verification helper` | D1 | Verification |
-| 11 | `feat: add D1 build-time binding verification script (worker)` | D1 | Verification |
-| 12 | `feat: add D1 runtime environment verification helper (worker)` | D1 | Verification |
-| 13 | `feat: add D1 test marker table migration for neo-db-test` | D1 | Verification |
-| 14 | `feat: add vitest config for true HTTP API E2E tests` | L2 | Infrastructure |
-| 15 | `chore: update pre-push hook comment to reflect true HTTP L2` | L2 | Hook |
-| 16 | `docs: add quality system v2 upgrade document` | Docs | Documentation |
-| 17 | `docs: add errata to doc 04 re L2 non-compliance` | Docs | Documentation |
-| 18 | `docs: update README quality system table post-upgrade` | Docs | Documentation |
+| #   | Message                                                                           | Dimension | Phase          |
+| --- | --------------------------------------------------------------------------------- | --------- | -------------- |
+| 1   | `feat: add L2 run-e2e.ts script for auto dev server management`                   | L2        | Infrastructure |
+| 2   | `refactor: remap test:api to true HTTP E2E, preserve mock tests as test:api:mock` | L2        | Infrastructure |
+| 3   | `feat: add E2E auth helper for session cookie acquisition`                        | L2        | Infrastructure |
+| 4   | `feat: enable Credentials provider and skip D1 adapter for E2E_API mode`          | L2+D1     | Infrastructure |
+| 5   | `test: add L2 health & live HTTP E2E tests`                                       | L2        | Tests          |
+| 6   | `test: add L2 backup & restore HTTP E2E tests`                                    | L2        | Tests          |
+| 7   | `test: add L2 backy webhook HTTP E2E tests`                                       | L2        | Tests          |
+| 8   | `feat: add D1 test database isolation to run-e2e.ts (hard-fail without test DB)`  | D1        | Verification   |
+| 9   | `feat: add /api/health/db endpoint for D1 test marker verification`               | D1        | Verification   |
+| 10  | `feat: add D1 test database runtime verification helper`                          | D1        | Verification   |
+| 11  | `feat: add D1 build-time binding verification script (worker)`                    | D1        | Verification   |
+| 12  | `feat: add D1 runtime environment verification helper (worker)`                   | D1        | Verification   |
+| 13  | `feat: add D1 test marker table migration for neo-db-test`                        | D1        | Verification   |
+| 14  | `feat: add vitest config for true HTTP API E2E tests`                             | L2        | Infrastructure |
+| 15  | `chore: update pre-push hook comment to reflect true HTTP L2`                     | L2        | Hook           |
+| 16  | `docs: add quality system v2 upgrade document`                                    | Docs      | Documentation  |
+| 17  | `docs: add errata to doc 04 re L2 non-compliance`                                 | Docs      | Documentation  |
+| 18  | `docs: update README quality system table post-upgrade`                           | Docs      | Documentation  |
 
 **Total: 18 atomic commits**
 
@@ -759,14 +757,14 @@ cd worker && bun scripts/verify-test-bindings.ts
 
 ### Expected Tier After Upgrade
 
-| Dimension | Status | Evidence |
-|-----------|--------|----------|
-| L1 | ✅ | 937+ unit tests, 95%+ coverage, 4-layer thresholds, pre-commit |
-| L2 | ✅ | True HTTP E2E via `run-e2e.ts` with dedicated tests for all application-owned route handlers (health, live, backup/archive, backup/restore, backup/migrate, backy/pull). Excluded: `/api/auth/*` (framework-owned), `/api/health/db` (infrastructure — exercised via globalSetup, not dedicated test). Server Actions covered by L1+ and L3 |
-| L3 | ✅ | 35+ Playwright specs (real browser + Server Actions over real HTTP), manual/CI |
-| G1 | ✅ | `tsc --noEmit` (strict) + ESLint `error` + `--max-warnings=0`, pre-commit |
-| G2 | ✅ | `osv-scanner` + `gitleaks`, pre-push |
-| D1 | ✅ | Main app: `run-e2e.ts` hard-fails without `CLOUDFLARE_D1_DATABASE_ID_TEST`; `/api/health/db` queries `_test_marker` table to verify test DB at runtime; `verifyTestDatabase()` called in test globalSetup. Worker: `neo-db-test` binding + `verify-test-bindings.ts`. Shared: `_test_marker` table in test D1 instances |
+| Dimension | Status | Evidence                                                                                                                                                                                                                                                                                                                                    |
+| --------- | ------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| L1        | ✅     | 937+ unit tests, 95%+ coverage, 4-layer thresholds, pre-commit                                                                                                                                                                                                                                                                              |
+| L2        | ✅     | True HTTP E2E via `run-e2e.ts` with dedicated tests for all application-owned route handlers (health, live, backup/archive, backup/restore, backup/migrate, backy/pull). Excluded: `/api/auth/*` (framework-owned), `/api/health/db` (infrastructure — exercised via globalSetup, not dedicated test). Server Actions covered by L1+ and L3 |
+| L3        | ✅     | 35+ Playwright specs (real browser + Server Actions over real HTTP), manual/CI                                                                                                                                                                                                                                                              |
+| G1        | ✅     | `tsc --noEmit` (strict) + ESLint `error` + `--max-warnings=0`, pre-commit                                                                                                                                                                                                                                                                   |
+| G2        | ✅     | `osv-scanner` + `gitleaks`, pre-push                                                                                                                                                                                                                                                                                                        |
+| D1        | ✅     | Main app: `run-e2e.ts` hard-fails without `CLOUDFLARE_D1_DATABASE_ID_TEST`; `/api/health/db` queries `_test_marker` table to verify test DB at runtime; `verifyTestDatabase()` called in test globalSetup. Worker: `neo-db-test` binding + `verify-test-bindings.ts`. Shared: `_test_marker` table in test D1 instances                     |
 
 **Target Tier: S** (all six dimensions genuinely green)
 
@@ -774,19 +772,19 @@ cd worker && bun scripts/verify-test-bindings.ts
 
 ## Risk Considerations
 
-| Risk | Mitigation |
-|------|------------|
-| True HTTP tests are slower (~10-20s for server startup) | `run-e2e.ts` polls `/api/health` with 500ms interval; pre-push budget is <3min |
-| Secrets/settings have no HTTP route handlers, only Server Actions | L2 covers all application-owned HTTP route handlers with dedicated tests (health, live, backup, backy). `/api/auth/*` excluded (framework-owned); `/api/health/db` excluded (infrastructure, exercised via globalSetup). Server Action coverage split between L1+ (mock-based in-process) and L3 (Playwright browser E2E) |
-| Main app D1 uses env vars, not wrangler bindings — harder to enforce isolation | `run-e2e.ts` hard-fails without `CLOUDFLARE_D1_DATABASE_ID_TEST`; runtime `_test_marker` table query via `/api/health/db` + `verifyTestDatabase()` in globalSetup blocks test execution if not connected to test DB |
-| D1 test database may not exist on developer machines | `run-e2e.ts` exits non-zero without test DB env var — developers must create `neo-db-test` via `wrangler d1 create` before running API E2E; this is intentional (spec prohibits silent fallback to production) |
-| Backy POST test requires a reachable Backy webhook URL | Test either with mock Backy server or accept connection error and assert error shape; auth/validation tests work without external dependency |
-| Existing mock-based tests become redundant | Kept as `test:api:mock` for fast local iteration; remove once true HTTP tests are stable |
+| Risk                                                                           | Mitigation                                                                                                                                                                                                                                                                                                                |
+| ------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| True HTTP tests are slower (~10-20s for server startup)                        | `run-e2e.ts` polls `/api/health` with 500ms interval; pre-push budget is <3min                                                                                                                                                                                                                                            |
+| Secrets/settings have no HTTP route handlers, only Server Actions              | L2 covers all application-owned HTTP route handlers with dedicated tests (health, live, backup, backy). `/api/auth/*` excluded (framework-owned); `/api/health/db` excluded (infrastructure, exercised via globalSetup). Server Action coverage split between L1+ (mock-based in-process) and L3 (Playwright browser E2E) |
+| Main app D1 uses env vars, not wrangler bindings — harder to enforce isolation | `run-e2e.ts` hard-fails without `CLOUDFLARE_D1_DATABASE_ID_TEST`; runtime `_test_marker` table query via `/api/health/db` + `verifyTestDatabase()` in globalSetup blocks test execution if not connected to test DB                                                                                                       |
+| D1 test database may not exist on developer machines                           | `run-e2e.ts` exits non-zero without test DB env var — developers must create `neo-db-test` via `wrangler d1 create` before running API E2E; this is intentional (spec prohibits silent fallback to production)                                                                                                            |
+| Backy POST test requires a reachable Backy webhook URL                         | Test either with mock Backy server or accept connection error and assert error shape; auth/validation tests work without external dependency                                                                                                                                                                              |
+| Existing mock-based tests become redundant                                     | Kept as `test:api:mock` for fast local iteration; remove once true HTTP tests are stable                                                                                                                                                                                                                                  |
 
 ## Out of Scope
 
-| Item | Reason |
-|------|--------|
-| CI pipeline (GitHub Actions) | Separate initiative; local hooks provide enforcement |
-| Worker true HTTP E2E | Worker is deployed to Cloudflare; local E2E would require `wrangler dev` setup, deferred |
-| `tests/api/` removal | Preserved as `test:api:mock` for transition period; evaluate removal in next cycle |
+| Item                         | Reason                                                                                   |
+| ---------------------------- | ---------------------------------------------------------------------------------------- |
+| CI pipeline (GitHub Actions) | Separate initiative; local hooks provide enforcement                                     |
+| Worker true HTTP E2E         | Worker is deployed to Cloudflare; local E2E would require `wrangler dev` setup, deferred |
+| `tests/api/` removal         | Preserved as `test:api:mock` for transition period; evaluate removal in next cycle       |

@@ -17,7 +17,9 @@ TS 6.0.3 → 7.0.2 那次提交, 我只跑了 `typecheck / lint / test:coverage`
 biome 的 `useExhaustiveDependencies` 对下面这个模式判为 "vm.searchQuery 不必要":
 
 ```tsx
-useEffect(() => { setSelectedIndex(null); }, [vm.searchQuery]);
+useEffect(() => {
+  setSelectedIndex(null);
+}, [vm.searchQuery]);
 ```
 
 它把 deps 自动改成 `[]`。但那个 dep 是**触发时机**, 不是被 body 读的值。改成 `[]` 后 effect 只在 mount 跑一次, 键盘选择在搜索过滤后不重置, 回车/空格会复制错卡片。
@@ -27,7 +29,6 @@ useEffect(() => { setSelectedIndex(null); }, [vm.searchQuery]);
 ### 教训 3: pre-commit 必须验证 index 快照
 
 pre-commit 里 tsc + vitest 直接跑在工作树上。这有两个漏洞:
-
 1. **并发写竞争**: `lint-staged --write` 会 stash + apply + rewrite, 与 tsc/vitest 并行时它们可能读到中间态。
 2. **index/工作树背离**: 用户把 broken 代码 stage, 又在工作树里修好, hook 读的是"修好后的工作树", 但**commit 只保存 index** —— broken 版本仍然 landed。
 
