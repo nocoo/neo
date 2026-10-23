@@ -36,7 +36,7 @@ Maintain root `AGENTS.md` as the only project handbook; do not create legacy ali
 
 ## Commands
 
-Run from root; CI currently pins Bun 1.4.2. Install both packages before typecheck.
+Run from root; CI currently pins Bun 1.4.4. Install both packages before typecheck.
 
 ```sh
 bun install --frozen-lockfile
