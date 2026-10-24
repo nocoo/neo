@@ -5,36 +5,25 @@
  * in a SidebarProvider for every render.
  */
 
-import { render, screen } from "@testing-library/react";
+import { fireEvent, render, screen } from "@testing-library/react";
 import React from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 // ── Hoisted mocks ────────────────────────────────────────────────────────
 
-const { mockPathname, mockHandleSignOut } = vi.hoisted(() => ({
+const { mockPathname, mockHandleSignOut, mockPush } = vi.hoisted(() => ({
   mockPathname: vi.fn().mockReturnValue("/dashboard"),
   mockHandleSignOut: vi.fn(),
+  mockPush: vi.fn(),
 }));
 
 vi.mock("next/navigation", () => ({
   usePathname: mockPathname,
+  useRouter: () => ({ push: mockPush }),
 }));
 
 vi.mock("@/actions/auth", () => ({
   handleSignOut: mockHandleSignOut,
-}));
-
-vi.mock("@/components/ui/collapsible", () => ({
-  Collapsible: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
-  CollapsibleTrigger: ({
-    children,
-    asChild,
-    ...props
-  }: {
-    children: React.ReactNode;
-    asChild?: boolean;
-  }) => (asChild ? children : <button {...props}>{children}</button>),
-  CollapsibleContent: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
 }));
 
 // Mock sidebar context to control collapsed state
@@ -89,22 +78,29 @@ describe("Sidebar — expanded", () => {
     expect(screen.getByLabelText("Collapse sidebar")).toBeDefined();
   });
 
-  it("renders all navigation links", () => {
-    render(<Sidebar user={defaultUser} />);
-    expect(screen.getByText("Secrets")).toBeDefined();
-    expect(screen.getAllByText("Backup").length).toBeGreaterThanOrEqual(1);
-    expect(screen.getByText("Tools")).toBeDefined();
-    expect(screen.getAllByText("Settings").length).toBeGreaterThanOrEqual(1);
+  it("renders all navigation rows", () => {
+    const { container } = render(<Sidebar user={defaultUser} />);
+    const rows = Array.from(container.querySelectorAll("[data-sidebar-row]")).map((row) =>
+      row.textContent?.trim(),
+    );
+    expect(rows).toEqual(["Secrets", "Recycle Bin", "Backup", "Tools", "Settings"]);
   });
 
-  it("renders group labels with correct styles", () => {
+  it("collapses a group from its label", () => {
+    const { container } = render(<Sidebar user={defaultUser} />);
+    const secretGroup = screen.getByRole("button", { name: "Secret" });
+    expect(secretGroup.getAttribute("aria-expanded")).toBe("true");
+    fireEvent.click(secretGroup);
+    const labels = Array.from(container.querySelectorAll("[data-sidebar-row]")).map((row) =>
+      row.textContent?.trim(),
+    );
+    expect(labels).not.toContain("Secrets");
+  });
+
+  it("navigates when a row is activated", () => {
     render(<Sidebar user={defaultUser} />);
-    const secretLabel = screen.getByText("Secret");
-    expect(secretLabel).toBeDefined();
-    expect(secretLabel.className).toContain("text-xs");
-    expect(secretLabel.className).toContain("font-medium");
-    expect(secretLabel.className).toContain("uppercase");
-    expect(secretLabel.className).toContain("tracking-wider");
+    fireEvent.click(screen.getByRole("button", { name: "Tools" }));
+    expect(mockPush).toHaveBeenCalledWith("/dashboard/tools");
   });
 
   it("renders sign out button as form submit", () => {
@@ -115,12 +111,15 @@ describe("Sidebar — expanded", () => {
     expect(signOutBtn.getAttribute("type")).toBe("submit");
   });
 
-  it("highlights active nav item", () => {
+  it("marks the active row with aria-current", () => {
     mockPathname.mockReturnValue("/dashboard/backup");
-    render(<Sidebar user={defaultUser} />);
-    const backupElements = screen.getAllByText("Backup");
-    const backupLink = backupElements.map((el) => el.closest("a")).find((a) => a !== null);
-    expect(backupLink?.className).toContain("bg-accent");
+    const { container } = render(<Sidebar user={defaultUser} />);
+    const row = (label: string) =>
+      Array.from(container.querySelectorAll("[data-sidebar-row]")).find(
+        (candidate) => candidate.textContent?.trim() === label,
+      );
+    expect(row("Backup")?.getAttribute("aria-current")).toBe("page");
+    expect(row("Secrets")?.getAttribute("aria-current")).toBeNull();
   });
 
   it("displays user name and email", () => {

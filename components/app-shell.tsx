@@ -1,5 +1,6 @@
 "use client";
 
+import { Sheet, SheetContent, SheetTitle } from "@nocoo/basalt";
 import { AppHeader } from "@nocoo/basalt/components/app-header";
 import {
   AppMain,
@@ -87,19 +88,18 @@ function AppShellInner({ children, user }: { children: React.ReactNode; user: Si
       {/* Desktop sidebar */}
       {!isMobile && <Sidebar user={user} />}
 
-      {/* Mobile overlay + sidebar */}
-      {isMobile && mobileOpen && (
-        <>
-          <button
-            type="button"
-            aria-label="Close sidebar overlay"
-            className="fixed inset-0 z-40 bg-black/50 backdrop-blur-xs"
-            onClick={() => setMobileOpen(false)}
-          />
-          <div className="fixed inset-y-0 left-0 z-50">
+      {/* Mobile drawer */}
+      {isMobile && (
+        <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
+          <SheetContent
+            side="left"
+            className="w-auto max-w-none border-0 bg-transparent p-0 shadow-none"
+            aria-describedby={undefined}
+          >
+            <SheetTitle className="sr-only">Navigation</SheetTitle>
             <Sidebar user={user} />
-          </div>
-        </>
+          </SheetContent>
+        </Sheet>
       )}
 
       <AppMain>

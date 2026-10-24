@@ -15,6 +15,7 @@ const { mockPathname, mockHandleSignOut } = vi.hoisted(() => ({
 
 vi.mock("next/navigation", () => ({
   usePathname: mockPathname,
+  useRouter: () => ({ push: vi.fn() }),
 }));
 
 vi.mock("@/actions/auth", () => ({
@@ -169,19 +170,16 @@ describe("AppShell — mobile mode", () => {
     expect(screen.getAllByText("Test User").length).toBeGreaterThanOrEqual(1);
   });
 
-  it("closes the mobile drawer when the overlay button is clicked", () => {
+  it("closes the mobile drawer with Escape", () => {
     renderAppShell(
       <AppShell user={defaultUser}>
         <div>content</div>
       </AppShell>,
     );
-    // Open drawer first
     fireEvent.click(screen.getByLabelText("Open menu"));
-    const overlay = screen.getByLabelText("Close sidebar overlay");
-    expect(overlay).toBeDefined();
+    expect(screen.getByRole("dialog")).toBeDefined();
 
-    // Clicking the overlay closes the drawer — overlay unmounts.
-    fireEvent.click(overlay);
-    expect(screen.queryByLabelText("Close sidebar overlay")).toBeNull();
+    fireEvent.keyDown(document.activeElement ?? document.body, { key: "Escape" });
+    expect(screen.queryByRole("dialog")).toBeNull();
   });
 });

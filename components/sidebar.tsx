@@ -1,16 +1,22 @@
 "use client";
 
-import { Archive, ChevronUp, Key, LogOut, PanelLeft, Settings, Trash2, Wrench } from "lucide-react";
+import {
+  SidebarFooter,
+  SidebarGroup,
+  SidebarHeader,
+  SidebarIconItem,
+  SidebarItem,
+  SidebarNav,
+  SidebarUser as SidebarUserRow,
+} from "@nocoo/basalt/components/sidebar";
+import { Archive, Key, LogOut, PanelLeft, Settings, Trash2, Wrench } from "lucide-react";
 import Image from "next/image";
-import Link from "next/link";
-import { usePathname } from "next/navigation";
-import { useState } from "react";
+import { usePathname, useRouter } from "next/navigation";
 import { handleSignOut } from "@/actions/auth";
 import { useSidebar } from "@/components/sidebar-context";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Collapsible, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { cn } from "@/lib/utils";
 import { VERSION } from "@/lib/version";
 
 // ── Navigation data model ──
@@ -24,13 +30,11 @@ interface NavItem {
 interface NavGroup {
   label: string;
   items: NavItem[];
-  defaultOpen: boolean;
 }
 
 const NAV_GROUPS: NavGroup[] = [
   {
     label: "Secret",
-    defaultOpen: true,
     items: [
       { href: "/dashboard", label: "Secrets", icon: Key },
       { href: "/dashboard/recycle", label: "Recycle Bin", icon: Trash2 },
@@ -38,12 +42,10 @@ const NAV_GROUPS: NavGroup[] = [
   },
   {
     label: "Backup",
-    defaultOpen: true,
     items: [{ href: "/dashboard/backup", label: "Backup", icon: Archive }],
   },
   {
     label: "Settings",
-    defaultOpen: true,
     items: [
       { href: "/dashboard/tools", label: "Tools", icon: Wrench },
       { href: "/dashboard/settings", label: "Settings", icon: Settings },
@@ -59,76 +61,12 @@ export interface SidebarUser {
   image: string | null;
 }
 
-// ── Sub-components ──
-
-function NavGroupSection({
-  group,
-  isActive,
-}: {
-  group: NavGroup;
-  isActive: (href: string) => boolean;
-}) {
-  const [open, setOpen] = useState(group.defaultOpen);
-
-  return (
-    <Collapsible open={open} onOpenChange={setOpen}>
-      <div className="px-3 mt-2">
-        <CollapsibleTrigger asChild>
-          <button
-            type="button"
-            className="flex w-full items-center justify-between px-3 py-2.5 cursor-pointer"
-          >
-            <span className="text-xs font-medium uppercase tracking-wider text-muted-foreground/70">
-              {group.label}
-            </span>
-            <span className="flex h-7 w-7 shrink-0 items-center justify-center">
-              <ChevronUp
-                className={cn(
-                  "h-4 w-4 text-muted-foreground transition-transform duration-200",
-                  !open && "rotate-180",
-                )}
-                strokeWidth={1.5}
-              />
-            </span>
-          </button>
-        </CollapsibleTrigger>
-      </div>
-      <div
-        className="grid overflow-hidden"
-        style={{
-          gridTemplateRows: open ? "1fr" : "0fr",
-          transition: "grid-template-rows 200ms ease-out",
-        }}
-      >
-        <div className="min-h-0 overflow-hidden">
-          <div className="flex flex-col gap-0.5 px-3">
-            {group.items.map((item) => (
-              <Link
-                key={item.href}
-                href={item.href}
-                className={cn(
-                  "flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-normal transition-colors",
-                  isActive(item.href)
-                    ? "bg-accent text-foreground"
-                    : "text-muted-foreground hover:bg-accent hover:text-foreground",
-                )}
-              >
-                <item.icon className="h-4 w-4 shrink-0" strokeWidth={1.5} />
-                <span className="flex-1 text-left">{item.label}</span>
-              </Link>
-            ))}
-          </div>
-        </div>
-      </div>
-    </Collapsible>
-  );
-}
-
 // ── Main sidebar component ──
 
 export function Sidebar({ user }: { user: SidebarUser }) {
   const { collapsed, toggle } = useSidebar();
   const pathname = usePathname();
+  const router = useRouter();
 
   const initials = user.name
     ? user.name
@@ -143,7 +81,6 @@ export function Sidebar({ user }: { user: SidebarUser }) {
     return href === "/dashboard" ? pathname === "/dashboard" : pathname.startsWith(href);
   }
 
-  // ── Avatar (shared between collapsed/expanded) ──
   const userAvatar = (
     <Avatar className="h-9 w-9">
       {user.image && <AvatarImage src={user.image} alt={user.name ?? "User"} />}
@@ -153,109 +90,125 @@ export function Sidebar({ user }: { user: SidebarUser }) {
     </Avatar>
   );
 
+  const signOut = (
+    <form action={handleSignOut}>
+      <Button type="submit" variant="ghost" size="icon" aria-label="Sign out" title="Sign out">
+        <LogOut className="h-4 w-4" strokeWidth={1.5} />
+      </Button>
+    </form>
+  );
+
   return (
     <TooltipProvider delayDuration={0}>
       <aside
-        data-collapsed={collapsed}
-        className={`safe-area-sidebar sticky top-0 flex h-full shrink-0 flex-col bg-background overflow-hidden transition-[width] duration-300 ease-in-out ${collapsed ? "w-[68px]" : "w-[260px]"}`}
+        data-basalt-sidebar=""
+        data-collapsed={collapsed ? "true" : "false"}
+        className={`safe-area-sidebar sticky top-0 flex h-full shrink-0 flex-col bg-background overflow-hidden transition-[width] duration-300 ease-in-out ${
+          collapsed ? "w-[68px]" : "w-[260px]"
+        }`}
       >
-        {/* ── Header / Logo ── */}
-        <div className="h-14 flex items-center pl-[22px] pr-3 shrink-0">
-          <Image src="/logo-24.png" alt="Neo" width={24} height={24} className="h-6 w-6 shrink-0" />
-          {!collapsed && (
-            <div className="flex items-center justify-between flex-1 min-w-0 ml-3">
-              <div className="flex items-center gap-3">
-                <span className="text-lg font-semibold text-foreground whitespace-nowrap">
-                  neo.
-                </span>
-                <span className="rounded-md bg-secondary px-1.5 py-0.5 text-[10px] font-mono font-medium text-muted-foreground leading-none whitespace-nowrap">
+        <SidebarHeader>
+          {collapsed ? (
+            <Image
+              src="/logo-24.png"
+              alt="Neo"
+              width={24}
+              height={24}
+              className="h-6 w-6 shrink-0"
+            />
+          ) : (
+            <div className="flex w-full min-w-0 items-center justify-between">
+              <div className="flex min-w-0 items-center gap-basalt-space-lg">
+                <Image
+                  src="/logo-24.png"
+                  alt="Neo"
+                  width={24}
+                  height={24}
+                  className="h-6 w-6 shrink-0"
+                />
+                <span className="truncate text-lg font-semibold text-foreground">neo.</span>
+                <span className="shrink-0 rounded-md bg-secondary px-basalt-space-md py-basalt-space-xs font-mono text-[10px] leading-none font-medium text-muted-foreground">
                   v{VERSION}
                 </span>
               </div>
-              <button
-                type="button"
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-7 w-7 shrink-0"
                 onClick={toggle}
                 aria-label="Collapse sidebar"
-                className="flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground hover:text-foreground transition-colors shrink-0"
               >
                 <PanelLeft className="h-4 w-4" strokeWidth={1.5} />
-              </button>
+              </Button>
             </div>
           )}
-        </div>
+        </SidebarHeader>
 
-        {/* ── Expand toggle (collapsed only) ── */}
         {collapsed && (
-          <div className="flex justify-center shrink-0 mb-2">
-            <button
-              type="button"
-              onClick={toggle}
-              aria-label="Expand sidebar"
-              className="flex h-10 w-10 items-center justify-center rounded-lg text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"
-            >
-              <PanelLeft className="h-4 w-4" strokeWidth={1.5} />
-            </button>
-          </div>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="mb-basalt-space-sm self-center"
+            onClick={toggle}
+            aria-label="Expand sidebar"
+          >
+            <PanelLeft className="h-4 w-4" strokeWidth={1.5} />
+          </Button>
         )}
 
-        {/* ── Navigation ── */}
-        <nav className="flex-1 overflow-y-auto pt-1">
-          {collapsed ? (
-            <div className="flex flex-col items-center gap-1">
-              {ALL_NAV_ITEMS.map((item) => (
+        <SidebarNav aria-label="Main navigation">
+          {collapsed
+            ? ALL_NAV_ITEMS.map((item) => (
                 <Tooltip key={item.href}>
                   <TooltipTrigger asChild>
-                    <Link
-                      href={item.href}
-                      className={cn(
-                        "relative flex h-10 w-10 items-center justify-center rounded-lg transition-colors",
-                        isActive(item.href)
-                          ? "bg-accent text-foreground"
-                          : "text-muted-foreground hover:bg-accent hover:text-foreground",
-                      )}
+                    <SidebarIconItem
+                      active={isActive(item.href)}
+                      aria-label={item.label}
+                      onClick={() => router.push(item.href)}
                     >
                       <item.icon className="h-4 w-4" strokeWidth={1.5} />
-                    </Link>
+                    </SidebarIconItem>
                   </TooltipTrigger>
                   <TooltipContent side="right" sideOffset={8}>
                     {item.label}
                   </TooltipContent>
                 </Tooltip>
+              ))
+            : NAV_GROUPS.map((group) => (
+                <SidebarGroup key={group.label} label={group.label} defaultOpen>
+                  {group.items.map((item) => (
+                    <SidebarItem
+                      key={item.href}
+                      active={isActive(item.href)}
+                      onClick={() => router.push(item.href)}
+                    >
+                      <item.icon className="h-4 w-4 shrink-0" strokeWidth={1.5} />
+                      <span className="flex-1 truncate text-left">{item.label}</span>
+                    </SidebarItem>
+                  ))}
+                </SidebarGroup>
               ))}
-            </div>
-          ) : (
-            NAV_GROUPS.map((group) => (
-              <NavGroupSection key={group.label} group={group} isActive={isActive} />
-            ))
-          )}
-        </nav>
+        </SidebarNav>
 
-        {/* ── User section ── */}
-        <div className={cn("py-3 shrink-0", collapsed ? "px-0" : "px-4")}>
-          <div className={cn("flex items-center", collapsed ? "justify-center" : "gap-3")}>
-            {userAvatar}
-            {!collapsed && (
-              <>
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium text-foreground truncate">
-                    {user.name ?? "User"}
-                  </p>
-                  <p className="text-xs text-muted-foreground truncate">{user.email ?? ""}</p>
-                </div>
-                <form action={handleSignOut}>
-                  <button
-                    type="submit"
-                    aria-label="Sign out"
-                    className="flex h-8 w-8 items-center justify-center rounded-lg text-muted-foreground hover:text-foreground hover:bg-accent transition-colors shrink-0 cursor-pointer"
-                    title="Sign out"
-                  >
-                    <LogOut className="h-4 w-4" strokeWidth={1.5} />
-                  </button>
-                </form>
-              </>
-            )}
-          </div>
-        </div>
+        <SidebarFooter>
+          {collapsed ? (
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <span className="inline-flex self-center">{userAvatar}</span>
+              </TooltipTrigger>
+              <TooltipContent side="right" sideOffset={8}>
+                {user.email ?? user.name ?? "User"}
+              </TooltipContent>
+            </Tooltip>
+          ) : (
+            <SidebarUserRow
+              name={user.name ?? "User"}
+              email={user.email ?? ""}
+              avatar={userAvatar}
+              action={signOut}
+            />
+          )}
+        </SidebarFooter>
       </aside>
     </TooltipProvider>
   );
