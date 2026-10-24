@@ -220,6 +220,21 @@
   width: calc(68px + env(safe-area-inset-left, 0px));
 }
 
+/* The brand mark keeps the 22px inset of the 68px rail in both states, so the
+   logo never shifts while the sidebar collapses. */
+.safe-area-sidebar [data-slot="sidebar-header"] {
+  padding-left: 22px;
+}
+
+.safe-area-sidebar[data-collapsed="true"] [data-slot="sidebar-header"] {
+  justify-content: flex-start;
+}
+
+/* Keep the identity row 12px off the bottom edge instead of the card inset. */
+.safe-area-sidebar [data-slot="sidebar-footer"] {
+  padding-bottom: 12px;
+}
+
 .safe-area-content {
   padding-left: max(0.5rem, env(safe-area-inset-left, 0px));
   padding-right: max(0.5rem, env(safe-area-inset-right, 0px));
