@@ -2,6 +2,15 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.3.5] - 2026-10-24
+
+### Changed
+
+- Upgrade `@nocoo/basalt` to 3.2.1 and rebuild the dashboard sidebar on its
+  primitives: collapsible `SidebarGroup` sections, 38px `SidebarItem` rows,
+  `SidebarUser` identity and a `Sheet` drawer that owns scroll locking and focus.
+- Upgrade Next.js to 16.4.3.
+
 ## [1.3.2] - 2026-10-13
 
 ### Changed
