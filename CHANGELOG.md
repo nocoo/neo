@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.3.6] - 2026-10-24
+
+### Fixed
+
+- Keep the sidebar brand mark at its 22px inset in both expanded and collapsed
+  states, and reduce the identity row's bottom inset so the footer no longer
+  floats above the edge.
+
 ## [1.3.5] - 2026-10-24
 
 ### Changed
