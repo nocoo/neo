@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.3.7] - 2026-10-26
+
+### Changed
+
+- Release deploy to jp2 joins Tailscale via workload identity federation (WIF)
+  before SSH, matching the ellie production setup.
+
 ## [1.3.6] - 2026-10-24
 
 ### Fixed
