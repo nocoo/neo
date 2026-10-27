@@ -24,11 +24,11 @@ jobs:
       environment: neo / production
       source-run-id: ${{ github.event_name == 'workflow_run' && format('{0}', github.event.workflow_run.id) || inputs.ci-run-id }}
       images: '[{"image":"ghcr.io/nocoo/neo","service":"app"}]'
-      deploy-directory: /opt/neo
+      deploy-directory: /data/neo
       remote-verify-command: |
         for i in 1 2 3 4 5 6 7 8 9 10; do
-          if docker exec neo-app bun -e 'fetch("http://127.0.0.1:7026/").then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))' 2>/dev/null; then
-            echo "✅ app responding on :7026"
+          if docker exec neo-app bun -e 'fetch("http://127.0.0.1:7026/api/live").then(async r=>{if(!r.ok)process.exit(1);const j=await r.json();process.exit(j.status==="ok"?0:1)}).catch(()=>process.exit(1))' 2>/dev/null; then
+            echo "✅ /api/live healthy on :7026"
             break
           fi
           echo "attempt $i: app not ready yet"
