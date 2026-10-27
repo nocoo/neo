@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.3.8] - 2026-10-27
+
+### Changed
+
+- Move production Docker CD deploy target from jp2 `/opt/neo` to jp4
+  `/data/neo`; release remote verify probes `/api/live` inside the container.
+
 ## [1.3.7] - 2026-10-26
 
 ### Changed
