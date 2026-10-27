@@ -87,7 +87,7 @@ Future D1-backed tests need local Wrangler/Miniflare, per-run SQLite and test co
 
 ## Operations / Release
 
-Use the existing Docker/CI release workflow for an authorized app release; optional Worker deployment is separate. Apply schema before dependent code, verify running `/api/live`, and use [README](README.md) plus [backup guide](docs/02-backup-consolidation.md) for configuration. This repo has no root release script.
+Use the existing Docker/CI release workflow for an authorized app release; production Docker CD deploys to jp4 at `/data/neo`. Optional Worker deployment is separate. Apply schema before dependent code, verify running `/api/live`, and use [README](README.md) plus [backup guide](docs/02-backup-consolidation.md) for configuration. This repo has no root release script.
 
 ## Retrospective
 
