@@ -79,6 +79,7 @@
     "browserslist": "4.28.7",
     "cookie": "^0.7.0",
     "esbuild": "^0.28.1",
+    "minimatch": "11.0.2",
     "picomatch": "^4.0.4",
     "postcss": "^8.5.32",
     "sharp": "^0.35.5",
