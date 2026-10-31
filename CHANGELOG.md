@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.3.9] - 2026-10-31
+
+### Changed
+
+- Bump PostCSS 8.5.31 → 8.5.32 (#554).
+- Pin transitive `minimatch@11.0.2` and `glob@14.0.3` via root overrides for G2 (GHSA-g3hv-75wg-m249, GHSA-3g3m-2fjr-6pw4).
+
 ## [1.3.8] - 2026-10-27
 
 ### Changed
