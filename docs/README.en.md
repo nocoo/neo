@@ -61,6 +61,7 @@ The repository has no `.env.example`. Create `.env.local` and configure:
 | `CLOUDFLARE_API_TOKEN`                  | API token authorized to query the target D1                        |
 
 Set the local Google OAuth callback to `http://localhost:7026/api/auth/callback/google`. Apply these SQL files in order to a new D1 database; the application does not create tables on startup:
+
 1. [Initial schema](../drizzle/0000_pink_archangel.sql)
 2. [Entry color field](../drizzle/0001_green_karnak.sql)
 3. [Recycle bin field](../drizzle/0002_recycle_bin.sql)

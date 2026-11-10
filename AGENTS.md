@@ -92,8 +92,8 @@ Use the existing Docker/CI release workflow for an authorized app release; produ
 ## Retrospective
 
 Full prior incidents are in [Retrospective.md](Retrospective.md). Keep only short project rules here; global lessons go to nmem/rules and deterministic checks to hooks/tests.
-- Preserve trigger-only effect dependencies during lint changes; include Worker dependency installation whenever checks cross packages.
 
+- Preserve trigger-only effect dependencies during lint changes; include Worker dependency installation whenever checks cross packages.
 
 <!-- BEGIN:nextjs-agent-rules -->
 

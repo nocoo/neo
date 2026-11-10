@@ -369,6 +369,7 @@ Encrypted backup system overhaul, UI polish, and deployment hardening.
 ### Added
 
 **Backup Consolidation**
+
 - AES-GCM 256-bit encrypted ZIP archive model with fflate compression
 - Backy integration model for off-site encrypted backup push
 - Backup route handlers: download archive, push to Backy, restore from ZIP
@@ -378,6 +379,7 @@ Encrypted backup system overhaul, UI polish, and deployment hardening.
 - Upload size and decompression limits on restore route
 
 **UI Enhancements**
+
 - Redesigned secrets page with responsive card grid layout
 - 3D card flip animation on OTP copy
 - Color column for secrets with color picker in edit dialog
@@ -390,6 +392,7 @@ Encrypted backup system overhaul, UI polish, and deployment hardening.
 - Step Two (macOS/iOS) RTF import format support
 
 **Infrastructure**
+
 - Worker rate-limit migrated from in-memory Map to D1-backed storage
 - Backup restore with hash-based deduplication via batchImportSecrets
 - DB-saved theme synced to next-themes on settings load
@@ -421,12 +424,12 @@ Encrypted backup system overhaul, UI polish, and deployment hardening.
 - Import-parsers coverage boosted to 95%+
 - Backy server action tests added
 
-
 Initial release — complete modernization from Cloudflare Workers template-string app to Next.js 15 full-stack PWA.
 
 ### Added
 
 **Phase 1: Project Skeleton**
+
 - Next.js 15 + React 19 + TypeScript project setup with Bun
 - Tailwind CSS 3 + shadcn/ui design system with HSL tokens
 - ESLint 9 flat config + Husky pre-commit hooks
@@ -435,6 +438,7 @@ Initial release — complete modernization from Cloudflare Workers template-stri
 - App Router layout with dashboard shell
 
 **Phase 2: Infrastructure Layer**
+
 - Cloudflare D1 HTTP client with Drizzle ORM schema
 - `ScopedDB` multi-tenant database abstraction (per-user isolation)
 - Structured 5-level logger
@@ -443,6 +447,7 @@ Initial release — complete modernization from Cloudflare Workers template-stri
 - Health check (`/api/health`) and liveness probe (`/api/live`)
 
 **Phase 3: Model Layer (TDD)**
+
 - OTP engine: TOTP/HOTP generation with SHA-1/256/512, Web Crypto API
 - Base32 codec with RFC 4648 compliance
 - Secret parser: `otpauth://` URI parsing and generation
@@ -452,12 +457,14 @@ Initial release — complete modernization from Cloudflare Workers template-stri
 - Backup model with hash-based deduplication
 
 **Phase 4: Worker Backend**
+
 - Cloudflare Worker for edge tasks
 - Quick OTP endpoint for fast code generation
 - Favicon proxy with waterfall across 4 sources
 - Cron-triggered daily backup
 
 **Phase 5: ViewModel + View Layer**
+
 - Server Actions for secrets, backup, settings, dashboard
 - ViewModel hooks bridging actions to React components
 - Secret list with search, TOTP countdown, copy-to-clipboard
@@ -471,6 +478,7 @@ Initial release — complete modernization from Cloudflare Workers template-stri
 - Theme toggle (light/dark/system)
 
 **Phase 6: PWA + Offline**
+
 - Serwist 9 service worker with precache + runtime caching
 - PWA manifest with shortcuts, maskable icons, protocol handlers
 - IndexedDB offline queue with retry logic
@@ -480,6 +488,7 @@ Initial release — complete modernization from Cloudflare Workers template-stri
 - PWA install prompt component
 
 **Phase 7: E2E Tests + Deployment**
+
 - API E2E test infrastructure with MockScopedDB
 - 58 API E2E tests (secrets CRUD, backup, settings, dashboard)
 - Playwright E2E configuration with auth setup

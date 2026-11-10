@@ -5,6 +5,7 @@
 将参考项目 `../2fa`（Cloudflare Worker 全栈 2FA 管理器）进行现代化改造，基于 `../zhe` 的 Next.js 架构重建，同时保留全部业务功能。
 
 三大核心目标：
+
 1. **框架现代化** — 从无框架模板字符串迁移到 Next.js 15 + React 19 + TypeScript + MVVM
 2. **UI 替换** — 用 shadcn/ui + Tailwind CSS 4 + HSL 设计 token 重建全部界面
 3. **四层测试** — 建立 UT + Lint + API E2E + BDD E2E 完整验证结构
@@ -125,6 +126,7 @@ Next.js 应用是主体，负责所有用户界面、认证和数据操作。Wor
 ```
 
 **核心原则**：
+
 - **Model** — 零 React 依赖，纯函数 + TypeScript 接口，所有业务逻辑在此层
 - **Server Actions** — `'use server'` 函数，调用 ScopedDB 和 Model，返回 `ActionResult<T>`
 - **ViewModel** — `"use client"` hooks，调用 Server Actions，用 `useMemo` 组合返回 View-ready 结构
@@ -696,6 +698,7 @@ callbacks: {
 ## 十、验证检查点
 
 每个 Phase 完成后执行：
+
 1. `bun run test:unit:coverage` — ≥90% 覆盖率门禁
 2. `bun run lint` — 零警告
 3. `bun run build` — 构建成功

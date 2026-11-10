@@ -61,6 +61,7 @@ bun install --cwd worker --frozen-lockfile
 | `CLOUDFLARE_API_TOKEN`                  | 有权查询目标 D1 的 API token                             |
 
 Google OAuth 的本地回调地址为 `http://localhost:7026/api/auth/callback/google`。在新建 D1 数据库中按顺序执行以下 SQL；应用启动不会自动创建表：
+
 1. [初始表结构](drizzle/0000_pink_archangel.sql)
 2. [条目颜色字段](drizzle/0001_green_karnak.sql)
 3. [回收站字段](drizzle/0002_recycle_bin.sql)
