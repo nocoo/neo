@@ -40,25 +40,12 @@ if [ -n "$WORKER_PKG_CHANGES" ]; then
   fi
 fi
 
-# Detect code changes. Docs-only commits skip heavy gates.
-# Keep this superset in sync with the BIOME_STAGED / TSC_AFFECTING matchers
-# below and with the lint-staged glob in package.json.
-CODE_CHANGES=$(echo "$STAGED_FILES" | grep -E '\.(ts|tsx|mts|cts|js|jsx|mjs|cjs|json)$' || true)
-TSC_AFFECTING=$(echo "$STAGED_FILES" | grep -E '\.(ts|tsx|mts|cts)$|tsconfig.*\.json$' || true)
-BIOME_STAGED=$(echo "$STAGED_FILES" | grep -E '\.(ts|tsx|mts|cts|js|jsx|mjs|cjs|json)$' || true)
-
-if [ -z "$CODE_CHANGES" ]; then
-  echo "⏭️  pre-commit: no code changes staged — skipping L1/G1a/G1b gates"
-  exit 0
-fi
-
 # G1b: check-only Biome on staged files before snapshotting the index.
-if [ -n "$BIOME_STAGED" ]; then
-  bunx lint-staged 2>&1
-  if [ $? -ne 0 ]; then
-    echo "❌ pre-commit FAILED: Biome errors in staged files."
-    exit 1
-  fi
+# lint-staged no-ops when nothing matches package.json globs (e.g. docs-only).
+bunx lint-staged 2>&1
+if [ $? -ne 0 ]; then
+  echo "❌ pre-commit FAILED: Biome errors in staged files."
+  exit 1
 fi
 
 # Materialise the INDEX (post-lint-staged) into a temp dir. Read-only gates
@@ -94,20 +81,15 @@ TSC_EXIT_FILE="$TMP_DIR/tsc_exit"
 ) &
 TEST_PID=$!
 
-if [ -n "$TSC_AFFECTING" ]; then
-  (
-    # G1a: TypeScript strict (whole project — tsc needs complete context) — read-only.
-    cd "$SNAP_ROOT" && bun run typecheck 2>&1
-    echo $? > "$TSC_EXIT_FILE"
-  ) &
-  TSC_PID=$!
-else
-  echo 0 > "$TSC_EXIT_FILE"
-  TSC_PID=""
-fi
+(
+  # G1a: TypeScript strict (whole project — tsc needs complete context) — read-only.
+  cd "$SNAP_ROOT" && bun run typecheck 2>&1
+  echo $? > "$TSC_EXIT_FILE"
+) &
+TSC_PID=$!
 
 wait $TEST_PID
-[ -n "$TSC_PID" ] && wait $TSC_PID
+wait $TSC_PID
 
 TEST_EXIT=$(cat "$TEST_EXIT_FILE")
 TSC_EXIT=$(cat "$TSC_EXIT_FILE")
