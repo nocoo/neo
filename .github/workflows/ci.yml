@@ -1,36 +1,59 @@
+# CI slot standard v1 (nocoo/base-ci docs/slots.md): impl S1, S2, S3, G1, G2, B1, L1, L1.5, L2, L3, Z1 via quality.yml;
+# na P1 in slot-status. nocoo/base-ci v2026.12: top-level slot jobs, L3 browsers/artifacts, S3 workflow-lint inline.
 name: CI
-"on":
+
+on:
   push:
-    branches:
-      - main
+    branches: [main]
   pull_request:
-    branches:
-      - main
-  workflow_dispatch: null
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
 jobs:
   quality:
-    uses: nocoo/base-ci/.github/workflows/quality.yml@633a5545fcfec91b688840650d4edf3e9cc1abbd # v2026.10
+    uses: nocoo/base-ci/.github/workflows/quality.yml@1ea10ecab22b72512399485391603fe03a161016 # v2026.12
     with:
-      runtime-version: 1.4.4
+      runtime-version: "1.4.4"
       install-policy: blocked
-      coverage-path: coverage
       extra-install-dirs: worker
-      prepare-command: bun run build
-      test-command: bun run test:coverage
+      coverage-path: coverage
       typecheck-command: bun run typecheck
-      l2-command: bun run test:api
-      l3-command: bun run test:e2e:bdd
-      l3-browser: chromium
-      security: true
+      test-command: bun run test:coverage
+      build: true
+      build-command: bun run build
+      osv-config: .osv-scanner.toml
+      gitleaks-config: .gitleaks.toml
+      lockfiles: |
+        bun.lock
+        worker/bun.lock
+      workflow-lint: true
+      workflow-lint-required-workflow: nocoo/base-ci/.github/workflows/deploy-docker.yml
+      workflow-lint-yamllint: true
       worker: true
       worker-command: bun run test:coverage
       l2: true
+      l2-command: bun run test:api
       l3: true
-  release-smoke:
-    name: Release Workflow Smoke
-    uses: nocoo/base-ci/.github/workflows/workflow-lint.yml@633a5545fcfec91b688840650d4edf3e9cc1abbd # v2026.10
-    with:
-      required-reusable-workflow: nocoo/base-ci/.github/workflows/deploy-docker.yml
-      yamllint: true
-permissions:
-  contents: read
+      l3-browsers: chromium
+      l3-prepare-command: bunx playwright install --with-deps chromium
+      l3-command: bun run test:e2e:bdd
+      l3-artifact-name: browser-evidence
+      l3-artifact-path: |
+        playwright-report/
+        test-results/
+      l3-artifact-retention-days: 7
+      slot-status: >-
+        {"S1": {"status": "impl"},
+        "S2": {"status": "impl"},
+        "S3": {"status": "impl"},
+        "G1": {"status": "impl"},
+        "G2": {"status": "impl"},
+        "B1": {"status": "impl"},
+        "L1": {"status": "impl"},
+        "L1.5": {"status": "impl"},
+        "L2": {"status": "impl"},
+        "L3": {"status": "impl"},
+        "P1": {"status": "na", "reason": "package.json 为 private，不发布 npm 包"},
+        "Z1": {"status": "impl"}}
