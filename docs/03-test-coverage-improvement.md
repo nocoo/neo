@@ -42,6 +42,7 @@ Elevate Neo's test infrastructure to fully align with the **Four-Layer Testing A
 **Goal**: Make the coverage config accurately reflect what we want to protect.
 
 **Changes to `vitest.config.ts`**:
+
 1. Add thresholds for all production layers:
 
 ```ts
@@ -174,6 +175,7 @@ include: [
 **Goal**: Achieve zero-tolerance lint with strict TypeScript checking.
 
 **Changes to `eslint.config.mjs`**:
+
 1. Promote `@typescript-eslint/no-unused-vars` from `warn` → `error`:
 
 ```js

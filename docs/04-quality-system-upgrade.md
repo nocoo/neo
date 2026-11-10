@@ -238,6 +238,7 @@ brew install osv-scanner gitleaks
 #### Analysis
 
 Neo's architecture:
+
 - **Main app (Next.js)**: accesses D1 **via HTTP** through the Cloudflare Worker — not direct binding
 - **Worker**: has direct D1 binding (`neo-db`)
 - **Current tests**: API E2E tests mock D1 at the vitest level (no real D1 connection)
@@ -272,6 +273,7 @@ ENVIRONMENT = "test"
 #### 3b. Mark D1 as conditionally applicable
 
 For tier evaluation purposes:
+
 - **Main app D1**: N/A (D1 access is via HTTP, mocked in tests)
 - **Worker D1**: Applicable — `[env.test]` config added, real isolation deferred until worker E2E tests are introduced
 
@@ -337,6 +339,7 @@ thresholds: {
 #### 5a. Final hook state
 
 **`.husky/pre-commit`**:
+
 ```bash
 # L1: Unit tests + coverage (pre-commit, <30s)
 bun run test:unit:coverage
@@ -349,6 +352,7 @@ bunx lint-staged
 ```
 
 **`.husky/pre-push`**:
+
 ```bash
 # L2: API E2E tests (pre-push)
 bun run test:api
@@ -358,6 +362,7 @@ bun run test:security
 ```
 
 **Manual/CI**:
+
 ```bash
 # L3: System/E2E (Playwright)
 bun run test:e2e:pw

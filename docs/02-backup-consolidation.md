@@ -445,6 +445,7 @@ Phase 1    ──►  Deploy 1  ──►  Phase 2-3  ──►  Deploy 2
 ### 6.3 Migration Gate for Deploy 7
 
 **Do NOT run Phase 7.6 (DROP TABLE) until:**
+
 1. Phase 5 migration route has been live for at least **one release cycle** (recommend 2 weeks minimum)
 2. Phase 4 (encryption key UI) has been live even longer — users need time to generate and save their key
 3. Server logs confirm the migration route was called (or no backups exist in D1)
