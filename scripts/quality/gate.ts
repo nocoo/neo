@@ -245,7 +245,9 @@ function loadDeclaration(): string[] {
   }
 
   const problems: string[] = [];
-  const declared = new Map(result.declarations.map((entry) => [entry.id, entry.status]));
+  const declared = new Map<string, string>(
+    result.declarations.map((entry) => [entry.id, entry.status]),
+  );
   for (const slot of SLOTS) {
     const status = declared.get(slot.id);
     if (status && status !== "impl") {

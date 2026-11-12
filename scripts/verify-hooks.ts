@@ -50,7 +50,12 @@ function tail(output: string, lines = 6): string {
 
 async function run(
   command: string[],
-  options: { cwd: string; stdin?: string; env?: Record<string, string>; timeoutMs?: number } = {
+  options: {
+    cwd: string;
+    stdin?: string | undefined;
+    env?: Record<string, string>;
+    timeoutMs?: number;
+  } = {
     cwd: repoRoot,
   },
 ): Promise<RunResult> {
@@ -218,7 +223,7 @@ function buildFixture(): void {
 }
 
 function toolPath(name: string): string | undefined {
-  return Bun.which(name);
+  return Bun.which(name) ?? undefined;
 }
 
 function buildBinDir(name: string, exclude: string[] = []): string {

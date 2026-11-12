@@ -27,7 +27,7 @@ export interface GateContext {
   gitRoot: string;
   stage: Stage;
   contentSha: string | undefined;
-  g1Range?: string;
+  g1Range?: string | undefined;
 }
 
 export interface SlotDefinition {
