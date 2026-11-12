@@ -149,7 +149,7 @@ jobs:
   b1-build:
     name: "B1: Build"
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 10
     outputs:
       tested-sha: ${{ steps.record-sha.outputs.sha }}
     steps:
@@ -175,7 +175,7 @@ jobs:
   l1-unit:
     name: "L1: Unit"
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 10
     outputs:
       tested-sha: ${{ steps.record-sha.outputs.sha }}
     steps:
@@ -214,7 +214,7 @@ jobs:
   l3-integration:
     name: "L3: Integration"
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 10
     outputs:
       tested-sha: ${{ steps.record-sha.outputs.sha }}
     steps:
@@ -240,7 +240,7 @@ jobs:
   l4-e2e:
     name: "L4: E2E"
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 10
     outputs:
       tested-sha: ${{ steps.record-sha.outputs.sha }}
     steps:
@@ -286,7 +286,7 @@ jobs:
   hook-self-test:
     name: "Hook Self-Test"
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 10
     outputs:
       tested-sha: ${{ steps.record-sha.outputs.sha }}
     steps:
@@ -318,7 +318,7 @@ jobs:
   container-smoke:
     name: "Container Smoke"
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 10
     outputs:
       tested-sha: ${{ steps.record-sha.outputs.sha }}
     steps:

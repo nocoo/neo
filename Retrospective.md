@@ -74,3 +74,21 @@ The root app and optional Worker have independent Bun manifests and locks. Valid
 ### 5. 门禁脚本也要进类型检查
 
 `scripts/` 原先被 `tsconfig.json` 排除，门禁脚本只有运行时自测。现在 `tsconfig.scripts.json` 用 `@types/bun` 单独检查脚本，主应用配置不引入 Bun 全局类型；同时删除了已无使用者的 `lint-staged` 依赖。不要把脚本类型检查塞回主 tsconfig，否则 Bun 的 `fetch` 类型会污染现有单元测试。
+
+## 2026-11-12 — System0 migration review round 1
+
+### 1. Reusing worktree `node_modules` is not dependency proof
+
+The first hooks compared manifests and locks, then symlinked the worktree install into the snapshot. A lockfile declaring `2.0.0` still passed while the installed tree remained `1.0.0`. Both hooks now run an isolated `bun install --frozen-lockfile --ignore-scripts` in the snapshot; the self-test pushes a new dependency version while the worktree keeps the old one and proves the gate sees the pushed version.
+
+### 2. A new ref must not skip secrets because another remote ref contains the commit
+
+`<oid> --not --remotes` excluded commits reachable from any remote-tracking ref, so a new branch could bypass G1 when the same commit was already fetched under another remote branch. A new ref now scans the full history reachable from its OID; an existing ref scans `<remote-sha>..<local-sha>`. G1 also runs once per distinct range, so the same OID pushed to two refs with different remote bases cannot skip the second range.
+
+### 3. The stage budget must include preparation and cleanup
+
+The gate timer started after dependency installation and restarted for every pushed OID. Preparation is now exported as `GATE_PREP_SECONDS`, cumulative across the whole push, and the hook enforces the hard wall budget after cleanup as well.
+
+### 4. A runtime-version reference must resolve or fail
+
+Parsing only literal `runtime-version: X.Y.Z` silently accepted a workflow using `${{ env.BUN_VERSION }}`. The parser now resolves the referenced env declaration; a missing or unresolved declaration fails preflight instead of passing.
