@@ -31,19 +31,20 @@ Neo now follows the System0 quality standard (1.3.0) with base-ci v2026.15 in na
 
 Measured on macOS arm64, Bun 1.4.4, Node 26.13.0:
 
-| Gate           | Result                                                                               |
-| -------------- | ------------------------------------------------------------------------------------ |
-| L1 Web         | Statements 97.57%, branches 95.75%, functions 95.90%, lines 98.60% (threshold 95.5%) |
-| L1 Worker      | Statements 99.43%, branches 97.65%, functions 100%, lines 99.40% (threshold 95%)     |
-| L3             | 35 tests pass in ~9s                                                                 |
-| L4             | 6 tests pass in ~15s                                                                 |
-| B1             | ~9.4s                                                                                |
-| G2             | 2 lockfiles, 0 vulnerabilities, ~1.8s                                                |
-| Hook self-test | 29/29 cases pass                                                                     |
-| Pre-commit     | 10.2–11s wall (gate 8.6s, prep 1.0s), target 15s, hard budget 30s                    |
-| Pre-push       | 52.8s wall (gate 49.3s), target 150s, hard budget 300s                               |
+| Gate           | Result                                                                                |
+| -------------- | ------------------------------------------------------------------------------------- |
+| L1 Web         | Statements 97.57%, branches 95.75%, functions 95.90%, lines 98.60% (threshold 95.5%)  |
+| L1 Worker      | Statements 99.43%, branches 97.65%, functions 100%, lines 99.40% (threshold 95%)      |
+| L3             | 35 tests pass in ~9s                                                                  |
+| L4             | 6 tests pass in ~15s                                                                  |
+| B1             | ~9.4s                                                                                 |
+| G2             | 2 lockfiles, 0 vulnerabilities, ~1.8s                                                 |
+| Hook self-test | 29/29 cases pass                                                                      |
+| Pre-commit     | 10.2–12.7s wall (gate 8.6–10.5s, prep 1–2s), target 15s, hard budget 30s              |
+| Pre-push       | 46–52.8s wall (gate 43.5–49.3s), target 150s, hard budget 300s                        |
+| CI             | 81s total on 02ad970; critical path L4 69s, then Z1 7s; 11 blocking jobs agree on SHA |
 
-The CI timing and real check-run names are recorded after the first pushed run. Every CI job has a 10-minute hard timeout; the workflow has no separate whole-run cap, so total wall time is the slowest job plus queue time. Branch protection requires only `quality / Z1: Gate` (strict=false, force-push and deletion blocked, admin bypass).
+The recorded run is [43174856476](https://github.com/nocoo/neo/actions/runs/43174856476); its required check is exactly `quality / Z1: Gate`. Every CI job has a 10-minute hard timeout; the workflow has no separate whole-run cap, so total wall time is the slowest job plus queue time. Branch protection requires only `quality / Z1: Gate` (strict=false, force-push and deletion blocked, admin bypass).
 
 ## Remaining Gaps
 
