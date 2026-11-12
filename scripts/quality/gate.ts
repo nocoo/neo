@@ -234,14 +234,14 @@ async function preflight(): Promise<boolean> {
   return ok;
 }
 
-function loadDeclaration(): { problems: string[]; declared: Map<string, string> } {
+function loadDeclaration(): string[] {
   const path = join(root, "scripts/quality/slot-status.json");
   if (!existsSync(path)) {
-    return { problems: [`slot declaration missing: ${path}`], declared: new Map() };
+    return [`slot declaration missing: ${path}`];
   }
   const result = parseSlotStatus(readFileSync(path, "utf-8"));
   if (result.errors.length > 0) {
-    return { problems: formatDeclarationErrors(result.errors).split("\n"), declared: new Map() };
+    return formatDeclarationErrors(result.errors).split("\n");
   }
 
   const problems: string[] = [];
@@ -259,15 +259,15 @@ function loadDeclaration(): { problems: string[]; declared: Map<string, string> 
       problems.push(`slot ${entry.id} is declared impl but the local gate has no slot for it`);
     }
   }
-  return { problems, declared };
+  return problems;
 }
 
 console.log(`▸ ${stage}: ${selected.map((slot) => slot.id).join(", ")}`);
 
-const declaration = loadDeclaration();
-if (declaration.problems.length > 0) {
+const declarationProblems = loadDeclaration();
+if (declarationProblems.length > 0) {
   console.error("❌ slot declaration is invalid:");
-  for (const problem of declaration.problems) console.error(`  ${problem}`);
+  for (const problem of declarationProblems) console.error(`  ${problem}`);
   process.exit(1);
 }
 
