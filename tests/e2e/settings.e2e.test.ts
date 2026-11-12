@@ -6,6 +6,8 @@
  */
 
 import { beforeEach, describe, expect, it } from "bun:test";
+import { openEncryptedZip } from "../../models/backup-archive";
+import { generateOTP } from "../../models/otp";
 
 const BASE = process.env.E2E_BASE_URL ?? "http://localhost:17026";
 const SETTINGS_URL = `${BASE}/api/e2e/settings`;
@@ -54,6 +56,11 @@ async function deleteAllSecrets() {
       await fetch(`${SECRETS_URL}?id=${s.id}`, { method: "DELETE" });
     }
   }
+}
+
+async function resetStorage() {
+  const res = await fetch(`${BASE}/api/e2e/reset`, { method: "POST" });
+  return res.json();
 }
 
 // ── Settings tests ──────────────────────────────────────────────────────────
@@ -153,5 +160,55 @@ describe("Dashboard — HTTP E2E", () => {
     const result = await getDashboard();
     expect(result.success).toBe(true);
     expect(result.data.encryptionEnabled).toBe(true);
+  });
+});
+
+// ── Core journey: create → read → encrypted export → decrypt → TOTP ────────
+
+describe("Encrypted backup journey — HTTP E2E", () => {
+  it("round-trips a secret through the encrypted archive and generates its TOTP", async () => {
+    const seed = "GEZDGNBVGY3TQOJQGEZDGNBVGY3TQOJQ";
+    expect(await resetStorage()).toEqual({ success: true });
+
+    const keyResult = await generateEncryptionKey();
+    expect(keyResult.success).toBe(true);
+    expect(typeof keyResult.data).toBe("string");
+    const key = keyResult.data as string;
+
+    const created = await createSecret({
+      name: "RFC 6238",
+      account: "e2e@test.local",
+      secret: seed,
+      digits: 8,
+      period: 30,
+      algorithm: "SHA-1",
+    });
+    expect(created.success).toBe(true);
+
+    const stored = await (await fetch(`${SECRETS_URL}?id=${created.data.id}`)).json();
+    expect(stored.success).toBe(true);
+    expect(stored.data.secret).toBe(seed);
+    expect(stored.data.digits).toBe(8);
+
+    const archive = await fetch(`${BASE}/api/backup/archive`);
+    expect(archive.status).toBe(200);
+    expect(archive.headers.get("content-type")).toBe("application/zip");
+    const zip = new Uint8Array(await archive.arrayBuffer());
+    expect(zip.byteLength).toBeGreaterThan(0);
+
+    const restored = await openEncryptedZip(zip, key);
+    expect(restored).toHaveLength(1);
+    expect(restored[0]?.secret).toBe(seed);
+    expect(restored[0]?.algorithm).toBe("SHA-1");
+    expect(restored[0]?.period).toBe(30);
+    expect(restored[0]?.digits).toBe(8);
+
+    const otp = await generateOTP(restored[0]?.secret ?? "", 59, {
+      digits: 8,
+      period: 30,
+      algorithm: "SHA1",
+      type: "TOTP",
+    });
+    expect(otp).toBe("94287082");
   });
 });

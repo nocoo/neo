@@ -33,7 +33,7 @@ export default defineConfig({
       CLOUDFLARE_ACCOUNT_ID: "",
       CLOUDFLARE_D1_DATABASE_ID: "",
       CLOUDFLARE_API_TOKEN: "",
-      NEXT_DIST_DIR: ".next-e2e",
+      NEXT_DIST_DIR: process.env.NEXT_DIST_DIR ?? ".next-e2e-pw",
     },
   },
 });

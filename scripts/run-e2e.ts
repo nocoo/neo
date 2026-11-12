@@ -1,116 +1,129 @@
 #!/usr/bin/env bun
-
 /**
- * L2: API E2E test runner — real HTTP requests against a running Next.js server.
+ * L3: Integration — real HTTP requests against a locally started Next.js server.
  *
- * 1. Ensure port is free
- * 2. Start Next.js dev server with E2E_SKIP_AUTH=true
- * 3. Wait for server readiness (poll /api/live)
- * 4. Run bun:test E2E suite
- * 5. Cleanup server + build artifacts
+ * The server uses the in-memory E2E adapter, the lane's own dist directory and
+ * dummy credentials. An occupied port fails before anything starts, and the
+ * lane directory is cleared per run; this runner never kills a process it did
+ * not spawn.
  */
-
 import { rmSync } from "node:fs";
-import { $ } from "bun";
+import { join, resolve } from "node:path";
+import { assertPortFree } from "./port-guard";
 
-const E2E_PORT = 17026;
-const BASE_URL = `http://localhost:${E2E_PORT}`;
-const NEXT_DIST_DIR = ".next-e2e";
-const MAX_WAIT_MS = 30_000;
-const POLL_INTERVAL_MS = 500;
+const root = resolve(import.meta.dir, "..");
+const port = 17026;
+const baseUrl = `http://localhost:${port}`;
+const distDir = ".next-e2e";
+const distPath = join(root, distDir);
+const readyTimeoutMs = 30_000;
+const pollIntervalMs = 500;
 
-// ── 1. Ensure port is free ───────────────────────────────────────────────────
+function serverEnv(): Record<string, string> {
+  return {
+    ...process.env,
+    NODE_ENV: "development",
+    E2E_SKIP_AUTH: "true",
+    NEXT_DIST_DIR: distDir,
+    AUTH_SECRET: "neo-e2e-test-secret",
+    AUTH_URL: baseUrl,
+    AUTH_GOOGLE_ID: "",
+    AUTH_GOOGLE_SECRET: "",
+    ALLOWED_EMAILS: "e2e@test.local",
+    CLOUDFLARE_ACCOUNT_ID: "",
+    CLOUDFLARE_D1_DATABASE_ID: "",
+    CLOUDFLARE_API_TOKEN: "",
+  };
+}
 
-async function ensurePortFree(): Promise<void> {
+async function killTree(pid: number): Promise<void> {
   try {
-    const pids = await $`lsof -ti:${E2E_PORT}`.text();
-    for (const pid of pids.trim().split("\n").filter(Boolean)) {
-      console.log(`⚠️  Killing process ${pid} on port ${E2E_PORT}`);
-      await $`kill -9 ${pid}`.quiet().nothrow();
-    }
-  } catch {
-    // No process on port — good
-  }
-}
-
-// ── 2. Start dev server ──────────────────────────────────────────────────────
-
-function startServer(): ReturnType<typeof Bun.spawn> {
-  console.log(`🚀 Starting Next.js dev server on port ${E2E_PORT}...`);
-  return Bun.spawn(["bun", "next", "dev", "--webpack", "-p", String(E2E_PORT)], {
-    cwd: `${import.meta.dir}/..`,
-    env: {
-      ...process.env,
-      E2E_SKIP_AUTH: "true",
-      NEXT_DIST_DIR,
-    },
-    stdout: "ignore",
-    stderr: "ignore",
-  });
-}
-
-// ── 3. Wait for readiness ────────────────────────────────────────────────────
-
-async function waitForServer(): Promise<void> {
-  const deadline = Date.now() + MAX_WAIT_MS;
-  while (Date.now() < deadline) {
-    try {
-      const res = await fetch(`${BASE_URL}/api/live`);
-      if (res.ok) {
-        console.log("✅ Server is ready");
-        return;
-      }
-    } catch {
-      // Not ready yet
-    }
-    await Bun.sleep(POLL_INTERVAL_MS);
-  }
-  throw new Error(`Server failed to start within ${MAX_WAIT_MS / 1000}s`);
-}
-
-// ── 4. Run tests ─────────────────────────────────────────────────────────────
-
-async function runTests(): Promise<boolean> {
-  console.log("🧪 Running E2E tests...\n");
-  try {
-    await $`bun test tests/e2e --timeout 30000`.env({
-      ...process.env,
-      E2E_BASE_URL: BASE_URL,
+    const children = Bun.spawn(["pgrep", "-P", String(pid)], {
+      stdout: "pipe",
+      stderr: "ignore",
     });
-    return true;
+    const text = await new Response(children.stdout).text();
+    await children.exited;
+    for (const child of text.split("\n").filter(Boolean)) {
+      await killTree(Number(child));
+    }
   } catch {
-    return false;
+    // pgrep is unavailable; the direct signal below still applies
   }
-}
-
-// ── 5. Cleanup ───────────────────────────────────────────────────────────────
-
-function cleanup(server: ReturnType<typeof Bun.spawn>): void {
-  console.log("\n🧹 Cleaning up...");
-  server.kill();
   try {
-    rmSync(NEXT_DIST_DIR, { recursive: true, force: true });
+    process.kill(pid, "SIGTERM");
   } catch {
-    // Already gone
+    // already gone
   }
 }
 
-// ── Main ─────────────────────────────────────────────────────────────────────
+async function stopServer(server: ReturnType<typeof Bun.spawn>): Promise<void> {
+  if (server.exitCode !== null) return;
+  await killTree(server.pid);
+  const stopped = await Promise.race([
+    server.exited.then(() => true),
+    Bun.sleep(5_000).then(() => false),
+  ]);
+  if (!stopped) {
+    try {
+      process.kill(server.pid, "SIGKILL");
+    } catch {
+      // already gone
+    }
+  }
+}
 
-await ensurePortFree();
-const server = startServer();
+async function waitForServer(server: ReturnType<typeof Bun.spawn>): Promise<void> {
+  const deadline = Date.now() + readyTimeoutMs;
+  while (Date.now() < deadline) {
+    if (server.exitCode !== null) {
+      throw new Error(`Next.js server exited early with code ${server.exitCode}`);
+    }
+    try {
+      const response = await fetch(`${baseUrl}/api/live`);
+      if (response.ok) return;
+    } catch {
+      // not ready yet
+    }
+    await Bun.sleep(pollIntervalMs);
+  }
+  throw new Error(`server failed to start within ${readyTimeoutMs / 1000}s`);
+}
 
+async function runTests(): Promise<number> {
+  const proc = Bun.spawn(["bun", "test", "tests/e2e", "--timeout", "30000"], {
+    cwd: root,
+    env: { ...process.env, E2E_BASE_URL: baseUrl },
+    stdout: "inherit",
+    stderr: "inherit",
+  });
+  return proc.exited;
+}
+
+await assertPortFree(port);
+rmSync(distPath, { recursive: true, force: true });
+console.log(`▸ starting Next.js on ${baseUrl} (dist ${distDir})`);
+const server = Bun.spawn(["bun", "next", "dev", "--webpack", "-p", String(port)], {
+  cwd: root,
+  env: serverEnv(),
+  stdout: "inherit",
+  stderr: "inherit",
+});
+
+let exitCode = 1;
 try {
-  await waitForServer();
-  const passed = await runTests();
-  cleanup(server);
-  if (!passed) {
-    console.error("\n💀 L2 API E2E tests FAILED");
-    process.exit(1);
-  }
-  console.log("\n✅ L2 API E2E tests passed");
-} catch (err) {
-  cleanup(server);
-  console.error("\n💀 L2 API E2E runner error:", err);
-  process.exit(1);
+  await waitForServer(server);
+  console.log("▸ server ready, running L3 tests");
+  exitCode = await runTests();
+} catch (error) {
+  console.error(`L3 runner error: ${error instanceof Error ? error.message : String(error)}`);
+} finally {
+  await stopServer(server);
+  rmSync(distPath, { recursive: true, force: true });
 }
+
+if (exitCode !== 0) {
+  console.error("L3 integration tests failed");
+  process.exit(exitCode || 1);
+}
+console.log("L3 integration tests passed");

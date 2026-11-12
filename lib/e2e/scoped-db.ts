@@ -42,13 +42,21 @@ interface SettingsRow {
   language: string;
 }
 
-let secrets: SecretRow[] = [];
-let settings: SettingsRow[] = [];
+interface E2EState {
+  secrets: SecretRow[];
+  settings: SettingsRow[];
+}
+
+const globalState = globalThis as typeof globalThis & { __neoE2EState?: E2EState };
+const state: E2EState = globalState.__neoE2EState ?? { secrets: [], settings: [] };
+globalState.__neoE2EState = state;
+const secrets = state.secrets;
+const settings = state.settings;
 
 /** Reset all in-memory storage. Called by /api/e2e/reset if needed. */
 export function resetE2EStorage(): void {
-  secrets = [];
-  settings = [];
+  secrets.length = 0;
+  settings.length = 0;
 }
 
 // ── E2E ScopedDB ────────────────────────────────────────────────────────────
@@ -173,7 +181,10 @@ export class E2eScopedDB {
   async emptyRecycleBin(): Promise<number> {
     const toDelete = secrets.filter((s) => s.user_id === this.userId && s.deleted_at !== null);
     const count = toDelete.length;
-    secrets = secrets.filter((s) => !(s.user_id === this.userId && s.deleted_at !== null));
+    for (const row of toDelete) {
+      const idx = secrets.indexOf(row);
+      if (idx >= 0) secrets.splice(idx, 1);
+    }
     return count;
   }
 
