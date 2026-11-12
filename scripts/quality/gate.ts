@@ -90,6 +90,9 @@ const stagedPaths = (process.env.GATE_STAGED_FILES ?? "")
   .map((line) => line.trim())
   .filter(Boolean);
 
+const willRun = (slot: SlotDefinition) =>
+  !slot.stagedOnly || stagedPaths.some((path) => slot.stagedOnly?.test(path));
+
 const ANSI = new RegExp(`${String.fromCharCode(27)}\\[[0-9;]*[A-Za-z]`, "g");
 
 function formatMs(ms: number): string {
@@ -201,6 +204,7 @@ async function preflight(): Promise<boolean> {
 
   const needed = new Set<ToolKey>();
   for (const slot of selected) {
+    if (!willRun(slot)) continue;
     if (slot.id === "G1") needed.add("gitleaks");
     if (slot.id === "G2") needed.add("osv");
     if (slot.id === "S3") needed.add("actionlint");
@@ -306,7 +310,7 @@ for (const slot of selected) {
     continue;
   }
 
-  if (slot.stagedOnly && !stagedPaths.some((path) => slot.stagedOnly?.test(path))) {
+  if (slot.stagedOnly && !willRun(slot)) {
     results.push({
       slot,
       outcome: "skip",

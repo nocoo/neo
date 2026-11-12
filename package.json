@@ -21,6 +21,7 @@
     "test:coverage": "vitest run --coverage",
     "typecheck": "tsc --noEmit && bun run --cwd worker typecheck",
     "test:security": "bun scripts/run-security.ts",
+    "check:hooks": "bun run scripts/verify-hooks.ts",
     "prepare": "husky"
   },
   "dependencies": {
