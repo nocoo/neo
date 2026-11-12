@@ -3,10 +3,13 @@
 # === System0 gate: pre-push ===
 # Verifies exactly the commits being pushed (never the working tree): one
 # exported snapshot per pushed OID, then S1, S2, G1, L1, G2, B1, L3 and L4.
-# Deleted refs are skipped; a new branch scans "<oid> --not --remotes".
+# Deleted refs are skipped. G1 scans one range per pushed ref: a new ref scans
+# the full history reachable from its OID, an existing ref scans
+# "<remote-sha>..<local-sha>".
 set -e
 
 zero=0000000000000000000000000000000000000000
+hook_start=$(date +%s)
 
 command -v git >/dev/null 2>&1 || {
 	echo "pre-push: git is required" >&2
@@ -31,6 +34,12 @@ cleanup() {
 	status=$?
 	trap - EXIT INT TERM HUP
 	rm -rf "$tmp_root" || :
+	elapsed=$(( $(date +%s) - hook_start ))
+	echo "pre-push: wall ${elapsed}s (hard budget 300s)"
+	if [ "$status" -eq 0 ] && [ "$elapsed" -gt 300 ]; then
+		echo "pre-push: wall time ${elapsed}s exceeds the 300s hard budget" >&2
+		status=1
+	fi
 	exit "$status"
 }
 trap cleanup EXIT
@@ -47,57 +56,22 @@ if [ ! -s "$refs_file" ]; then
 	exit 1
 fi
 
-# A pushed commit that changes dependencies needs its own install. On failure say
-# why, because the raw registry error is unhelpful: the lockfile is authoritative
-# and a blocked registry is an environment problem, not a code problem.
+# The pushed snapshot must run against exactly the dependencies its own lockfile
+# describes. Reusing the worktree's node_modules only compared manifests; it
+# could not prove the installed versions matched the pushed lockfile.
 install_in() {
-	if ! (cd "$1" && bun install --frozen-lockfile); then
+	if ! (cd "$1" && bun install --frozen-lockfile --ignore-scripts); then
 		echo "pre-push: frozen install failed in $1" >&2
 		echo "pre-push: the pushed lockfile is authoritative; if the registry is blocked, point BUN_CONFIG_REGISTRY at a reachable mirror and retry" >&2
 		exit 1
 	fi
 }
 
-link_tree() {
-	from=$1
-	to=$2
-	mkdir -p "$to/node_modules"
-	for entry in "$from/node_modules"/*; do
-		[ -e "$entry" ] || continue
-		ln -s "$entry" "$to/node_modules/${entry##*/}"
-	done
-	if [ -d "$from/node_modules/.bin" ]; then
-		ln -s "$from/node_modules/.bin" "$to/node_modules/.bin"
-	fi
-}
-
-# The snapshot must run against the dependencies its own manifests declare.
-prepare_dependencies() {
-	snapshot=$1
-	if cmp -s "$snapshot/package.json" "$repo/package.json" &&
-		cmp -s "$snapshot/bun.lock" "$repo/bun.lock" &&
-		[ -d "$repo/node_modules" ]; then
-		link_tree "$repo" "$snapshot"
-	else
-		echo "▸ root manifests differ from the installed tree — frozen install in the snapshot"
-		install_in "$snapshot"
-	fi
-	if [ -f "$snapshot/worker/package.json" ]; then
-		if cmp -s "$snapshot/worker/package.json" "$repo/worker/package.json" &&
-			cmp -s "$snapshot/worker/bun.lock" "$repo/worker/bun.lock" &&
-			[ -d "$repo/worker/node_modules" ]; then
-			link_tree "$repo/worker" "$snapshot/worker"
-		else
-			echo "▸ worker manifests differ from the installed tree — frozen install in the snapshot"
-			install_in "$snapshot/worker"
-		fi
-	fi
-}
-
 status=0
-verified=
-count=0
 deleted=0
+ranges="$tmp_root/ranges"
+commits="$tmp_root/commits"
+: >"$ranges"
 
 while read -r local_ref local_sha remote_ref remote_sha; do
 	[ -n "$local_sha" ] || continue
@@ -108,28 +82,34 @@ while read -r local_ref local_sha remote_ref remote_sha; do
 	fi
 
 	commit=$(git rev-parse --verify "$local_sha^{commit}")
-	case " $verified " in
-	*" $commit "*)
-		echo "▸ $remote_ref: $commit already verified in this push"
-		continue
-		;;
-	esac
-	verified="$verified $commit"
-	count=$((count + 1))
-
 	if [ "$remote_sha" = "$zero" ]; then
-		range="$commit --not --remotes"
-		echo "▸ $remote_ref: $commit (new ref, secret range: $range)"
+		range="$commit"
 	else
 		range="$remote_sha..$commit"
-		echo "▸ $remote_ref: $commit (secret range: $range)"
 	fi
+	echo "▸ $remote_ref: $commit (secret range: $range)"
+	printf '%s\t%s\n' "$commit" "$range" >>"$ranges"
+done <"$refs_file"
+
+awk -F '\t' '!seen[$1]++ {print $1}' "$ranges" >"$commits"
+count=$(wc -l <"$commits" | tr -d ' ')
+
+while read -r commit; do
+	[ -n "$commit" ] || continue
+
+	g1_args=
+	for range in $(awk -F '\t' -v commit="$commit" '$1 == commit {print $2}' "$ranges" | sort -u); do
+		g1_args="$g1_args --g1-range=$range"
+	done
 
 	snapshot="$snapshots/$(printf '%s' "$commit" | cut -c1-12)"
 	mkdir -p "$snapshot"
 	git archive "$commit" >"$tmp_root/archive.tar"
 	tar -xf "$tmp_root/archive.tar" -C "$snapshot"
-	prepare_dependencies "$snapshot"
+	install_in "$snapshot"
+	if [ -f "$snapshot/worker/package.json" ] && [ -f "$snapshot/worker/bun.lock" ]; then
+		install_in "$snapshot/worker"
+	fi
 
 	if ! (
 		cd "$snapshot"
@@ -137,14 +117,15 @@ while read -r local_ref local_sha remote_ref remote_sha; do
 		export GATE_GIT_ROOT="$repo"
 		export GATE_SNAPSHOT_ROOT="$snapshot"
 		export GATE_CONTENT_SHA="$commit"
+		export GATE_PREP_SECONDS=$(( $(date +%s) - hook_start ))
 		export XDG_CACHE_HOME="$tmp_root/cache"
 		export XDG_STATE_HOME="$tmp_root/cache"
 		mkdir -p "$XDG_CACHE_HOME"
-		bun run scripts/quality/gate.ts --stage=pre-push --g1-range="$range"
+		bun run scripts/quality/gate.ts --stage=pre-push $g1_args
 	); then
 		status=1
 	fi
-done <"$refs_file"
+done <"$commits"
 
 if [ "$count" -eq 0 ] && [ "$deleted" -eq 0 ]; then
 	echo "pre-push: no source ref found in the push input" >&2

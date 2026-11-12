@@ -9,7 +9,7 @@
  *
  * Usage (from inside the snapshot root):
  *   bun scripts/quality/gate.ts --stage=pre-commit
- *   bun scripts/quality/gate.ts --stage=pre-push --g1-range=<remote-sha>..<local-sha>
+ *   bun scripts/quality/gate.ts --stage=pre-push --g1-range=<range> [--g1-range=<range>...]
  *   bun scripts/quality/gate.ts --stage=pre-push --only=B1,L3
  */
 import { existsSync, readFileSync } from "node:fs";
@@ -34,7 +34,14 @@ const argValue = (name: string) =>
 
 const stage = argValue("stage") as Stage | undefined;
 const only = argValue("only");
-const g1Range = argValue("g1-range");
+const g1Ranges = [
+  ...new Set(
+    args
+      .filter((arg) => arg.startsWith("--g1-range="))
+      .map((arg) => arg.slice("--g1-range=".length))
+      .filter(Boolean),
+  ),
+];
 const listOnly = args.includes("--list");
 
 if (listOnly) {
@@ -58,9 +65,12 @@ const gitRoot = process.env.GATE_GIT_ROOT ?? root;
 const contentSha = process.env.GATE_CONTENT_SHA;
 const scale = Number(process.env.GATE_TIMEOUT_SCALE ?? "1");
 const timeoutScale = Number.isFinite(scale) && scale > 0 ? scale : 1;
+const prepSeconds = Number(process.env.GATE_PREP_SECONDS ?? "0");
+const prepMs = Number.isFinite(prepSeconds) && prepSeconds > 0 ? prepSeconds * 1000 : 0;
 const startedAt = performance.now();
 const budgetMs = STAGE_BUDGET_MS[stage] * timeoutScale;
 const targetMs = STAGE_TARGET_MS[stage] * timeoutScale;
+const elapsedFromStageStart = () => prepMs + performance.now() - startedAt;
 
 type Outcome = "pass" | "fail" | "timeout" | "skip";
 
@@ -273,18 +283,33 @@ if (declarationProblems.length > 0) {
   process.exit(1);
 }
 
+if (prepMs > budgetMs) {
+  console.error(
+    `\n❌ ${stage}: preparation alone took ${formatMs(prepMs)}, over the ${formatMs(budgetMs)} hard budget`,
+  );
+  process.exit(1);
+}
+
 console.log("▸ preflight: toolchain and lockfiles");
 if (!(await preflight())) {
   console.error(`\n❌ ${stage}: preflight failed`);
   process.exit(1);
 }
 
-if (stage === "pre-push" && !g1Range && selected.some((slot) => slot.id === "G1")) {
-  console.error("gate: pre-push secret scanning requires --g1-range=<remote-sha>..<local-sha>");
+if (stage === "pre-push" && g1Ranges.length === 0 && selected.some((slot) => slot.id === "G1")) {
+  console.error(
+    "gate: pre-push secret scanning requires at least one --g1-range=<remote-sha>..<local-sha>",
+  );
   process.exit(2);
 }
 
-const context: GateContext = { root, gitRoot, stage, contentSha, g1Range };
+const context: GateContext = {
+  root,
+  gitRoot,
+  stage,
+  contentSha,
+  g1Ranges,
+};
 const results: SlotResult[] = [];
 let abortAfter: string | undefined;
 
@@ -300,7 +325,7 @@ for (const slot of selected) {
     continue;
   }
 
-  const elapsed = performance.now() - startedAt;
+  const elapsed = elapsedFromStageStart();
   if (elapsed > budgetMs) {
     results.push({
       slot,
@@ -330,7 +355,7 @@ for (const slot of selected) {
   const stepResults: StepResult[] = [];
 
   for (const step of steps) {
-    const remaining = budgetMs - (performance.now() - startedAt);
+    const remaining = budgetMs - elapsedFromStageStart();
     const timeoutMs = Math.min(step.timeoutMs * timeoutScale, Math.max(remaining, 1));
     console.log(`  $ ${step.command}`);
     const result = await runStep(step, timeoutMs);
@@ -367,7 +392,7 @@ for (const slot of selected) {
   if (failed) abortAfter = slot.id;
 }
 
-const totalMs = performance.now() - startedAt;
+const totalMs = elapsedFromStageStart();
 const versions = results
   .filter((result) => result.outcome === "pass")
   .map((result) => ({ id: result.slot.id, sha: contentSha }));
@@ -391,7 +416,7 @@ for (const entry of NOT_APPLICABLE) {
 }
 console.log(`${"─".repeat(78)}`);
 console.log(
-  `total ${formatMs(totalMs)} (target ${formatMs(targetMs)}, budget ${formatMs(budgetMs)})`,
+  `total ${formatMs(totalMs)} (prep ${formatMs(prepMs)}, target ${formatMs(targetMs)}, budget ${formatMs(budgetMs)})`,
 );
 
 const failedSlots = results.filter(

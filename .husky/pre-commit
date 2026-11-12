@@ -5,6 +5,8 @@
 # when workflows are staged — S3. See scripts/quality/slots.ts for the slot map.
 set -e
 
+stage_start=$(date +%s)
+
 command -v git >/dev/null 2>&1 || {
 	echo "pre-commit: git is required" >&2
 	exit 1
@@ -24,6 +26,12 @@ cleanup() {
 		rm -rf "$snapshot" || :
 		snapshot=
 	fi
+	elapsed=$(( $(date +%s) - stage_start ))
+	echo "pre-commit: wall ${elapsed}s (hard budget 30s)"
+	if [ "$status" -eq 0 ] && [ "$elapsed" -gt 30 ]; then
+		echo "pre-commit: wall time ${elapsed}s exceeds the 30s hard budget" >&2
+		status=1
+	fi
 	exit "$status"
 }
 trap cleanup EXIT
@@ -38,53 +46,26 @@ export GATE_STAGED_FILES
 
 git checkout-index --all --prefix="$snapshot/"
 
-if [ ! -d "$repo/node_modules" ]; then
-	echo "pre-commit: node_modules is required — run bun install" >&2
-	exit 1
-fi
 if [ ! -f "$snapshot/package.json" ] || [ ! -f "$snapshot/bun.lock" ]; then
 	echo "pre-commit: index must contain package.json and bun.lock" >&2
 	exit 1
 fi
 
-# The installed tree must belong to the manifests being committed, otherwise the
-# gates would run against dependencies the commit does not declare.
-if ! cmp -s "$snapshot/package.json" "$repo/package.json" ||
-	! cmp -s "$snapshot/bun.lock" "$repo/bun.lock"; then
-	echo "pre-commit: index package.json/bun.lock must match the installed worktree copies (run bun install)" >&2
-	exit 1
-fi
+# Install the exact snapshot from its own lockfile. Reusing the worktree's
+# node_modules only compared manifests; it could not prove the installed
+# versions matched the index. Lifecycle scripts stay disabled because the
+# snapshot has no .git directory.
+install_in() {
+	if ! (cd "$1" && bun install --frozen-lockfile --ignore-scripts); then
+		echo "pre-commit: isolated frozen install failed in $1" >&2
+		echo "pre-commit: the index lockfile is authoritative; populate the Bun cache or configure a reachable registry" >&2
+		exit 1
+	fi
+}
+
+install_in "$snapshot"
 if [ -f "$snapshot/worker/package.json" ] && [ -f "$snapshot/worker/bun.lock" ]; then
-	if [ ! -d "$repo/worker/node_modules" ]; then
-		echo "pre-commit: worker/node_modules is required — run bun install --cwd worker" >&2
-		exit 1
-	fi
-	if ! cmp -s "$snapshot/worker/package.json" "$repo/worker/package.json" ||
-		! cmp -s "$snapshot/worker/bun.lock" "$repo/worker/bun.lock"; then
-		echo "pre-commit: index worker/package.json/bun.lock must match the installed worktree copies (run bun install --cwd worker)" >&2
-		exit 1
-	fi
-fi
-
-# Reuse the installed dependencies read-only; caches stay inside the snapshot.
-mkdir "$snapshot/node_modules"
-for entry in "$repo/node_modules"/*; do
-	[ -e "$entry" ] || continue
-	ln -s "$entry" "$snapshot/node_modules/${entry##*/}"
-done
-if [ -d "$repo/node_modules/.bin" ]; then
-	ln -s "$repo/node_modules/.bin" "$snapshot/node_modules/.bin"
-fi
-
-if [ -d "$repo/worker/node_modules" ]; then
-	mkdir -p "$snapshot/worker/node_modules"
-	for entry in "$repo/worker/node_modules"/*; do
-		[ -e "$entry" ] || continue
-		ln -s "$entry" "$snapshot/worker/node_modules/${entry##*/}"
-	done
-	if [ -d "$repo/worker/node_modules/.bin" ]; then
-		ln -s "$repo/worker/node_modules/.bin" "$snapshot/worker/node_modules/.bin"
-	fi
+	install_in "$snapshot/worker"
 fi
 
 mkdir -p "$snapshot/node_modules/.vite" "$snapshot/node_modules/.vitest" "$snapshot/.cache"
@@ -104,6 +85,8 @@ GATE_CONTENT_SHA=$(git write-tree) || {
 export GATE_CONTENT_SHA
 
 PATH="$snapshot/node_modules/.bin:$PATH"
+
+export GATE_PREP_SECONDS=$(( $(date +%s) - stage_start ))
 
 cd "$snapshot"
 bun run scripts/quality/gate.ts --stage=pre-commit

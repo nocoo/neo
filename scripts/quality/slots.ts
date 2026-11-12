@@ -27,7 +27,7 @@ export interface GateContext {
   gitRoot: string;
   stage: Stage;
   contentSha: string | undefined;
-  g1Range?: string | undefined;
+  g1Ranges?: string[] | undefined;
 }
 
 export interface SlotDefinition {
@@ -88,15 +88,23 @@ export const SLOTS: SlotDefinition[] = [
     name: "G1: Secrets",
     stages: ["pre-commit", "pre-push"],
     target: "git index snapshot (pre-commit) / pushed ref range (pre-push)",
-    stepsFor: (ctx) => [
-      {
-        label: ctx.g1Range ? `range ${ctx.g1Range}` : "staged",
-        command: ctx.g1Range
-          ? `bun run scripts/quality/secrets.ts --range="${ctx.g1Range}"`
-          : "bun run scripts/quality/secrets.ts --index-snapshot",
+    stepsFor: (ctx) => {
+      const ranges = ctx.g1Ranges ?? [];
+      if (ranges.length === 0) {
+        return [
+          {
+            label: "staged",
+            command: "bun run scripts/quality/secrets.ts --index-snapshot",
+            timeoutMs: STEP_TIMEOUT_MS,
+          },
+        ];
+      }
+      return ranges.map((range) => ({
+        label: `range ${range}`,
+        command: `bun run scripts/quality/secrets.ts --range="${range}"`,
         timeoutMs: STEP_TIMEOUT_MS,
-      },
-    ],
+      }));
+    },
   },
   {
     id: "L1",
