@@ -1,28 +1,32 @@
 name: Release
-"on":
-  workflow_run:
-    workflows:
-      - CI
-    types:
-      - completed
-    branches:
-      - main
+
+# Production is manual-only: a successful CI run never deploys by itself.
+# The operator supplies the successful main-push CI run ID; release-source
+# proves that run's SHA and requires `quality / Z1: Gate` on that exact SHA.
+on:
   workflow_dispatch:
     inputs:
       ci-run-id:
         description: Successful main push CI run ID for the exact current main commit
         required: true
         type: string
+
+permissions:
+  contents: read
+  actions: read
+  packages: write
+  id-token: write
+
 jobs:
   deploy:
-    if: |
-      github.event_name == 'workflow_dispatch' || (github.event.workflow_run.conclusion == 'success' &&
-       github.event.workflow_run.head_branch == 'main')
-    uses: nocoo/base-ci/.github/workflows/deploy-docker.yml@1ea10ecab22b72512399485391603fe03a161016 # v2026.12
+    name: Deploy Docker (production)
+    uses: nocoo/base-ci/.github/workflows/deploy-docker.yml@777bbe4f9bacab8a91d8c01974480a6ee23d28e0 # v2026.15
     with:
       tailscale: true
       environment: neo / production
-      source-run-id: ${{ github.event_name == 'workflow_run' && format('{0}', github.event.workflow_run.id) || inputs.ci-run-id }}
+      source-run-id: ${{ inputs.ci-run-id }}
+      required-quality-check: "quality / Z1: Gate"
+      require-quality-check: true
       images: '[{"image":"ghcr.io/nocoo/neo","service":"app"}]'
       deploy-directory: /data/neo
       remote-verify-command: |
@@ -56,8 +60,3 @@ jobs:
         )
       timeout-minutes: 25
     secrets: inherit
-permissions:
-  contents: read
-  actions: read
-  packages: write
-  id-token: write

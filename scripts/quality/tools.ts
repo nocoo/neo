@@ -96,10 +96,15 @@ export async function checkTool(key: ToolKey): Promise<ToolCheck> {
 
 /** Bun version the CI workflow pins for this repository, when it declares one. */
 export function declaredRuntimeVersion(root: string): string | undefined {
-  const path = join(root, ".github", "workflows", "ci.yml");
-  if (!existsSync(path)) return undefined;
-  const match = /runtime-version:\s*"?([0-9]+\.[0-9]+\.[0-9]+)"?/.exec(readFileSync(path, "utf-8"));
-  return match?.[1];
+  for (const name of ["quality-slots.yml", "ci.yml"]) {
+    const path = join(root, ".github", "workflows", name);
+    if (!existsSync(path)) continue;
+    const match = /runtime-version:\s*"?([0-9]+\.[0-9]+\.[0-9]+)"?/.exec(
+      readFileSync(path, "utf-8"),
+    );
+    if (match?.[1]) return match[1];
+  }
+  return undefined;
 }
 
 export async function checkBun(root: string): Promise<ToolCheck> {

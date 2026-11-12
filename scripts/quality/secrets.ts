@@ -5,6 +5,8 @@
  *   --index-snapshot      pre-commit: scan the exported Git index (the content
  *                         that becomes the commit)
  *   --range=<a..b>        pre-push: scan the commits this push introduces
+ *   --content             CI: scan the tracked files of HEAD (no node_modules
+ *                         or untracked build output)
  *
  * A missing scanner, a wrong version and a scanner error are reported as gate
  * failures distinct from "leaks found". Findings are redacted.
@@ -13,7 +15,8 @@
  * diff header of a new file instead of its content, so a staged secret passed
  * clean.
  */
-import { existsSync, realpathSync } from "node:fs";
+import { existsSync, mkdtempSync, realpathSync, rmSync } from "node:fs";
+import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { checkTool } from "./tools";
 
@@ -22,12 +25,14 @@ const value = (name: string) =>
   args.find((arg) => arg.startsWith(`--${name}=`))?.slice(name.length + 3);
 
 const indexSnapshot = args.includes("--index-snapshot");
+const content = args.includes("--content");
 const range = value("range");
 const snapshotRoot = process.env.GATE_SNAPSHOT_ROOT;
 const gitRoot = process.env.GATE_GIT_ROOT ?? process.cwd();
 
-if (indexSnapshot === Boolean(range)) {
-  console.error("G1: pass exactly one of --index-snapshot or --range=<a..b>");
+const modes = [indexSnapshot, content, Boolean(range)].filter(Boolean).length;
+if (modes !== 1) {
+  console.error("G1: pass exactly one of --index-snapshot, --content or --range=<a..b>");
   process.exit(2);
 }
 
@@ -53,37 +58,80 @@ if (!tool.ok) {
   process.exit(2);
 }
 
-// The config of the content under test wins: a pushed commit may ship its own
-// allowlist, and the gate must judge that commit by its own rules.
-const config = [snapshotRoot, gitRoot]
-  .filter((root): root is string => Boolean(root))
-  .map((root) => join(root, ".gitleaks.toml"))
-  .find((path) => existsSync(path));
-
-if (!config) {
-  console.error(`G1: .gitleaks.toml not found in ${snapshotRoot ?? gitRoot}`);
-  process.exit(2);
+function configIn(root: string | undefined): string | undefined {
+  if (!root) return undefined;
+  const candidate = join(root, ".gitleaks.toml");
+  return existsSync(candidate) ? candidate : undefined;
 }
 
-const cwd = indexSnapshot ? process.cwd() : gitRoot;
-const target = range ? `range ${range}` : "index snapshot";
-const invocation = range
-  ? ["gitleaks", "git", `--log-opts=${range}`, "--no-banner", "--redact"]
-  : ["gitleaks", "dir", ".", "--no-banner", "--redact"];
-invocation.push(`--config=${config}`);
+let contentRoot: string | undefined;
+let exitCode = 1;
+try {
+  if (content) {
+    contentRoot = mkdtempSync(join(tmpdir(), "neo-g1-content-"));
+    const archive = join(contentRoot, "content.tar");
+    const exportHead = Bun.spawn(["git", "archive", `--output=${archive}`, "HEAD"], {
+      cwd: gitRoot,
+      stdout: "pipe",
+      stderr: "pipe",
+    });
+    if ((await exportHead.exited) !== 0) {
+      console.error(`G1: git archive HEAD failed in ${gitRoot}`);
+      exitCode = 2;
+      throw new Error("git archive failed");
+    }
+    const extract = Bun.spawn(["tar", "-xf", archive, "-C", contentRoot], {
+      cwd: gitRoot,
+      stdout: "pipe",
+      stderr: "pipe",
+    });
+    if ((await extract.exited) !== 0) {
+      console.error(`G1: cannot extract HEAD snapshot in ${gitRoot}`);
+      exitCode = 2;
+      throw new Error("tar extract failed");
+    }
+  }
 
-console.log(`G1: gitleaks (${tool.detail}) — ${target} in ${cwd}`);
-const proc = Bun.spawn(invocation, { cwd, stdout: "inherit", stderr: "inherit" });
-await proc.exited;
-const code = proc.exitCode ?? 1;
+  // The config of the content under test wins: a pushed commit may ship its own
+  // allowlist, and the gate must judge that commit by its own rules.
+  const config = content
+    ? configIn(contentRoot)
+    : [configIn(snapshotRoot), configIn(gitRoot)].find(Boolean);
+  if (!config) {
+    console.error(`G1: .gitleaks.toml not found in ${contentRoot ?? snapshotRoot ?? gitRoot}`);
+    exitCode = 2;
+    throw new Error("gitleaks config missing");
+  }
 
-if (code === 0) {
-  console.log(`G1: 0 leaks in ${target}`);
-  process.exit(0);
+  const cwd = content ? (contentRoot as string) : indexSnapshot ? process.cwd() : gitRoot;
+  const target = range
+    ? `range ${range}`
+    : indexSnapshot
+      ? "index snapshot"
+      : "tracked HEAD content";
+  const invocation = range
+    ? ["gitleaks", "git", `--log-opts=${range}`, "--no-banner", "--redact"]
+    : ["gitleaks", "dir", ".", "--no-banner", "--redact"];
+  invocation.push(`--config=${config}`);
+
+  console.log(`G1: gitleaks (${tool.detail}) — ${target} in ${cwd}`);
+  const proc = Bun.spawn(invocation, { cwd, stdout: "inherit", stderr: "inherit" });
+  await proc.exited;
+  const code = proc.exitCode ?? 1;
+
+  if (code === 0) {
+    console.log(`G1: 0 leaks in ${target}`);
+    exitCode = 0;
+  } else if (code === 1) {
+    console.error(`G1: leaks found in ${target} — see the findings above`);
+    exitCode = 1;
+  } else {
+    console.error(`G1: gitleaks itself failed (exit ${code}) for ${target}`);
+    exitCode = 1;
+  }
+} catch {
+  // a gate-specific message has already been printed
+} finally {
+  if (contentRoot) rmSync(contentRoot, { recursive: true, force: true });
 }
-if (code === 1) {
-  console.error(`G1: leaks found in ${target} — see the findings above`);
-  process.exit(1);
-}
-console.error(`G1: gitleaks itself failed (exit ${code}) for ${target}`);
-process.exit(1);
+process.exit(exitCode);
