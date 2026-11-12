@@ -40,8 +40,8 @@ Measured on macOS arm64, Bun 1.4.4, Node 26.13.0:
 | B1             | ~9.4s                                                                                 |
 | G2             | 2 lockfiles, 0 vulnerabilities, ~1.8s                                                 |
 | Hook self-test | 29/29 cases pass                                                                      |
-| Pre-commit     | 10.2–12.7s wall (gate 8.6–10.5s, prep 1–2s), target 15s, hard budget 30s              |
-| Pre-push       | 46–52.8s wall (gate 43.5–49.3s), target 150s, hard budget 300s                        |
+| Pre-commit     | 10.2–12.7s wall (gate 8.6–10.7s, prep 1–3s), target 15s, hard budget 30s              |
+| Pre-push       | 44.0–52.8s wall (gate 41.5–49.3s), target 150s, hard budget 300s                      |
 | CI             | 81s total on 02ad970; critical path L4 69s, then Z1 7s; 11 blocking jobs agree on SHA |
 
 The recorded run is [43174856476](https://github.com/nocoo/neo/actions/runs/43174856476); its required check is exactly `quality / Z1: Gate`. Every CI job has a 10-minute hard timeout; the workflow has no separate whole-run cap, so total wall time is the slowest job plus queue time. Branch protection requires only `quality / Z1: Gate` (strict=false, force-push and deletion blocked, admin bypass).
