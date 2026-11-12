@@ -94,15 +94,34 @@ export async function checkTool(key: ToolKey): Promise<ToolCheck> {
   return { name: key, ok: true, detail: `${spec.bin} ${version}` };
 }
 
-/** Bun version the CI workflow pins for this repository, when it declares one. */
+function scalar(text: string, key: string): string | undefined {
+  const match = new RegExp(`^[ \\t]*${key}:[ \\t]*(.*)$`, "m").exec(text);
+  let value = match?.[1]?.replace(/[ \\t]+#.*$/, "").trim();
+  if (!value) return undefined;
+  if (
+    (value.startsWith('"') && value.endsWith('"')) ||
+    (value.startsWith("'") && value.endsWith("'"))
+  ) {
+    value = value.slice(1, -1);
+  }
+  return value || undefined;
+}
+
+function runtimeVersion(text: string): string | undefined {
+  const raw = scalar(text, "runtime-version");
+  if (!raw) return undefined;
+  const reference = /^\$\{\{\s*env\.([A-Za-z_][A-Za-z0-9_]*)\s*\}\}$/.exec(raw);
+  const resolved = reference?.[1] ? scalar(text, reference[1]) : raw;
+  return resolved && /^[0-9]+\.[0-9]+\.[0-9]+$/.test(resolved) ? resolved : undefined;
+}
+
+/** Bun version the CI workflow pins for this repository. */
 export function declaredRuntimeVersion(root: string): string | undefined {
   for (const name of ["quality-slots.yml", "ci.yml"]) {
     const path = join(root, ".github", "workflows", name);
     if (!existsSync(path)) continue;
-    const match = /runtime-version:\s*"?([0-9]+\.[0-9]+\.[0-9]+)"?/.exec(
-      readFileSync(path, "utf-8"),
-    );
-    if (match?.[1]) return match[1];
+    const version = runtimeVersion(readFileSync(path, "utf-8"));
+    if (version) return version;
   }
   return undefined;
 }
@@ -115,7 +134,11 @@ export async function checkBun(root: string): Promise<ToolCheck> {
   const actual = result.text.trim().split("\n")[0]?.trim() ?? "";
   const declared = declaredRuntimeVersion(root);
   if (!declared) {
-    return { name: "bun", ok: true, detail: `${actual} (CI declares no runtime-version)` };
+    return {
+      name: "bun",
+      ok: false,
+      detail: `${actual}, but no runtime-version is declared in .github/workflows/quality-slots.yml or ci.yml`,
+    };
   }
   const sameMinor =
     actual.split(".").slice(0, 2).join(".") === declared.split(".").slice(0, 2).join(".");

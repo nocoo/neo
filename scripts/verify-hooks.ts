@@ -11,6 +11,7 @@
  * Usage: bun run scripts/verify-hooks.ts
  */
 import {
+  chmodSync,
   cpSync,
   existsSync,
   mkdirSync,
@@ -23,6 +24,7 @@ import {
 } from "node:fs";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
+import { checkBun, declaredRuntimeVersion } from "./quality/tools";
 
 const repoRoot = resolve(import.meta.dir, "..");
 const ZERO = "0".repeat(40);
@@ -148,7 +150,7 @@ const ROOT_PACKAGE = {
   scripts: {
     typecheck: "bun run scripts/stub.ts typecheck",
     lint: "bun run scripts/stub.ts lint",
-    build: "bun run scripts/stub.ts build",
+    build: "bun run scripts/verify-dep.ts && bun run scripts/stub.ts build",
     "test:coverage": "bun run scripts/stub.ts test-coverage",
     "test:e2e": "bun run scripts/stub.ts test-e2e",
     "test:e2e:pw": "bun run scripts/stub.ts test-e2e-pw",
@@ -164,6 +166,23 @@ const WORKER_PACKAGE = {
   dependencies: { dep: "file:../dep" },
 };
 
+const VERIFY_DEP_SCRIPT = `import { existsSync, readFileSync } from "node:fs";
+import { join } from "node:path";
+
+const control = process.env.STUB_CONTROL_DIR;
+const expectedFile = control ? join(control, "expected-dep") : undefined;
+if (expectedFile && existsSync(expectedFile)) {
+  const expected = readFileSync(expectedFile, "utf-8").trim();
+  const installed = JSON.parse(
+    readFileSync(join(process.cwd(), "node_modules", "dep", "package.json"), "utf-8"),
+  ).version;
+  if (installed !== expected) {
+    console.error(\`verify-dep: installed \${installed}, expected \${expected}\`);
+    process.exit(1);
+  }
+}
+`;
+
 const WORKFLOW = `name: CI
 
 on:
@@ -173,9 +192,16 @@ on:
 permissions:
   contents: read
 
+env:
+  BUN_VERSION: "1.4.4"
+
 jobs:
   quality:
-    uses: nocoo/base-ci/.github/workflows/quality.yml@777bbe4f9bacab8a91d8c01974480a6ee23d28e0 # v2026.15
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          runtime-version: \${{ env.BUN_VERSION }}
 `;
 
 const UNPINNED_WORKFLOW = `name: Unpinned
@@ -209,6 +235,7 @@ function buildFixture(): void {
   cpSync(join(repoRoot, ".husky", "pre-push"), join(fixture, ".husky", "pre-push"));
 
   writeFileSync(join(fixture, "scripts", "stub.ts"), STUB_SCRIPT);
+  writeFileSync(join(fixture, "scripts", "verify-dep.ts"), VERIFY_DEP_SCRIPT);
   writeFileSync(join(fixture, "package.json"), `${JSON.stringify(ROOT_PACKAGE, null, 2)}\n`);
   writeFileSync(
     join(fixture, "dep", "package.json"),
@@ -242,6 +269,12 @@ function buildBinDir(name: string, exclude: string[] = []): string {
     "cat",
     "cut",
     "pgrep",
+    "awk",
+    "sort",
+    "wc",
+    "tr",
+    "date",
+    "sleep",
     "osv-scanner",
     "actionlint",
     "gitleaks",
@@ -318,6 +351,43 @@ async function main(): Promise<void> {
   const healthyPush = await hook("pre-push", { stdin: pushInput(baseSha) });
   check("pre-push passes on a healthy ref", healthyPush.code === 0, tail(healthyPush.output));
 
+  // ── the pushed snapshot installs its own dependency versions ──────────────
+  const depManifest = join(fixture, "dep", "package.json");
+  writeFileSync(depManifest, `${JSON.stringify({ name: "dep", version: "2.0.0" }, null, 2)}\n`);
+  const depInstall = await run(["bun", "install"], { cwd: fixture });
+  if (depInstall.code !== 0) {
+    console.error(`fixture dep install failed:\n${depInstall.output}`);
+    process.exit(1);
+  }
+  await git(["add", "-A"]);
+  await git(["commit", "-qm", "dep 2"]);
+  const depSha = (await git(["rev-parse", "HEAD"])).output.trim().split("\n")[0] ?? "";
+  await git(["reset", "--hard", "-q", baseSha]);
+  const restoreInstall = await run(["bun", "install"], { cwd: fixture });
+  if (restoreInstall.code !== 0) {
+    console.error(`fixture restore install failed:\n${restoreInstall.output}`);
+    process.exit(1);
+  }
+
+  writeStub("expected-dep", "2.0.0");
+  const isolatedInstall = await hook("pre-push", {
+    stdin: `refs/heads/main ${depSha} refs/heads/main ${baseSha}\n`,
+  });
+  rmSync(join(controlDir, "expected-dep"));
+  check(
+    "pre-push installs the pushed dependency version instead of reusing the worktree",
+    isolatedInstall.code === 0 && !isolatedInstall.output.includes("verify-dep"),
+    tail(isolatedInstall.output),
+  );
+  const worktreeDep = JSON.parse(
+    readFileSync(join(fixture, "node_modules", "dep", "package.json"), "utf-8"),
+  ).version;
+  check(
+    "pre-push leaves the worktree install untouched",
+    worktreeDep === "1.0.0",
+    `worktree dep ${worktreeDep}`,
+  );
+
   // ── G1: staged content and pushed range ───────────────────────────────────
   const stagedSecret = join(fixture, "secret-probe.txt");
   writeFileSync(stagedSecret, `aws_access_key_id = ${fakeAwsKey()}\n`);
@@ -352,6 +422,37 @@ async function main(): Promise<void> {
     "pre-push judges the pushed OID, not the current branch",
     rangeBlock.code !== 0 && !rangeBlock.output.includes("✅ pre-push gate passed"),
     tail(rangeBlock.output),
+  );
+
+  const twoRanges = await hook("pre-push", {
+    stdin:
+      `refs/heads/clean ${leakSha} refs/heads/clean ${leakSha}\n` +
+      `refs/heads/dirty ${leakSha} refs/heads/dirty ${baseSha}\n`,
+  });
+  check(
+    "pre-push scans G1 once per distinct range of the same OID",
+    twoRanges.code !== 0 && twoRanges.output.includes("G1"),
+    tail(twoRanges.output),
+  );
+
+  const remote = join(tmpRoot, "remote.git");
+  const initRemote = await run(["git", "init", "--bare", "-q", remote], { cwd: tmpRoot });
+  const fetchRemote = await run(
+    ["git", "--git-dir", remote, "fetch", fixture, `${leakSha}:refs/heads/other`],
+    { cwd: tmpRoot },
+  );
+  await git(["remote", "add", "origin", remote]);
+  await git(["update-ref", "refs/remotes/origin/other", leakSha]);
+  const newRefRemote = await hook("pre-push", {
+    stdin: `refs/heads/new ${leakSha} refs/heads/new ${ZERO}\n`,
+  });
+  check(
+    "pre-push scans the full pushed history when only unrelated remote refs contain it",
+    initRemote.code === 0 &&
+      fetchRemote.code === 0 &&
+      newRefRemote.code !== 0 &&
+      newRefRemote.output.includes("G1"),
+    tail(newRefRemote.output),
   );
 
   // ── deleted refs are skipped ───────────────────────────────────────────────
@@ -456,6 +557,24 @@ async function main(): Promise<void> {
     tail(timeout.output),
   );
 
+  // ── preparation time counts against the stage budget ──────────────────────
+  const slowBin = buildBinDir("bin-slow-install", ["bun"]);
+  const realBun = Bun.which("bun");
+  if (!realBun) throw new Error("bun is not on PATH");
+  writeFileSync(
+    join(slowBin, "bun"),
+    `#!/bin/sh\nif [ "$1" = "install" ]; then sleep 2; fi\nexec "${realBun}" "$@"\n`,
+  );
+  chmodSync(join(slowBin, "bun"), 0o755);
+  const prepBudget = await hook("pre-commit", {
+    env: { PATH: `${slowBin}:/usr/bin:/bin`, GATE_TIMEOUT_SCALE: "0.05" },
+  });
+  check(
+    "pre-commit counts preparation against the stage budget",
+    prepBudget.code !== 0 && prepBudget.output.includes("preparation alone took"),
+    tail(prepBudget.output),
+  );
+
   // ── an empty run blocks ────────────────────────────────────────────────────
   writeStub("test-coverage", "empty");
   const empty = await hook("pre-commit");
@@ -485,6 +604,35 @@ async function main(): Promise<void> {
     "pre-push blocks when the pushed manifests drift from the installed tree",
     drift.code !== 0 && drift.output.includes("frozen install failed"),
     tail(drift.output),
+  );
+
+  // ── the Bun version declaration must resolve ──────────────────────────────
+  const versionRoot = join(tmpRoot, "version-check");
+  const workflows = join(versionRoot, ".github", "workflows");
+  mkdirSync(workflows, { recursive: true });
+  const workflowFile = join(workflows, "quality-slots.yml");
+  const envReference = `$${"{{ env.BUN_VERSION }}"}`;
+  writeFileSync(workflowFile, "name: check\n");
+  const noRuntime = await checkBun(versionRoot);
+  check(
+    "the Bun check fails when CI declares no runtime-version",
+    !noRuntime.ok && noRuntime.detail.includes("no runtime-version"),
+    noRuntime.detail,
+  );
+
+  writeFileSync(workflowFile, `runtime-version: ${envReference}\n`);
+  const unresolved = await checkBun(versionRoot);
+  check(
+    "the Bun check fails when the runtime-version reference does not resolve",
+    !unresolved.ok && declaredRuntimeVersion(versionRoot) === undefined,
+    unresolved.detail,
+  );
+
+  writeFileSync(workflowFile, `env:\n  BUN_VERSION: "1.4.4"\nruntime-version: ${envReference}\n`);
+  check(
+    "the Bun check resolves env references in the CI runtime declaration",
+    declaredRuntimeVersion(versionRoot) === "1.4.4",
+    String(declaredRuntimeVersion(versionRoot)),
   );
 
   // ── the hooks clean up after themselves ────────────────────────────────────
