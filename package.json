@@ -62,11 +62,6 @@
     "typescript": "^7.0.2",
     "vitest": "5.1.0"
   },
-  "lint-staged": {
-    "*.{ts,tsx,mts,cts,js,jsx,mjs,cjs,json}": [
-      "biome check --error-on-warnings --max-diagnostics=500 --no-errors-on-unmatched"
-    ]
-  },
   "browserslist": [
     "chrome >= 96",
     "firefox >= 95",
