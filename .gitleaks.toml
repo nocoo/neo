@@ -1,10 +1,27 @@
 # Gitleaks configuration
-# Allow known test vectors (RFC 4226 / RFC 6238 base32 TOTP secrets)
+#
+# The default rule set is extended, never replaced: the repository keeps every
+# built-in detector and only allowlists the known test fixtures below.
+#
+# Allowlisted values are test data only:
+#   - RFC 4226 / RFC 6238 base32 TOTP seeds used by the unit tests
+#   - the fake API key and base64 key used by the backup fixtures
+#
+# Path: scripts/quality/secrets.ts (G1), .github/workflows/ci.yml (CI)
+
+[extend]
+useDefault = true
 
 [allowlist]
-  description = "Test TOTP secrets (RFC 4226 test vectors)"
+  description = "Test fixtures: base32 TOTP seeds, fake API keys, base64 test keys"
   regexTarget = "match"
   regexes = [
     '''GEZDGNBVGY3TQOJQ''',
     '''JBSWY3DPEHPK3PXP''',
+    '''HXDMVJECJJWSRB3H''',
+    '''HXDMVJECJJWSRB3HWIZR4IFUGFTMXBOZ''',
+    '''KRSXG5CTMVRXEZLU''',
+    '''KRMVATZTJFZUC53FONXW2ZJB''',
+    '''abc123def456''',
+    '''dGVzdGtleXRlc3RrZXl0ZXN0a2V5dGVzdGtleTE=''',
   ]

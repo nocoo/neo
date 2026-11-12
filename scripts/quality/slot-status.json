@@ -1,0 +1,22 @@
+[
+  { "id": "S1", "status": "impl" },
+  { "id": "S2", "status": "impl" },
+  { "id": "S3", "status": "impl" },
+  { "id": "G1", "status": "impl" },
+  { "id": "G2", "status": "impl" },
+  { "id": "B1", "status": "impl" },
+  { "id": "L1", "status": "impl" },
+  {
+    "id": "L2",
+    "status": "na",
+    "reason": "worker tests run in Node with a mocked Env binding (L1 evidence); no workerd or Miniflare runtime suite exists"
+  },
+  { "id": "L3", "status": "impl" },
+  { "id": "L4", "status": "impl" },
+  {
+    "id": "P1",
+    "status": "na",
+    "reason": "root package.json is private and nothing is published to npm"
+  },
+  { "id": "Z1", "status": "impl" }
+]
