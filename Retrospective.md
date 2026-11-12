@@ -52,3 +52,25 @@ codex 的第一轮找出 5 个问题 (P1 #1/#2 + P2 #3/#4/#5), 我全修完自�
 ## 2026-10-04 — Keep dependency scope and security evidence explicit
 
 The root app and optional Worker have independent Bun manifests and locks. Validate both and update paired Vitest/coverage packages in every issue-listed scope; a root-only scan misses Worker requests. Current strict scans no longer need the two expired advisory waivers, so remove them without relaxing any gate. The existing local HTTP runner can kill fixed-port owners: this duty rejects any occupied test port before invocation, removes ambient production credentials and uses only its owned checkout and memory adapter. This operational guard does not certify a complete race-free SQL/browser isolation lane. Preserve the Next/Webpack/Serwist path and verify a real build after Next updates.
+
+## 2026-11-12 — System0 12-slot migration
+
+### 1. `gitleaks git --staged` 会漏掉新文件内容
+
+第一版 G1 用 `gitleaks git --staged` 扫暂存区。8.30.1 对新增文件只扫到 diff header，伪造的 AWS key 直接通过；独立 `gitleaks dir` 却能命中。现在 pre-commit 用 `git checkout-index` 导出 index 快照后扫目录，pre-push 按每个被推送 OID 的区间扫 `gitleaks git`。`bun run check:hooks` 固定保留“暂存一次、推送区间一次”的真实 fake-key 注入，任何 allowlist 都不能替代它。
+
+### 2. E2E 内存存储会被 Next 的 route bundle 复制
+
+新增“创建 → 加密导出 → 解密 → TOTP”L3 旅程时，`/api/e2e/settings` 生成的 key 在 `/api/backup/archive` 里读不到，返回 400。根因是 Next 开发构建把 `lib/e2e/scoped-db.ts` 复制进不同 route bundle，模块级数组不共享。现在状态挂在 `globalThis` 上，并改为原地清空/删除；跨 route bundle 仍然只使用同一份进程内存储。这条旅程以后必须保留，它同时证明了 key、加密 ZIP、解密和 TOTP 的真实链路。
+
+### 3. 不要用 per-PID 的 Next distDir
+
+最初把 L3/L4 的 `NEXT_DIST_DIR` 设成 `.next-e2e-${pid}`。Next dev 会把该路径写回 `tsconfig.json` 的 include，每次跑测试都污染工作树。现在使用每个 lane 固定的 `.next-e2e` / `.next-e2e-pw`，启动前清空、结束后删除；端口占用直接失败，因此同一 worktree 不会并发复用。worktree 之间各自持有目录，互不影响。
+
+### 4. green CI 不能自动上生产
+
+迁移前 `release.yml` 监听 `workflow_run(CI completed)`。如果先推 main 再改发布链路，CI 一绿就会自动部署生产。现在发布只保留 `workflow_dispatch`，操作者必须提供成功 main-push CI 的 run ID；base-ci v2026.15 `deploy-docker` 会校验该 SHA 上的 `quality / Z1: Gate`。阶段一推送前先确认这一点。
+
+### 5. 门禁脚本也要进类型检查
+
+`scripts/` 原先被 `tsconfig.json` 排除，门禁脚本只有运行时自测。现在 `tsconfig.scripts.json` 用 `@types/bun` 单独检查脚本，主应用配置不引入 Bun 全局类型；同时删除了已无使用者的 `lint-staged` 依赖。不要把脚本类型检查塞回主 tsconfig，否则 Bun 的 `fetch` 类型会污染现有单元测试。

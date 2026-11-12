@@ -73,7 +73,7 @@ bun run build     # 生产构建，包含 Serwist Service Worker
 bun run start     # 本地启动生产构建，端口 7026
 ```
 
-`bun run typecheck` 同时检查主应用和 `worker/`；`bun run lint` 使用 Biome。主应用也可以使用仓库的 [Dockerfile](Dockerfile) 部署。
+`bun run typecheck` 同时检查主应用、门禁脚本和 `worker/`；`bun run lint` 使用 Biome。主应用也可以使用仓库的 [Dockerfile](Dockerfile) 部署。生产发布只通过手动触发 `.github/workflows/release.yml`，CI 绿灯不会自动上线。
 
 可选的 `worker/` 提供 `POST /otp`、`GET /favicon/:domain` 和 `/health`。它独立于 Next.js 应用，需要自己的 Wrangler 配置与 D1 限流表。使用 [wrangler.toml.example](worker/wrangler.toml.example) 时，替换 D1 binding，并移除其中遗留的 cron 配置；当前 Worker 没有 `scheduled` 处理函数。准备好配置与 [SQL](worker/migrations/0001_rate_limits.sql) 后，可运行 `bun run --cwd worker dev`。
 
@@ -89,17 +89,20 @@ worker/            可选 OTP 与 favicon 服务
 
 ## 测试
 
-从仓库根目录执行：
+从仓库根目录执行。本地 hook 验证 index 或推送 OID 快照，CI 用同一套 System0 槽位独立复跑：
 
-| 测试层                 | 命令                        |
-| ---------------------- | --------------------------- |
-| 主应用单元与组件测试   | `bun run test:unit`         |
-| Server Action 集成测试 | `bun run test:api`          |
-| 本地 HTTP 端到端测试   | `bun run test:e2e`          |
-| 浏览器冒烟测试         | `bun run test:e2e:pw`       |
-| 独立 Worker 单元测试   | `bun run --cwd worker test` |
+| 槽位            | 命令                                                                  | 说明                                                        |
+| --------------- | --------------------------------------------------------------------- | ----------------------------------------------------------- |
+| S1 Types        | `bun run typecheck`                                                   | 主应用、门禁脚本和 Worker                                   |
+| S2 Lint         | `bun run lint`                                                        | Biome check-only，0 error / 0 warning                       |
+| G1 Secrets      | `bun run check:hooks`                                                 | 真实 gitleaks 失败注入，覆盖暂存和推送区间                  |
+| G2 Dependencies | `bun run test:security`                                               | osv-scanner 扫描根和 Worker 锁文件                          |
+| L1 Unit         | `bun run test:coverage`、`bun run --cwd worker test:coverage`         | `test:api` 的 mock 用例计入 L1，不冒充 L3                   |
+| L3 Integration  | `bun run test:e2e`                                                    | 端口 `17026` 的真实 HTTP；覆盖创建 → 加密导出 → 解密 → TOTP |
+| L4 E2E          | `bunx playwright install --with-deps chromium`、`bun run test:e2e:pw` | 端口 `27026`，仅 chromium                                   |
+| B1 Build        | `bun run build`                                                       | Next/Webpack/Serwist 生产构建                               |
 
-Server Action 测试使用内存存储替代 D1。HTTP 测试自动启动端口 `17026` 的 Next.js 服务，使用测试身份和内存数据库；运行前保持该端口空闲。浏览器测试先执行 `bunx playwright install chromium`，会自动启动端口 `27026` 的服务，当前用例检查登录页加载。以上测试不需要真实 D1 数据或 Google 登录。
+L3 使用内存数据库和测试身份，不需要真实 D1 或 Google 登录；`17026`、`27026` 被占用时 runner 直接失败，不会杀掉其他进程。浏览器测试只覆盖当前登录页和 PWA 冒烟旅程。
 
 ## 技术栈
 

@@ -73,7 +73,7 @@ bun run build     # Production build, including the Serwist service worker
 bun run start     # Run the production build locally on port 7026
 ```
 
-`bun run typecheck` checks both the main app and `worker/`; `bun run lint` uses Biome. The main app can also be deployed using the [Dockerfile](../Dockerfile).
+`bun run typecheck` checks the main app, the gate scripts, and `worker/`; `bun run lint` uses Biome. The main app can also be deployed using the [Dockerfile](../Dockerfile). Production deploys only when `.github/workflows/release.yml` is dispatched manually; a green CI run does not deploy.
 
 The optional `worker/` provides `POST /otp`, `GET /favicon/:domain`, and `/health`. It runs separately from Next.js and needs its own Wrangler configuration and D1 rate-limit table. When using [wrangler.toml.example](../worker/wrangler.toml.example), replace the D1 binding and remove its leftover cron configuration; the current Worker has no `scheduled` handler. After preparing the configuration and [SQL](../worker/migrations/0001_rate_limits.sql), run `bun run --cwd worker dev`.
 
@@ -89,17 +89,20 @@ worker/            Optional OTP and favicon service
 
 ## Tests
 
-Run from the repository root:
+Run from the repository root. Local hooks verify the index or pushed OID snapshot; CI independently reruns the same System0 slots:
 
-| Test layer                        | Command                     |
-| --------------------------------- | --------------------------- |
-| Main app unit and component tests | `bun run test:unit`         |
-| Server Action integration tests   | `bun run test:api`          |
-| Local HTTP end-to-end tests       | `bun run test:e2e`          |
-| Browser smoke test                | `bun run test:e2e:pw`       |
-| Separate Worker unit tests        | `bun run --cwd worker test` |
+| Slot            | Command                                                               | Purpose                                                          |
+| --------------- | --------------------------------------------------------------------- | ---------------------------------------------------------------- |
+| S1 Types        | `bun run typecheck`                                                   | Main app, gate scripts, and Worker                               |
+| S2 Lint         | `bun run lint`                                                        | Biome check-only, zero errors and warnings                       |
+| G1 Secrets      | `bun run check:hooks`                                                 | Real gitleaks failure injection for staged and pushed content    |
+| G2 Dependencies | `bun run test:security`                                               | osv-scanner over both lockfiles                                  |
+| L1 Unit         | `bun run test:coverage`, `bun run --cwd worker test:coverage`         | The mock `test:api` suite is L1 evidence, not L3                 |
+| L3 Integration  | `bun run test:e2e`                                                    | Real HTTP on `17026`; create → encrypted export → decrypt → TOTP |
+| L4 E2E          | `bunx playwright install --with-deps chromium`, `bun run test:e2e:pw` | Port `27026`, chromium only                                      |
+| B1 Build        | `bun run build`                                                       | Next/Webpack/Serwist production output                           |
 
-Server Action tests replace D1 with in-memory storage. HTTP tests start Next.js on port `17026` with a test identity and an in-memory database; keep that port free before running. For browser tests, first run `bunx playwright install chromium`. They start a server on port `27026`; the current case checks login-page loading. These tests do not require real D1 data or Google sign-in.
+L3 uses an in-memory database and a test identity, so it needs no real D1 data or Google sign-in. The runners fail when `17026` or `27026` is occupied instead of killing another process. Browser coverage currently checks the login page and PWA smoke journey.
 
 ## Stack
 

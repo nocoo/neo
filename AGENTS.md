@@ -12,7 +12,7 @@ Maintain root `AGENTS.md` as the only project handbook; do not create legacy ali
 | ----------- | -------------------------------------------------------------------------------- |
 | Human docs  | [README.md](README.md), [docs/README.md](docs/README.md)                         |
 | Version     | Root `package.json`; Worker is independently versioned                           |
-| Enforcement | `.husky/`, CI, root/Worker Vitest configs                                        |
+| Enforcement | `.husky/`, `scripts/quality/`, `quality-slots.yml`, root/Worker Vitest configs   |
 | Environment | Ignored `.env.local`; no root example exists; Worker has `wrangler.toml.example` |
 | Accidents   | [Retrospective.md](Retrospective.md)                                             |
 
@@ -36,7 +36,7 @@ Maintain root `AGENTS.md` as the only project handbook; do not create legacy ali
 
 ## Commands
 
-Run from root; CI currently pins Bun 1.4.4. Install both packages before typecheck.
+Run from root; CI pins Bun 1.4.4 and Node 26.12.1. Install both packages before typecheck.
 
 ```sh
 bun install --frozen-lockfile
@@ -48,52 +48,61 @@ bun run build
 bun run test:unit:coverage
 bun run test:api
 bun run --cwd worker test
+bun run test:coverage
 bun run --cwd worker test:coverage
 bun run test:e2e
-bunx playwright install chromium
+bunx playwright install --with-deps chromium
 bun run test:e2e:pw
 bun run test:security
+bun run check:hooks
 ```
 
-Normal dev needs `AUTH_SECRET`, `AUTH_GOOGLE_ID`, `AUTH_GOOGLE_SECRET`, `AUTH_URL`, `ALLOWED_EMAILS`, `CLOUDFLARE_ACCOUNT_ID`, `CLOUDFLARE_D1_DATABASE_ID`, `CLOUDFLARE_API_TOKEN`; apply README's four schema files to the intended database before use. HTTP tests use `E2E_SKIP_AUTH=true` and in-memory storage; never supply real D1 credentials. Confirm 17026 is free first: the current runner forcibly kills port owners.
+Normal dev needs `AUTH_SECRET`, `AUTH_GOOGLE_ID`, `AUTH_GOOGLE_SECRET`, `AUTH_URL`, `ALLOWED_EMAILS`, `CLOUDFLARE_ACCOUNT_ID`, `CLOUDFLARE_D1_DATABASE_ID`, `CLOUDFLARE_API_TOKEN`; apply README's four schema files to the intended database before use. HTTP tests use `E2E_SKIP_AUTH=true` and in-memory storage; never supply real D1 credentials. Confirm 17026 and 27026 are free first: both runners now fail instead of killing an occupant.
 
 ## Verification
 
-6DQ retains its name with unified L1, L2/L3, G2 and D1; former G1 merged into L1 on 2026-09-21. Follow the maintained `system0-6dq-l1` contract. Status: `enforced`, `planned`, `manual`, `N/A`. No focused/skipped tests; preserve the stricter Web L1 contract of all four metrics ≥95.5% (Worker ≥95%).
+System0 quality 1.3.0, native CI mode, base-ci v2026.15 (`777bbe4f9bacab8a91d8c01974480a6ee23d28e0`). `scripts/quality/slot-status.json` is the single declaration; the local gate, the native CI workflow and Z1 all read it. Status: `impl`, `na`, `todo`. No focused/skipped tests; Web coverage stays ≥95.5% on all four metrics and Worker coverage ≥95%.
 
-| Piece              | Requirement and current reality                                                                                           | Status   | Evidence                                                                                                                                                |
-| ------------------ | ------------------------------------------------------------------------------------------------------------------------- | -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| L1 Web coverage    | Four metrics ≥95.5%                                                                                                       | enforced | Root Vitest, index-snapshot pre-commit and CI                                                                                                           |
-| L1 Worker coverage | Four metrics ≥95%                                                                                                         | enforced | Worker Vitest coverage thresholds; CI Worker job runs `test:coverage`                                                                                   |
-| L2                 | Every endpoint/method over real HTTP and real SQL                                                                         | planned  | Pre-push `test:e2e` uses memory adapter; CI labels mocked `test:api` as L2                                                                              |
-| L3                 | Authenticated OTP/import/backup journeys                                                                                  | planned  | CI Playwright currently checks login-page smoke only                                                                                                    |
-| Complete L1        | Coverage above plus strict types, zero-warning/error check-only lint, installed index-snapshot hooks and proven rejection | enforced | Index-snapshot hook runs full L1 on every commit (no docs-only skip); check-only lint-staged precedes snapshot; negative fixtures verified in hook work |
-| G2                 | Required OSV + gitleaks, both lockfiles                                                                                   | planned  | `test:security` scans root lock and upstream range, not pushed refs/all lane locks                                                                      |
-| D1                 | Per-run local database/build/browser state, fail on occupied ports                                                        | planned  | HTTP uses memory; `.next-e2e` is fixed and runner kills port owners; browser may reuse dev server                                                       |
-| Build              | Next/Webpack/Serwist output                                                                                               | enforced | CI preparation `build`                                                                                                                                  |
-| Docs               | Current runtime and backup contracts                                                                                      | manual   | Review linked docs                                                                                                                                      |
+| Slot            | Status | Command and check object                                                                                                                         | Stage                                           | Measured / evidence                                                   |
+| --------------- | ------ | ------------------------------------------------------------------------------------------------------------------------------------------------ | ----------------------------------------------- | --------------------------------------------------------------------- |
+| S1 Types        | impl   | `bun run typecheck`: root `tsc`, scripts `tsc -p tsconfig.scripts.json`, Worker `tsc --noEmit`                                                   | pre-commit, pre-push, CI                        | 0.7–1.1s local                                                        |
+| S2 Lint         | impl   | `bun run lint`: Biome check-only, 0 error / 0 warning                                                                                            | pre-commit, pre-push, CI                        | 0.2–0.3s local                                                        |
+| S3 Workflow     | impl   | `bun run scripts/quality/workflow-lint.ts`: actionlint + full-SHA base-ci pins                                                                   | pre-commit when workflows are staged; CI always | 0.0s local                                                            |
+| G1 Secrets      | impl   | `scripts/quality/secrets.ts`: gitleaks over the index snapshot, each pushed range, or tracked HEAD                                               | pre-commit, pre-push, CI                        | 0.3–0.6s local                                                        |
+| G2 Dependencies | impl   | `bun run test:security`: osv-scanner over `bun.lock` + `worker/bun.lock`                                                                         | pre-push, CI                                    | ~1.8s local; 2 lockfiles                                              |
+| B1 Build        | impl   | `bun run build`: Next/Webpack/Serwist production output                                                                                          | pre-push, CI                                    | ~9.4s local                                                           |
+| L1 Unit         | impl   | `bun run test:coverage` + `bun run --cwd worker test:coverage`                                                                                   | pre-commit, pre-push, CI                        | Web 97.57 / 95.75 / 95.90 / 98.60; Worker 99.43 / 97.65 / 100 / 99.40 |
+| L2 Runtime      | na     | No separate workerd/Miniflare suite; Worker tests run in Node with a mocked `Env` binding and are counted as L1                                  | skipped in CI                                   | CI job remains skipped; `slot-status.json` requires it                |
+| L3 Integration  | impl   | `bun run test:e2e`: real HTTP on 17026, memory adapter, 35 tests including create → encrypted export → decrypt → TOTP                            | pre-push, CI                                    | ~9s local                                                             |
+| L4 E2E          | impl   | `bun run test:e2e:pw`: Playwright chromium on 27026                                                                                              | pre-push, CI                                    | 6 tests, ~15s local                                                   |
+| P1 Package      | na     | Root `package.json` is private; no npm package is published                                                                                      | skipped in CI                                   | CI job remains skipped                                                |
+| Z1 Gate         | impl   | Local `scripts/quality/gate.ts`; CI `scripts/quality/ci-gate.ts` validates declarations, the exact blocking-job set, success/skip and tested SHA | every gate, CI                                  | `check:hooks` covers 21 negative cases                                |
 
-Pre-commit always runs index-snapshot L1 (lint-staged, unit coverage, typecheck) regardless of staged paths; lockfile G0 still gates package.json/bun.lock changes only. Pre-push runs HTTP then security against worktree/upstream. Target: check-only index L1 <30s and stdin-ref L2/G2 in parallel <3min. No commit/branch-push bypass, no lowered thresholds.
+Pre-commit always runs the complete index snapshot (S1, S2, G1, L1, plus S3 when workflows are staged); pre-push exports every pushed OID and runs S1, S2, G1, L1, G2, B1, L3, L4 against it. `bun run check:hooks` proves staged and pushed fake-key blocking, per-slot failures, missing tools, timeouts, empty runs, lockfile drift, pushed-OID selection and deleted-ref skipping. Targets: pre-commit 15s (hard 30s), pre-push 150s (hard 300s), CI 5min (hard 10min). No hook bypass and no lowered thresholds.
 
 ## Resources / Isolation
 
-| Purpose | Port / resource                       | Current reality                                          |
-| ------- | ------------------------------------- | -------------------------------------------------------- |
-| Dev     | 7026; real configured D1              | Never a fixture database                                 |
-| L2      | 17026, `.next-e2e`, in-memory adapter | Local HTTP; real-SQL and non-destructive port guard gaps |
-| L3      | 27026                                 | Login smoke; dedicated state/auth journey gap            |
+| Purpose | Port / resource                       | Current reality                                                             |
+| ------- | ------------------------------------- | --------------------------------------------------------------------------- |
+| Dev     | 7026; real configured D1              | Never a fixture database                                                    |
+| L3      | 17026, `.next-e2e`, in-memory adapter | Fails when the port is occupied; clears its lane dist dir per run           |
+| L4      | 27026, `.next-e2e-pw`                 | Fails when the port is occupied; Playwright starts and stops its own server |
 
-Future D1-backed tests need local Wrangler/Miniflare, per-run SQLite and test context/`_test_marker` before writes/cleanup. Do not create remote `-test` resources. Preserve other worktrees and running servers.
+Both lanes use their own repo-local dist directory, so separate worktrees and servers do not share build state. Never kill another worktree's process. Future D1-backed runtime tests need local Wrangler/Miniflare and an isolated database; do not create remote `-test` resources.
 
 ## Operations / Release
 
-Use the existing Docker/CI release workflow for an authorized app release; production Docker CD deploys to jp4 at `/data/neo`. Optional Worker deployment is separate. Apply schema before dependent code, verify running `/api/live`, and use [README](README.md) plus [backup guide](docs/02-backup-consolidation.md) for configuration. This repo has no root release script.
+Production is manual-only. `.github/workflows/release.yml` runs only from `workflow_dispatch`; the operator supplies the successful main-push CI run ID. base-ci v2026.15 `deploy-docker` proves that run's SHA and requires `quality / Z1: Gate` on the exact SHA before deploying jp4 `/data/neo`. A green CI run does not deploy by itself. Optional Worker deployment is separate. Apply schema before dependent code, verify `/api/live`, and use [README](README.md) plus [backup guide](docs/02-backup-consolidation.md) for configuration. This repo has no root release script.
 
 ## Retrospective
 
 Full prior incidents are in [Retrospective.md](Retrospective.md). Keep only short project rules here; global lessons go to nmem/rules and deterministic checks to hooks/tests.
 
 - Preserve trigger-only effect dependencies during lint changes; include Worker dependency installation whenever checks cross packages.
+- Validate the index or pushed OID snapshot, never the working tree; a local hook must never kill a process it did not spawn.
+- Keep the real fake-key injection in `bun run check:hooks`; a gitleaks allowlist must never replace the failure test.
+- Mock Worker tests are L1. Do not relabel them as L2 Runtime without a real workerd/Miniflare suite.
+- Keep production release manual. A successful CI run must not be able to deploy production.
 
 <!-- BEGIN:nextjs-agent-rules -->
 
