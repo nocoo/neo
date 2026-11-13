@@ -1,6 +1,6 @@
-# System0 Quality Migration
+# System1 Quality Migration
 
-Neo now follows the System0 quality standard (1.3.0) with base-ci v2026.15 in native mode. The authoritative runtime contract is [AGENTS.md](../AGENTS.md); this document records the slot mapping, evidence, and remaining gaps.
+Neo now follows the System1 quality standard (1.3.0) with base-ci v2026.15 in native mode. The authoritative runtime contract is [AGENTS.md](../AGENTS.md); this document records the slot mapping, evidence, and remaining gaps.
 
 ## Slots
 
