@@ -1,3 +1,4 @@
+import { LayerCard } from "@nocoo/basalt/components/layer-card";
 import { Skeleton } from "@/components/ui/skeleton";
 
 /**
@@ -18,11 +19,7 @@ export default function SecretsLoading() {
       {/* Secret card grid skeleton */}
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-3">
         {Array.from({ length: 12 }, (_, i) => i).map((i) => (
-          <div
-            key={`skeleton-${i}`}
-            className="rounded-card bg-secondary p-4 space-y-3"
-            style={{ animationDelay: `${Math.min(i * 40, 400)}ms` }}
-          >
+          <LayerCard key={`skeleton-${i}`} padding="lg" className="space-y-3">
             {/* Issuer row */}
             <div className="flex items-center gap-2">
               <Skeleton className="h-8 w-8 rounded-lg" />
@@ -35,7 +32,7 @@ export default function SecretsLoading() {
             <Skeleton className="h-8 w-32" />
             {/* Progress bar */}
             <Skeleton className="h-1.5 w-full rounded-full" />
-          </div>
+          </LayerCard>
         ))}
       </div>
     </div>

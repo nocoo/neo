@@ -1,3 +1,4 @@
+import { LayerCard } from "@nocoo/basalt/components/layer-card";
 import { Skeleton } from "@/components/ui/skeleton";
 
 /**
@@ -8,7 +9,7 @@ export default function SettingsLoading() {
   return (
     <div className="space-y-6">
       {/* Encryption Key card skeleton */}
-      <div className="rounded-card bg-secondary p-6 space-y-4">
+      <LayerCard padding="lg" className="space-y-4">
         <div className="flex items-center gap-3">
           <Skeleton className="h-10 w-10 rounded-lg" />
           <div className="space-y-1.5">
@@ -21,10 +22,10 @@ export default function SettingsLoading() {
           <Skeleton className="h-9 w-24 rounded-lg" />
           <Skeleton className="h-9 w-24 rounded-lg" />
         </div>
-      </div>
+      </LayerCard>
 
       {/* Backy Integration card skeleton */}
-      <div className="rounded-card bg-secondary p-6 space-y-4">
+      <LayerCard padding="lg" className="space-y-4">
         <div className="flex items-center gap-3">
           <Skeleton className="h-10 w-10 rounded-lg" />
           <div className="space-y-1.5">
@@ -40,7 +41,7 @@ export default function SettingsLoading() {
           <Skeleton className="h-9 w-32 rounded-lg" />
           <Skeleton className="h-9 w-28 rounded-lg" />
         </div>
-      </div>
+      </LayerCard>
     </div>
   );
 }

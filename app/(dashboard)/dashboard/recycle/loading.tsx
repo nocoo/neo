@@ -1,3 +1,4 @@
+import { LayerCard } from "@nocoo/basalt/components/layer-card";
 import { Skeleton } from "@/components/ui/skeleton";
 
 /**
@@ -13,11 +14,7 @@ export default function RecycleLoading() {
       {/* Deleted secrets list */}
       <div className="space-y-2">
         {Array.from({ length: 6 }, (_, i) => i).map((i) => (
-          <div
-            key={`skeleton-${i}`}
-            className="rounded-card bg-secondary px-4 py-3 flex items-center gap-3"
-            style={{ animationDelay: `${Math.min(i * 40, 200)}ms` }}
-          >
+          <LayerCard key={`skeleton-${i}`} className="flex items-center gap-3">
             {/* Theme color indicator */}
             <Skeleton className="h-8 w-8 rounded-lg" />
             {/* Name + issuer */}
@@ -32,7 +29,7 @@ export default function RecycleLoading() {
               <Skeleton className="h-8 w-8 rounded-lg" />
               <Skeleton className="h-8 w-8 rounded-lg" />
             </div>
-          </div>
+          </LayerCard>
         ))}
       </div>
     </div>

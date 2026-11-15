@@ -238,7 +238,7 @@ export function SecretCard({
     <div
       className={cn(
         "cursor-pointer rounded-2xl transition-shadow",
-        selected && "ring-2 ring-ring ring-offset-2 ring-offset-background",
+        selected && "ring-2 ring-basalt-ring ring-offset-2 ring-offset-basalt-background",
       )}
       style={{ perspective: "800px" }}
       data-testid={`secret-card-${secret.id}`}
@@ -280,7 +280,7 @@ export function SecretCard({
           {/* Bottom: large OTP code */}
           {otp && (
             <div className="mt-auto pt-2">
-              <div className="font-display font-mono text-2xl font-bold tracking-widest tabular-nums leading-tight">
+              <div className="font-basalt-display font-mono text-2xl font-bold tracking-widest tabular-nums leading-tight">
                 {otp.otp}
               </div>
               {/* Timer bar */}

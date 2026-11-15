@@ -98,7 +98,7 @@ export function ImportDialog({
           <div>
             <label
               htmlFor="import-file"
-              className="flex cursor-pointer items-center justify-center gap-2 rounded-lg border-2 border-dashed border-border p-6 text-sm text-muted-foreground hover:border-primary transition-colors"
+              className="flex cursor-pointer items-center justify-center gap-2 rounded-lg border-2 border-dashed border-basalt-border p-6 text-sm text-basalt-muted-foreground hover:border-basalt-primary transition-colors"
             >
               <Upload className="h-5 w-5" />
               <span>Drop a file or click to upload</span>
@@ -124,7 +124,7 @@ export function ImportDialog({
               onChange={(e) => setContent(e.target.value)}
               placeholder="Paste otpauth:// URIs, JSON, or CSV..."
               rows={4}
-              className="w-full rounded-md border border-border bg-secondary px-3 py-2 text-sm font-mono"
+              className="w-full rounded-md border border-basalt-border bg-basalt-secondary px-3 py-2 text-sm font-mono"
             />
             <Button
               variant="outline"
@@ -139,7 +139,7 @@ export function ImportDialog({
 
           {/* Results */}
           {detectedFormat && (
-            <p className="text-sm text-muted-foreground">
+            <p className="text-sm text-basalt-muted-foreground">
               Detected format: <strong>{detectedFormat}</strong>
             </p>
           )}
@@ -153,7 +153,7 @@ export function ImportDialog({
                 {parsedSecrets.map((s) => (
                   <li
                     key={`${s.name}::${s.account ?? ""}::${s.secret}`}
-                    className="text-xs text-muted-foreground"
+                    className="text-xs text-basalt-muted-foreground"
                   >
                     {s.name}
                     {s.account ? ` (${s.account})` : ""}
@@ -164,7 +164,7 @@ export function ImportDialog({
           )}
 
           {error && (
-            <p className="text-sm text-destructive" role="alert">
+            <p className="text-sm text-basalt-destructive" role="alert">
               {error}
             </p>
           )}

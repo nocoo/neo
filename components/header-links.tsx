@@ -28,7 +28,7 @@ export function HexlyLink() {
       <Button
         variant="ghost"
         size="icon"
-        className="h-8 w-8 shrink-0 text-muted-foreground hover:text-foreground"
+        className="h-8 w-8 shrink-0 text-basalt-muted-foreground hover:text-basalt-foreground"
         asChild
       >
         <a

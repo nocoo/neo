@@ -1,3 +1,4 @@
+import { LayerCard } from "@nocoo/basalt/components/layer-card";
 import { Skeleton } from "@/components/ui/skeleton";
 
 /**
@@ -13,11 +14,7 @@ export default function BackupLoading() {
       {/* Action cards grid */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
         {Array.from({ length: 3 }, (_, i) => i).map((i) => (
-          <div
-            key={`skeleton-${i}`}
-            className="rounded-card bg-secondary p-6 space-y-4"
-            style={{ animationDelay: `${i * 50}ms` }}
-          >
+          <LayerCard key={`skeleton-${i}`} padding="lg" className="space-y-4">
             {/* Icon + title */}
             <div className="flex items-center gap-3">
               <Skeleton className="h-10 w-10 rounded-lg" />
@@ -28,12 +25,12 @@ export default function BackupLoading() {
             </div>
             {/* Button */}
             <Skeleton className="h-10 w-full rounded-lg" />
-          </div>
+          </LayerCard>
         ))}
       </div>
 
       {/* Backy status card skeleton */}
-      <div className="rounded-card bg-secondary p-6 space-y-4">
+      <LayerCard padding="lg" className="space-y-4">
         <div className="flex items-center gap-3">
           <Skeleton className="h-10 w-10 rounded-lg" />
           <div className="space-y-1.5">
@@ -46,7 +43,7 @@ export default function BackupLoading() {
           <Skeleton className="h-16 rounded-lg" />
           <Skeleton className="h-16 rounded-lg" />
         </div>
-      </div>
+      </LayerCard>
     </div>
   );
 }

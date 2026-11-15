@@ -90,7 +90,7 @@ export function SecretsView() {
       {/* Search + actions */}
       <div className="flex items-center gap-2">
         <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-basalt-muted-foreground" />
           <input
             ref={searchRef}
             type="text"
@@ -98,10 +98,10 @@ export function SecretsView() {
             value={vm.searchQuery}
             onChange={(e) => vm.setSearchQuery(e.target.value)}
             onKeyDown={handleSearchKeyDown}
-            className="w-full rounded-lg border border-border bg-secondary py-2 pl-10 pr-14 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+            className="w-full rounded-lg border border-basalt-border bg-basalt-secondary py-2 pl-10 pr-14 text-sm focus:outline-none focus:ring-2 focus:ring-basalt-ring"
             aria-label="Search secrets"
           />
-          <kbd className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 hidden sm:inline-flex h-5 items-center gap-0.5 rounded border border-border bg-muted px-1.5 text-[10px] font-medium text-muted-foreground">
+          <kbd className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 hidden sm:inline-flex h-5 items-center gap-0.5 rounded border border-basalt-border bg-basalt-muted px-1.5 text-[10px] font-medium text-basalt-muted-foreground">
             ⌘K
           </kbd>
         </div>
@@ -119,7 +119,7 @@ export function SecretsView() {
       {/* Error banner */}
       {vm.error && (
         <div
-          className="rounded-lg bg-destructive/10 px-4 py-3 text-sm text-destructive"
+          className="rounded-lg bg-basalt-destructive/10 px-4 py-3 text-sm text-basalt-destructive"
           role="alert"
         >
           {vm.error}

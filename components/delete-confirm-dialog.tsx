@@ -46,12 +46,12 @@ export function DeleteConfirmDialog({
         className="w-full max-w-sm rounded-basalt-lg bg-basalt-card p-6 shadow-lg border border-basalt-border"
       >
         <div className="flex items-center gap-3 mb-4">
-          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-destructive/10">
-            <AlertTriangle className="h-5 w-5 text-destructive" />
+          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-basalt-destructive/10">
+            <AlertTriangle className="h-5 w-5 text-basalt-destructive" />
           </div>
           <div>
             <h2 className="text-lg font-semibold">Delete Secret</h2>
-            <p className="text-sm text-muted-foreground">
+            <p className="text-sm text-basalt-muted-foreground">
               The secret will be moved to Recycle Bin.
             </p>
           </div>

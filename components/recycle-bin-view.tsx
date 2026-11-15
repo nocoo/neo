@@ -47,12 +47,12 @@ function ConfirmDialog({
         className="w-full max-w-sm rounded-basalt-lg bg-basalt-card p-6 shadow-lg border border-basalt-border"
       >
         <div className="flex items-center gap-3 mb-4">
-          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-destructive/10">
-            <AlertTriangle className="h-5 w-5 text-destructive" />
+          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-basalt-destructive/10">
+            <AlertTriangle className="h-5 w-5 text-basalt-destructive" />
           </div>
           <div>
             <h2 className="text-lg font-semibold">{title}</h2>
-            <p className="text-sm text-muted-foreground">{description}</p>
+            <p className="text-sm text-basalt-muted-foreground">{description}</p>
           </div>
         </div>
 
@@ -96,14 +96,14 @@ function DeletedSecretRow({
     : "—";
 
   return (
-    <div className="group flex items-center gap-3 rounded-lg border border-border px-4 py-3 transition-colors hover:bg-accent/50">
+    <div className="group flex items-center gap-3 rounded-lg border border-basalt-border px-4 py-3 transition-colors hover:bg-basalt-accent/50">
       {/* Color dot */}
       <div className={cn("h-3 w-3 shrink-0 rounded-full", theme.bg)} />
 
       {/* Info */}
       <div className="flex-1 min-w-0">
-        <p className="text-sm font-medium text-foreground truncate">{secret.name}</p>
-        <p className="text-xs text-muted-foreground truncate">
+        <p className="text-sm font-medium text-basalt-foreground truncate">{secret.name}</p>
+        <p className="text-xs text-basalt-muted-foreground truncate">
           {secret.account ? `${secret.account} · ` : ""}
           Deleted {deletedDate}
         </p>
@@ -125,7 +125,7 @@ function DeletedSecretRow({
         <Button
           variant="ghost"
           size="icon"
-          className="h-8 w-8 text-destructive hover:text-destructive"
+          className="h-8 w-8 text-basalt-destructive hover:text-basalt-destructive"
           onClick={() => onPermanentDelete(secret.id)}
           disabled={busy}
           title="Permanently delete"
@@ -167,17 +167,17 @@ export function RecycleBinView({ initialSecrets }: { initialSecrets: Secret[] })
       {/* Search + actions */}
       <div className="flex items-center gap-2">
         <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-basalt-muted-foreground" />
           <input
             ref={searchRef}
             type="text"
             placeholder="Search deleted secrets..."
             value={vm.searchQuery}
             onChange={(e) => vm.setSearchQuery(e.target.value)}
-            className="w-full rounded-lg border border-border bg-secondary py-2 pl-10 pr-14 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+            className="w-full rounded-lg border border-basalt-border bg-basalt-secondary py-2 pl-10 pr-14 text-sm focus:outline-none focus:ring-2 focus:ring-basalt-ring"
             aria-label="Search secrets"
           />
-          <kbd className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 hidden sm:inline-flex h-5 items-center gap-0.5 rounded border border-border bg-muted px-1.5 text-[10px] font-medium text-muted-foreground">
+          <kbd className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 hidden sm:inline-flex h-5 items-center gap-0.5 rounded border border-basalt-border bg-basalt-muted px-1.5 text-[10px] font-medium text-basalt-muted-foreground">
             ⌘K
           </kbd>
         </div>
@@ -197,7 +197,7 @@ export function RecycleBinView({ initialSecrets }: { initialSecrets: Secret[] })
       {/* Error banner */}
       {vm.error && (
         <div
-          className="rounded-lg bg-destructive/10 px-4 py-3 text-sm text-destructive"
+          className="rounded-lg bg-basalt-destructive/10 px-4 py-3 text-sm text-basalt-destructive"
           role="alert"
         >
           {vm.error}
@@ -210,15 +210,15 @@ export function RecycleBinView({ initialSecrets }: { initialSecrets: Secret[] })
       {/* Loading */}
       {vm.loading && (
         <div className="flex items-center justify-center py-12">
-          <p className="text-sm text-muted-foreground">Loading...</p>
+          <p className="text-sm text-basalt-muted-foreground">Loading...</p>
         </div>
       )}
 
       {/* Deleted secrets list */}
       {!vm.loading && vm.filteredSecrets.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-12 text-center">
-          <Trash2 className="h-10 w-10 text-muted-foreground/30 mb-3" />
-          <p className="text-sm text-muted-foreground">
+          <Trash2 className="h-10 w-10 text-basalt-muted-foreground/30 mb-3" />
+          <p className="text-sm text-basalt-muted-foreground">
             {vm.searchQuery ? "No deleted secrets match your search." : "Recycle bin is empty."}
           </p>
         </div>

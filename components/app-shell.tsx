@@ -56,7 +56,7 @@ function AppShellInner({ children, user }: { children: React.ReactNode; user: Si
         type="button"
         onClick={toggle}
         aria-label="Open menu"
-        className="flex h-8 w-8 items-center justify-center rounded-lg text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"
+        className="flex h-8 w-8 items-center justify-center rounded-lg text-basalt-muted-foreground hover:text-basalt-foreground hover:bg-basalt-accent transition-colors"
       >
         <Menu className="h-5 w-5" strokeWidth={1.5} />
       </button>
@@ -70,7 +70,7 @@ function AppShellInner({ children, user }: { children: React.ReactNode; user: Si
           href="https://github.com/nocoo/neo"
           target="_blank"
           rel="noopener noreferrer"
-          className="flex h-8 w-8 items-center justify-center rounded-lg text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"
+          className="flex h-8 w-8 items-center justify-center rounded-lg text-basalt-muted-foreground hover:text-basalt-foreground hover:bg-basalt-accent transition-colors"
           aria-label="GitHub repository"
         >
           <Github className="h-[18px] w-[18px]" strokeWidth={1.5} />

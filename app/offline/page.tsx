@@ -12,18 +12,18 @@ export default function OfflinePage() {
   return (
     <div
       data-basalt-surface-root=""
-      className="flex min-h-screen items-center justify-center bg-background p-4"
+      className="flex min-h-screen items-center justify-center bg-basalt-background p-4"
     >
       <div className="text-center space-y-6 max-w-md">
         <div className="flex justify-center">
-          <div className="rounded-full bg-muted p-6">
-            <WifiOff className="h-12 w-12 text-muted-foreground" />
+          <div className="rounded-full bg-basalt-muted p-6">
+            <WifiOff className="h-12 w-12 text-basalt-muted-foreground" />
           </div>
         </div>
 
         <div className="space-y-2">
           <h1 className="text-2xl font-semibold">You&apos;re Offline</h1>
-          <p className="text-sm text-muted-foreground">
+          <p className="text-sm text-basalt-muted-foreground">
             It looks like you&apos;ve lost your internet connection. Some features may be
             unavailable until you reconnect.
           </p>
@@ -40,7 +40,7 @@ export default function OfflinePage() {
           </Button>
         </div>
 
-        <p className="text-xs text-muted-foreground">
+        <p className="text-xs text-basalt-muted-foreground">
           Changes made while offline will be synced automatically when your connection is restored.
         </p>
       </div>

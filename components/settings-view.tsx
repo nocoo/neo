@@ -31,7 +31,7 @@ export function SettingsView() {
   if (vm.loading) {
     return (
       <div className="flex items-center justify-center py-12">
-        <p className="text-sm text-muted-foreground">Loading settings...</p>
+        <p className="text-sm text-basalt-muted-foreground">Loading settings...</p>
       </div>
     );
   }
@@ -58,14 +58,14 @@ export function SettingsView() {
   };
 
   const inputClass =
-    "w-full rounded-md border border-border bg-secondary px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring";
+    "w-full rounded-md border border-basalt-border bg-basalt-secondary px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-basalt-ring";
 
   return (
     <div className="space-y-6">
       {/* Error banner */}
       {vm.error && (
         <div
-          className="rounded-lg bg-destructive/10 px-4 py-3 text-sm text-destructive"
+          className="rounded-lg bg-basalt-destructive/10 px-4 py-3 text-sm text-basalt-destructive"
           role="alert"
         >
           {vm.error}
@@ -78,7 +78,7 @@ export function SettingsView() {
       {/* Encryption Key Management */}
       <LayerCard padding="lg">
         <div className="flex items-center gap-2 mb-4">
-          <Shield className="h-5 w-5 text-primary" />
+          <Shield className="h-5 w-5 text-basalt-primary" />
           <h2 className="text-lg font-medium">Encryption Key</h2>
         </div>
 
@@ -95,7 +95,7 @@ export function SettingsView() {
               <h3 className="block text-sm font-medium">Your Encryption Key</h3>
               <div className="flex items-center gap-2">
                 <code
-                  className="flex-1 rounded-md border border-border bg-muted px-3 py-2 text-sm font-mono break-all"
+                  className="flex-1 rounded-md border border-basalt-border bg-basalt-muted px-3 py-2 text-sm font-mono break-all"
                   data-testid="encryption-key-display"
                 >
                   {vm.keyRevealed ? vm.encryptionKey : "••••••••••••••••••••••••"}
@@ -129,7 +129,7 @@ export function SettingsView() {
                 <RefreshCw className="h-4 w-4 mr-1" />
                 Regenerate Key
               </Button>
-              <p className="text-xs text-muted-foreground mt-1">
+              <p className="text-xs text-basalt-muted-foreground mt-1">
                 Regenerating will replace the current key. Existing encrypted backups will require
                 the old key to restore.
               </p>
@@ -140,12 +140,12 @@ export function SettingsView() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium">No encryption key configured</p>
-                <p className="text-xs text-muted-foreground">
+                <p className="text-xs text-basalt-muted-foreground">
                   Generate an encryption key to enable encrypted backups.
                 </p>
               </div>
               <span
-                className="text-sm font-medium text-muted-foreground"
+                className="text-sm font-medium text-basalt-muted-foreground"
                 data-testid="encryption-status"
               >
                 Disabled
@@ -167,10 +167,10 @@ export function SettingsView() {
       {/* Backy Configuration */}
       <LayerCard padding="lg">
         <div className="flex items-center gap-2 mb-4">
-          <Link className="h-5 w-5 text-primary" />
+          <Link className="h-5 w-5 text-basalt-primary" />
           <h2 className="text-lg font-medium">Backy Integration</h2>
         </div>
-        <p className="text-xs text-muted-foreground mb-4">
+        <p className="text-xs text-basalt-muted-foreground mb-4">
           Push encrypted backups to Backy for off-site storage.
         </p>
 
@@ -198,7 +198,7 @@ export function SettingsView() {
             </label>
             {vm.backyMaskedApiKey && !backyApiKey ? (
               <div className="flex items-center gap-2">
-                <code className="flex-1 rounded-md border border-border bg-muted px-3 py-2 text-sm font-mono">
+                <code className="flex-1 rounded-md border border-basalt-border bg-basalt-muted px-3 py-2 text-sm font-mono">
                   {vm.backyMaskedApiKey}
                 </code>
                 <Button
@@ -248,7 +248,7 @@ export function SettingsView() {
               </span>
             )}
             {connectionTestResult === "error" && (
-              <span className="text-sm text-destructive" data-testid="connection-error">
+              <span className="text-sm text-basalt-destructive" data-testid="connection-error">
                 Failed
               </span>
             )}
@@ -256,15 +256,15 @@ export function SettingsView() {
         </div>
 
         {/* Pull Webhook Key */}
-        <div className="mt-6 pt-4 border-t border-border">
+        <div className="mt-6 pt-4 border-t border-basalt-border">
           <h3 className="text-sm font-medium mb-2">Pull Webhook Key</h3>
-          <p className="text-xs text-muted-foreground mb-3">
+          <p className="text-xs text-basalt-muted-foreground mb-3">
             Allow Backy to trigger backup creation via pull webhook.
           </p>
           {vm.backyPullKey ? (
             <div className="space-y-2">
               <code
-                className="block rounded-md border border-border bg-muted px-3 py-2 text-sm font-mono break-all"
+                className="block rounded-md border border-basalt-border bg-basalt-muted px-3 py-2 text-sm font-mono break-all"
                 data-testid="pull-key-display"
               >
                 {vm.backyPullKey}

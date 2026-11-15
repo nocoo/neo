@@ -84,7 +84,7 @@ export function Sidebar({ user }: { user: SidebarUser }) {
   const userAvatar = (
     <Avatar className="h-9 w-9">
       {user.image && <AvatarImage src={user.image} alt={user.name ?? "User"} />}
-      <AvatarFallback className="bg-accent text-xs font-medium text-accent-foreground">
+      <AvatarFallback className="bg-basalt-accent text-xs font-medium text-basalt-accent-foreground">
         {initials}
       </AvatarFallback>
     </Avatar>
@@ -103,7 +103,7 @@ export function Sidebar({ user }: { user: SidebarUser }) {
       <aside
         data-basalt-sidebar=""
         data-collapsed={collapsed ? "true" : "false"}
-        className={`safe-area-sidebar sticky top-0 flex h-full shrink-0 flex-col bg-background overflow-hidden transition-[width] duration-300 ease-in-out ${
+        className={`safe-area-sidebar sticky top-0 flex h-full shrink-0 flex-col bg-basalt-background overflow-hidden transition-[width] duration-300 ease-in-out ${
           collapsed ? "w-[68px]" : "w-[260px]"
         }`}
       >
@@ -126,8 +126,8 @@ export function Sidebar({ user }: { user: SidebarUser }) {
                   height={24}
                   className="h-6 w-6 shrink-0"
                 />
-                <span className="truncate text-lg font-semibold text-foreground">neo.</span>
-                <span className="shrink-0 rounded-md bg-secondary px-basalt-space-md py-basalt-space-xs font-mono text-[10px] leading-none font-medium text-muted-foreground">
+                <span className="truncate text-lg font-semibold text-basalt-foreground">neo.</span>
+                <span className="shrink-0 rounded-md bg-basalt-secondary px-basalt-space-md py-basalt-space-xs font-mono text-[10px] leading-none font-medium text-basalt-muted-foreground">
                   v{VERSION}
                 </span>
               </div>

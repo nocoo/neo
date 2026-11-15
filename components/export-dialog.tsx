@@ -95,7 +95,7 @@ export function ExportDialog({ open, onClose, onExport, exportOutput, error }: E
               id="export-format"
               value={selectedFormat}
               onChange={(e) => setSelectedFormat(e.target.value as ExportFormat)}
-              className="w-full rounded-md border border-border bg-secondary px-3 py-2 text-sm"
+              className="w-full rounded-md border border-basalt-border bg-basalt-secondary px-3 py-2 text-sm"
             >
               {EXPORT_FORMATS.map((f) => (
                 <option key={f.value} value={f.value}>
@@ -129,14 +129,14 @@ export function ExportDialog({ open, onClose, onExport, exportOutput, error }: E
                   </Button>
                 </div>
               </div>
-              <pre className="max-h-48 overflow-auto rounded-md bg-muted p-3 text-xs font-mono">
+              <pre className="max-h-48 overflow-auto rounded-md bg-basalt-muted p-3 text-xs font-mono">
                 {exportOutput}
               </pre>
             </div>
           )}
 
           {error && (
-            <p className="text-sm text-destructive" role="alert">
+            <p className="text-sm text-basalt-destructive" role="alert">
               {error}
             </p>
           )}

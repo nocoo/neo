@@ -52,7 +52,7 @@ export function BackupView() {
       {/* Error banner */}
       {vm.error && (
         <div
-          className="rounded-lg bg-destructive/10 px-4 py-3 text-sm text-destructive"
+          className="rounded-lg bg-basalt-destructive/10 px-4 py-3 text-sm text-basalt-destructive"
           role="alert"
         >
           {vm.error}
@@ -119,10 +119,10 @@ export function BackupView() {
       {/* Create & Download */}
       <LayerCard padding="lg">
         <div className="flex items-center gap-2 mb-4">
-          <Archive className="h-5 w-5 text-primary" />
+          <Archive className="h-5 w-5 text-basalt-primary" />
           <h2 className="text-lg font-medium">Create & Download</h2>
         </div>
-        <p className="text-xs text-muted-foreground mb-4">
+        <p className="text-xs text-basalt-muted-foreground mb-4">
           Create an encrypted ZIP archive of all your secrets and download it to your device.
         </p>
         <Button
@@ -139,10 +139,10 @@ export function BackupView() {
       {/* Push to Backy */}
       <LayerCard padding="lg">
         <div className="flex items-center gap-2 mb-4">
-          <Send className="h-5 w-5 text-primary" />
+          <Send className="h-5 w-5 text-basalt-primary" />
           <h2 className="text-lg font-medium">Push to Backy</h2>
         </div>
-        <p className="text-xs text-muted-foreground mb-4">
+        <p className="text-xs text-basalt-muted-foreground mb-4">
           Encrypt and push your secrets to Backy for off-site storage.
         </p>
 
@@ -195,7 +195,7 @@ export function BackupView() {
               {vm.history.recent_backups.slice(0, 5).map((entry) => (
                 <li
                   key={entry.id}
-                  className="flex items-center justify-between text-xs text-muted-foreground py-1 border-b border-border last:border-0"
+                  className="flex items-center justify-between text-xs text-basalt-muted-foreground py-1 border-b border-basalt-border last:border-0"
                 >
                   <span className="truncate">{entry.tag || "Backup"}</span>
                   <span className="shrink-0 ml-2">
@@ -206,7 +206,7 @@ export function BackupView() {
               ))}
             </ul>
             {vm.history.total_backups > 5 && (
-              <p className="text-xs text-muted-foreground mt-2">
+              <p className="text-xs text-basalt-muted-foreground mt-2">
                 {vm.history.total_backups} total backups
               </p>
             )}
@@ -217,10 +217,10 @@ export function BackupView() {
       {/* Restore */}
       <LayerCard padding="lg">
         <div className="flex items-center gap-2 mb-4">
-          <Upload className="h-5 w-5 text-primary" />
+          <Upload className="h-5 w-5 text-basalt-primary" />
           <h2 className="text-lg font-medium">Restore from Backup</h2>
         </div>
-        <p className="text-xs text-muted-foreground mb-4">
+        <p className="text-xs text-basalt-muted-foreground mb-4">
           Upload an encrypted ZIP archive and enter the encryption key to restore secrets.
         </p>
 
@@ -231,7 +231,7 @@ export function BackupView() {
               Encryption Key
             </label>
             <div className="flex items-center gap-2">
-              <Key className="h-4 w-4 text-muted-foreground shrink-0" />
+              <Key className="h-4 w-4 text-basalt-muted-foreground shrink-0" />
               <input
                 id="restore-key"
                 type="password"
@@ -239,7 +239,7 @@ export function BackupView() {
                 onChange={(e) => setRestoreKey(e.target.value)}
                 placeholder="Enter the encryption key used to create the archive"
                 disabled={vm.busy}
-                className="w-full rounded-md border border-border bg-secondary px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+                className="w-full rounded-md border border-basalt-border bg-basalt-secondary px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-basalt-ring"
                 data-testid="restore-key-input"
               />
             </div>

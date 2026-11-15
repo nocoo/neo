@@ -59,23 +59,23 @@ export function PwaInstallPrompt() {
   return (
     <header
       data-basalt-surface-root=""
-      className="fixed bottom-4 left-4 right-4 z-50 mx-auto max-w-md rounded-basalt-lg border border-border bg-card p-4 shadow-lg"
+      className="fixed bottom-4 left-4 right-4 z-50 mx-auto max-w-md rounded-basalt-lg border border-basalt-border bg-basalt-card p-4 shadow-lg"
       data-testid="pwa-install-prompt"
     >
       <div className="flex items-start gap-3">
-        <div className="rounded-full bg-primary/10 p-2">
-          <Download className="h-5 w-5 text-primary" />
+        <div className="rounded-full bg-basalt-primary/10 p-2">
+          <Download className="h-5 w-5 text-basalt-primary" />
         </div>
         <div className="flex-1 space-y-1">
           <p className="text-sm font-medium">Install Neo</p>
-          <p className="text-xs text-muted-foreground">
+          <p className="text-xs text-basalt-muted-foreground">
             Add Neo to your home screen for quick access and offline support.
           </p>
         </div>
         <button
           type="button"
           onClick={handleDismiss}
-          className="text-muted-foreground hover:text-foreground"
+          className="text-basalt-muted-foreground hover:text-basalt-foreground"
           aria-label="Dismiss install prompt"
         >
           <X className="h-4 w-4" />

@@ -150,7 +150,7 @@ export function SecretFormDialog({
               value={name}
               onChange={(e) => setName(e.target.value)}
               placeholder="e.g., GitHub"
-              className="w-full rounded-md border border-border bg-secondary px-3 py-2 text-sm"
+              className="w-full rounded-md border border-basalt-border bg-basalt-secondary px-3 py-2 text-sm"
             />
           </div>
 
@@ -164,7 +164,7 @@ export function SecretFormDialog({
               value={account}
               onChange={(e) => setAccount(e.target.value)}
               placeholder="e.g., user@example.com"
-              className="w-full rounded-md border border-border bg-secondary px-3 py-2 text-sm"
+              className="w-full rounded-md border border-basalt-border bg-basalt-secondary px-3 py-2 text-sm"
             />
           </div>
 
@@ -179,7 +179,7 @@ export function SecretFormDialog({
                 value={secretValue}
                 onChange={(e) => setSecretValue(e.target.value)}
                 placeholder="Base32 encoded key"
-                className="w-full rounded-md border border-border bg-secondary px-3 py-2 text-sm font-mono"
+                className="w-full rounded-md border border-basalt-border bg-basalt-secondary px-3 py-2 text-sm font-mono"
               />
             </div>
           )}
@@ -199,8 +199,8 @@ export function SecretFormDialog({
                     "h-7 w-7 rounded-full border-2 transition-all flex items-center justify-center",
                     opt.swatch,
                     color === opt.key
-                      ? "border-foreground scale-110"
-                      : "border-transparent hover:border-muted-foreground/50",
+                      ? "border-basalt-foreground scale-110"
+                      : "border-transparent hover:border-basalt-muted-foreground/50",
                   )}
                 >
                   {color === opt.key && <Check className="h-3.5 w-3.5 text-white drop-shadow" />}
@@ -210,7 +210,7 @@ export function SecretFormDialog({
           </fieldset>
 
           {formError && (
-            <p className="text-sm text-destructive" role="alert">
+            <p className="text-sm text-basalt-destructive" role="alert">
               {formError}
             </p>
           )}

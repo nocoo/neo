@@ -39,7 +39,7 @@ export function ToolsView() {
       {/* Error banner */}
       {devTools.error && (
         <div
-          className="rounded-lg bg-destructive/10 px-4 py-3 text-sm text-destructive"
+          className="rounded-lg bg-basalt-destructive/10 px-4 py-3 text-sm text-basalt-destructive"
           role="alert"
         >
           {devTools.error}
@@ -58,10 +58,10 @@ export function ToolsView() {
         {/* Import */}
         <LayerCard padding="lg" className="space-y-3">
           <div className="flex items-center gap-2">
-            <Upload className="h-5 w-5 text-primary" />
+            <Upload className="h-5 w-5 text-basalt-primary" />
             <h2 className="text-lg font-medium">Import</h2>
           </div>
-          <p className="text-sm text-muted-foreground">
+          <p className="text-sm text-basalt-muted-foreground">
             Import secrets from other authenticator apps
           </p>
           <Button variant="outline" onClick={() => setShowImport(true)} className="w-full">
@@ -72,10 +72,12 @@ export function ToolsView() {
         {/* Export */}
         <LayerCard padding="lg" className="space-y-3">
           <div className="flex items-center gap-2">
-            <Download className="h-5 w-5 text-primary" />
+            <Download className="h-5 w-5 text-basalt-primary" />
             <h2 className="text-lg font-medium">Export</h2>
           </div>
-          <p className="text-sm text-muted-foreground">Export your secrets in various formats</p>
+          <p className="text-sm text-basalt-muted-foreground">
+            Export your secrets in various formats
+          </p>
           <Button variant="outline" onClick={() => setShowExport(true)} className="w-full">
             Open Export Tool
           </Button>
@@ -84,7 +86,7 @@ export function ToolsView() {
         {/* OTP Tester */}
         <LayerCard padding="lg" className="space-y-3">
           <div className="flex items-center gap-2">
-            <TestTube className="h-5 w-5 text-primary" />
+            <TestTube className="h-5 w-5 text-basalt-primary" />
             <h2 className="text-lg font-medium">OTP Tester</h2>
           </div>
           <div className="space-y-2">
@@ -93,7 +95,7 @@ export function ToolsView() {
               value={testSecret}
               onChange={(e) => setTestSecret(e.target.value)}
               placeholder="Base32 secret key"
-              className="w-full rounded-md border border-border bg-secondary px-3 py-2 text-sm font-mono"
+              className="w-full rounded-md border border-basalt-border bg-basalt-secondary px-3 py-2 text-sm font-mono"
               aria-label="Test secret key"
             />
             <div className="flex gap-2">
@@ -101,7 +103,7 @@ export function ToolsView() {
                 type="number"
                 value={testDigits}
                 onChange={(e) => setTestDigits(e.target.value)}
-                className="w-20 rounded-md border border-border bg-secondary px-2 py-1 text-sm"
+                className="w-20 rounded-md border border-basalt-border bg-basalt-secondary px-2 py-1 text-sm"
                 aria-label="Digits"
                 min="4"
                 max="8"
@@ -110,7 +112,7 @@ export function ToolsView() {
                 type="number"
                 value={testPeriod}
                 onChange={(e) => setTestPeriod(e.target.value)}
-                className="w-20 rounded-md border border-border bg-secondary px-2 py-1 text-sm"
+                className="w-20 rounded-md border border-basalt-border bg-basalt-secondary px-2 py-1 text-sm"
                 aria-label="Period"
                 min="15"
                 max="120"
@@ -127,7 +129,7 @@ export function ToolsView() {
             {devTools.otpTestResult && (
               <div className="text-center">
                 <span
-                  className="font-display font-mono text-2xl font-bold tracking-widest"
+                  className="font-basalt-display font-mono text-2xl font-bold tracking-widest"
                   data-testid="otp-test-result"
                 >
                   {devTools.otpTestResult}

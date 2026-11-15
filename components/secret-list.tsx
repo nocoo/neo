@@ -130,7 +130,7 @@ export function SecretList({
       {/* Grid */}
       {secrets.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-12 text-center">
-          <p className="text-sm text-muted-foreground">
+          <p className="text-sm text-basalt-muted-foreground">
             {searchQuery
               ? "No secrets match your search."
               : "No secrets yet. Add your first secret to get started."}
