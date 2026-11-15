@@ -47,21 +47,19 @@ const themeScript = `(function() {
     el.classList.toggle('light', !dark);
     el.dataset.mode = dark ? 'dark' : 'light';
 
-    var storedAccent = localStorage.getItem('basalt-accent') || 'purple';
-    var isDark = el.classList.contains('dark');
-    var swatches = {
-      purple: { light: '270 70% 60%', dark: '270 70% 65%', fg: '0 0% 100%' },
-      primary: { light: '217 91% 60%', dark: '217 91% 65%', fg: '0 0% 100%' }
+    // Semantic values derived by @nocoo/basalt applyAccent for the default
+    // purple accent; other accents are re-derived by AccentProvider on mount.
+    var storedAccent = localStorage.getItem('basalt-accent');
+    var accents = {
+      purple: { light: '280 53% 50%', dark: '280 53% 77%' },
+      primary: { light: '204 88% 36%', dark: '204 90% 70%' }
     };
-    var swatch = swatches[storedAccent] || swatches.purple;
-    var primary = isDark ? swatch.dark : swatch.light;
+    var accent = accents[storedAccent] || accents.purple;
+    var primary = dark ? accent.dark : accent.light;
     el.style.setProperty('--basalt-primary', primary);
-    el.style.setProperty('--basalt-primary-foreground', swatch.fg);
+    el.style.setProperty('--basalt-primary-foreground', dark ? '0 0% 10%' : '0 0% 100%');
     el.style.setProperty('--basalt-ring', primary);
-    el.dataset.accent = storedAccent;
-    if (!localStorage.getItem('basalt-accent')) {
-      localStorage.setItem('basalt-accent', 'purple');
-    }
+    el.dataset.accent = storedAccent || 'purple';
   } catch (e) {}
 })();`;
 

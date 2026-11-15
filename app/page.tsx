@@ -60,7 +60,7 @@ export default async function Home({
   return (
     <div className="relative flex min-h-screen flex-col bg-basalt-background overflow-hidden">
       {/* Top-right controls */}
-      <div className="absolute top-4 right-4 z-10 flex items-center gap-1">
+      <div className="absolute top-[calc(1rem+env(safe-area-inset-top,0px))] right-[calc(1rem+env(safe-area-inset-right,0px))] z-10 flex items-center gap-1">
         <ProjectLinks github="nocoo/neo" hexly="neo" name="Neo" />
         <ThemeToggle aria-label="Toggle theme" />
       </div>
@@ -211,7 +211,7 @@ export default async function Home({
         </div>
       </div>
 
-      <footer className="safe-area-login-footer py-4 text-center">
+      <footer className="pt-4 pb-[calc(1rem+env(safe-area-inset-bottom,0px))] text-center">
         <p className="text-xs text-basalt-muted-foreground">
           Powered by{" "}
           <a
