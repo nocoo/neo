@@ -6,8 +6,9 @@
 
 import { Upload, X } from "lucide-react";
 import { useCallback, useState } from "react";
-import { createPortal } from "react-dom";
 import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
+import { InputArea } from "@/components/ui/input-area";
 import type { ImportFormat, ParsedSecret } from "@/models/types";
 
 // ── Types ────────────────────────────────────────────────────────────────
@@ -73,21 +74,11 @@ export function ImportDialog({
     }
   }, [parsedSecrets, onImport, onClose]);
 
-  if (!open) return null;
-
-  return createPortal(
-    <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/50"
-      role="dialog"
-      aria-modal="true"
-      aria-label="Import secrets"
-    >
-      <div
-        data-basalt-surface-root=""
-        className="w-full max-w-lg rounded-basalt-lg bg-basalt-card p-6 shadow-lg border border-basalt-border"
-      >
+  return (
+    <Dialog open={open} onOpenChange={(next) => (!next ? onClose() : undefined)}>
+      <DialogContent size="lg" aria-label="Import secrets">
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-lg font-semibold">Import Secrets</h2>
+          <DialogTitle className="text-lg font-semibold">Import Secrets</DialogTitle>
           <Button variant="ghost" size="icon" onClick={onClose} aria-label="Close dialog">
             <X className="h-4 w-4" />
           </Button>
@@ -118,13 +109,13 @@ export function ImportDialog({
             <label htmlFor="import-content" className="block text-sm font-medium mb-1">
               Or paste content
             </label>
-            <textarea
+            <InputArea
               id="import-content"
               value={content}
               onChange={(e) => setContent(e.target.value)}
               placeholder="Paste otpauth:// URIs, JSON, or CSV..."
               rows={4}
-              className="w-full rounded-md border border-basalt-border bg-basalt-secondary px-3 py-2 text-sm font-mono"
+              className="w-full font-mono"
             />
             <Button
               variant="outline"
@@ -180,8 +171,7 @@ export function ImportDialog({
             </Button>
           </div>
         </div>
-      </div>
-    </div>,
-    document.body,
+      </DialogContent>
+    </Dialog>
   );
 }

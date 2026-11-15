@@ -6,9 +6,19 @@
 
 import { AlertTriangle, Search, Trash2, Undo2 } from "lucide-react";
 import { useCallback, useRef, useState } from "react";
-import { createPortal } from "react-dom";
 import { CARD_THEMES, resolveThemeKey } from "@/components/secret-card";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { useHotkey } from "@/hooks/use-hotkey";
 import { cn } from "@/lib/utils";
 import type { Secret } from "@/models/types";
@@ -33,40 +43,34 @@ function ConfirmDialog({
   onConfirm: () => void;
   busy: boolean;
 }) {
-  if (!open) return null;
-
-  return createPortal(
-    <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/50"
-      role="dialog"
-      aria-modal="true"
-      aria-label={title}
-    >
-      <div
-        data-basalt-surface-root=""
-        className="w-full max-w-sm rounded-basalt-lg bg-basalt-card p-6 shadow-lg border border-basalt-border"
-      >
-        <div className="flex items-center gap-3 mb-4">
-          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-basalt-destructive/10">
-            <AlertTriangle className="h-5 w-5 text-basalt-destructive" />
+  return (
+    <AlertDialog open={open} onOpenChange={(next) => (!next ? onClose() : undefined)}>
+      <AlertDialogContent aria-label={title}>
+        <AlertDialogHeader>
+          <div className="flex items-center gap-3 mb-2">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-basalt-destructive/10">
+              <AlertTriangle className="h-5 w-5 text-basalt-destructive" />
+            </div>
+            <AlertDialogTitle className="text-lg font-semibold">{title}</AlertDialogTitle>
           </div>
-          <div>
-            <h2 className="text-lg font-semibold">{title}</h2>
-            <p className="text-sm text-basalt-muted-foreground">{description}</p>
-          </div>
-        </div>
-
-        <div className="flex justify-end gap-2">
-          <Button variant="outline" onClick={onClose}>
-            Cancel
-          </Button>
-          <Button variant="destructive" onClick={onConfirm} disabled={busy}>
+          <AlertDialogDescription className="text-sm text-basalt-muted-foreground">
+            {description}
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+          <AlertDialogCancel onClick={onClose}>Cancel</AlertDialogCancel>
+          <AlertDialogAction
+            onClick={(e) => {
+              e.preventDefault();
+              onConfirm();
+            }}
+            disabled={busy}
+          >
             {busy ? "Processing..." : confirmLabel}
-          </Button>
-        </div>
-      </div>
-    </div>,
-    document.body,
+          </AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
   );
 }
 
@@ -168,13 +172,13 @@ export function RecycleBinView({ initialSecrets }: { initialSecrets: Secret[] })
       <div className="flex items-center gap-2">
         <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-basalt-muted-foreground" />
-          <input
+          <Input
             ref={searchRef}
             type="text"
             placeholder="Search deleted secrets..."
             value={vm.searchQuery}
             onChange={(e) => vm.setSearchQuery(e.target.value)}
-            className="w-full rounded-lg border border-basalt-border bg-basalt-secondary py-2 pl-10 pr-14 text-sm focus:outline-none focus:ring-2 focus:ring-basalt-ring"
+            className="w-full rounded-lg pl-10 pr-14"
             aria-label="Search secrets"
           />
           <kbd className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 hidden sm:inline-flex h-5 items-center gap-0.5 rounded border border-basalt-border bg-basalt-muted px-1.5 text-[10px] font-medium text-basalt-muted-foreground">

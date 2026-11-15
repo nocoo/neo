@@ -13,6 +13,7 @@ import { ImportDialog } from "@/components/import-dialog";
 import { SecretFormDialog } from "@/components/secret-form-dialog";
 import { SecretList } from "@/components/secret-list";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { useHotkey } from "@/hooks/use-hotkey";
 import type { Secret } from "@/models/types";
 import { useDevToolsViewModel } from "@/viewmodels/useDevToolsViewModel";
@@ -91,14 +92,14 @@ export function SecretsView() {
       <div className="flex items-center gap-2">
         <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-basalt-muted-foreground" />
-          <input
+          <Input
             ref={searchRef}
             type="text"
             placeholder="Search secrets..."
             value={vm.searchQuery}
             onChange={(e) => vm.setSearchQuery(e.target.value)}
             onKeyDown={handleSearchKeyDown}
-            className="w-full rounded-lg border border-basalt-border bg-basalt-secondary py-2 pl-10 pr-14 text-sm focus:outline-none focus:ring-2 focus:ring-basalt-ring"
+            className="w-full rounded-lg pl-10 pr-14"
             aria-label="Search secrets"
           />
           <kbd className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 hidden sm:inline-flex h-5 items-center gap-0.5 rounded border border-basalt-border bg-basalt-muted px-1.5 text-[10px] font-medium text-basalt-muted-foreground">

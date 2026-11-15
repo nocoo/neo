@@ -23,6 +23,7 @@ import {
 } from "lucide-react";
 import { useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { useDashboardState } from "@/contexts/dashboard-context";
 import { formatFileSize, formatTimeAgo } from "@/models/backy";
 import { useBackupViewModel } from "@/viewmodels/useBackupViewModel";
@@ -232,14 +233,14 @@ export function BackupView() {
             </label>
             <div className="flex items-center gap-2">
               <Key className="h-4 w-4 text-basalt-muted-foreground shrink-0" />
-              <input
+              <Input
                 id="restore-key"
                 type="password"
                 value={restoreKey}
                 onChange={(e) => setRestoreKey(e.target.value)}
                 placeholder="Enter the encryption key used to create the archive"
                 disabled={vm.busy}
-                className="w-full rounded-md border border-basalt-border bg-basalt-secondary px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-basalt-ring"
+                className="w-full"
                 data-testid="restore-key-input"
               />
             </div>

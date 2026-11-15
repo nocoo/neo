@@ -10,6 +10,7 @@ import { useCallback, useState } from "react";
 import { ExportDialog } from "@/components/export-dialog";
 import { ImportDialog } from "@/components/import-dialog";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { useDevToolsViewModel } from "@/viewmodels/useDevToolsViewModel";
 import { useSecretsViewModel } from "@/viewmodels/useSecretsViewModel";
 
@@ -90,29 +91,29 @@ export function ToolsView() {
             <h2 className="text-lg font-medium">OTP Tester</h2>
           </div>
           <div className="space-y-2">
-            <input
+            <Input
               type="text"
               value={testSecret}
               onChange={(e) => setTestSecret(e.target.value)}
               placeholder="Base32 secret key"
-              className="w-full rounded-md border border-basalt-border bg-basalt-secondary px-3 py-2 text-sm font-mono"
+              className="w-full font-mono"
               aria-label="Test secret key"
             />
             <div className="flex gap-2">
-              <input
+              <Input
                 type="number"
                 value={testDigits}
                 onChange={(e) => setTestDigits(e.target.value)}
-                className="w-20 rounded-md border border-basalt-border bg-basalt-secondary px-2 py-1 text-sm"
+                className="w-20"
                 aria-label="Digits"
                 min="4"
                 max="8"
               />
-              <input
+              <Input
                 type="number"
                 value={testPeriod}
                 onChange={(e) => setTestPeriod(e.target.value)}
-                className="w-20 rounded-md border border-basalt-border bg-basalt-secondary px-2 py-1 text-sm"
+                className="w-20"
                 aria-label="Period"
                 min="15"
                 max="120"

@@ -5,8 +5,16 @@
  */
 
 import { AlertTriangle } from "lucide-react";
-import { createPortal } from "react-dom";
-import { Button } from "@/components/ui/button";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 // ── Types ────────────────────────────────────────────────────────────────
 
@@ -32,45 +40,38 @@ export function DeleteConfirmDialog({
   onConfirm,
   busy = false,
 }: DeleteConfirmDialogProps) {
-  if (!open) return null;
-
-  return createPortal(
-    <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/50"
-      role="dialog"
-      aria-modal="true"
-      aria-label="Confirm delete"
-    >
-      <div
-        data-basalt-surface-root=""
-        className="w-full max-w-sm rounded-basalt-lg bg-basalt-card p-6 shadow-lg border border-basalt-border"
-      >
-        <div className="flex items-center gap-3 mb-4">
-          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-basalt-destructive/10">
-            <AlertTriangle className="h-5 w-5 text-basalt-destructive" />
+  return (
+    <AlertDialog open={open} onOpenChange={(next) => (!next ? onClose() : undefined)}>
+      <AlertDialogContent aria-label="Confirm delete">
+        <AlertDialogHeader>
+          <div className="flex items-center gap-3 mb-2">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-basalt-destructive/10">
+              <AlertTriangle className="h-5 w-5 text-basalt-destructive" />
+            </div>
+            <AlertDialogTitle className="text-lg font-semibold">Delete Secret</AlertDialogTitle>
           </div>
-          <div>
-            <h2 className="text-lg font-semibold">Delete Secret</h2>
-            <p className="text-sm text-basalt-muted-foreground">
-              The secret will be moved to Recycle Bin.
-            </p>
-          </div>
-        </div>
+          <AlertDialogDescription className="text-sm text-basalt-muted-foreground">
+            The secret will be moved to Recycle Bin.
+          </AlertDialogDescription>
+        </AlertDialogHeader>
 
         <p className="text-sm mb-6">
           Are you sure you want to delete <strong>{secretName}</strong>?
         </p>
 
-        <div className="flex justify-end gap-2">
-          <Button variant="outline" onClick={onClose}>
-            Cancel
-          </Button>
-          <Button variant="destructive" onClick={onConfirm} disabled={busy}>
+        <AlertDialogFooter>
+          <AlertDialogCancel onClick={onClose}>Cancel</AlertDialogCancel>
+          <AlertDialogAction
+            onClick={(e) => {
+              e.preventDefault();
+              onConfirm();
+            }}
+            disabled={busy}
+          >
             {busy ? "Deleting..." : "Delete"}
-          </Button>
-        </div>
-      </div>
-    </div>,
-    document.body,
+          </AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
   );
 }

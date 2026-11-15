@@ -8,6 +8,7 @@ import { LayerCard } from "@nocoo/basalt/components/layer-card";
 import { Check, Copy, Eye, EyeOff, Key, Link, RefreshCw, Shield, Trash2 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { useSettingsViewModel } from "@/viewmodels/useSettingsViewModel";
 
 // ── Component ────────────────────────────────────────────────────────────
@@ -57,8 +58,7 @@ export function SettingsView() {
     setBackyApiKey("");
   };
 
-  const inputClass =
-    "w-full rounded-md border border-basalt-border bg-basalt-secondary px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-basalt-ring";
+  const inputClass = "w-full";
 
   return (
     <div className="space-y-6">
@@ -180,7 +180,7 @@ export function SettingsView() {
             <label htmlFor="backy-url" className="block text-sm font-medium">
               Webhook URL
             </label>
-            <input
+            <Input
               id="backy-url"
               type="url"
               value={backyUrl}
@@ -211,7 +211,7 @@ export function SettingsView() {
                 </Button>
               </div>
             ) : (
-              <input
+              <Input
                 id="backy-api-key"
                 type="password"
                 value={backyApiKey}
