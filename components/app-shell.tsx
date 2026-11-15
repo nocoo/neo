@@ -112,7 +112,10 @@ function AppShellInner({ children, user }: { children: React.ReactNode; user: Si
             }
           />
 
-          <div className="flex min-h-0 min-w-0 flex-1 flex-col px-basalt-space-lg pb-basalt-space-lg md:px-basalt-layout-sm md:pb-basalt-layout-sm">
+          <div
+            data-testid="island-wrap"
+            className="flex min-h-0 min-w-0 flex-1 flex-col px-basalt-space-lg pb-basalt-space-lg md:px-basalt-layout-sm md:pb-basalt-layout-sm"
+          >
             <ContentIsland>{children}</ContentIsland>
           </div>
         </AppMain>

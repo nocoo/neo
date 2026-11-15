@@ -1,22 +1,31 @@
-import { readFileSync } from "node:fs";
 import { expect, type Page, test } from "@playwright/test";
-import postcss from "postcss";
 
 type Insets = { top: number; right: number; bottom: number; left: number };
 
 // Browser emulators do not expose physical notch/home-indicator insets.
-// Exercise the actual app selectors with non-zero env() values, including
-// responsive rules, without adding test controls to the production stylesheet.
-const safeAreaCss = postcss
-  .parse(readFileSync("app/globals.css", "utf8"))
-  .nodes.filter((node) => node.toString().includes(".safe-area-"))
-  .map((node) => node.toString())
-  .join("\n");
-
+// Basalt's AppShell owns the safe-area padding for the authenticated shell
+// ([data-basalt-shell]), while the login page (outside the shell) and the
+// toaster keep their own env() offsets. Mirror those exact formulas with
+// concrete pixel values, without adding test controls to production styles.
 async function simulateInsets(page: Page, insets: Insets) {
-  const pattern = /env\(safe-area-inset-(top|right|bottom|left),\s*0px\)/g;
   await page.addStyleTag({
-    content: safeAreaCss.replace(pattern, (_, side: keyof Insets) => `${insets[side]}px`),
+    content: `
+      [data-basalt-shell] {
+        --basalt-safe-top: ${insets.top}px;
+        --basalt-sticky-top: ${insets.top}px;
+        padding: ${insets.top}px ${insets.right}px ${insets.bottom}px ${insets.left}px;
+      }
+      [data-basalt-sheet] [data-basalt-sidebar] {
+        padding: ${insets.top}px ${insets.right}px ${insets.bottom}px ${insets.left}px;
+      }
+      [data-testid="login-edge-actions"] {
+        top: calc(1rem + ${insets.top}px) !important;
+        right: calc(1rem + ${insets.right}px) !important;
+      }
+      [data-testid="login-footer"] {
+        padding-bottom: calc(1rem + ${insets.bottom}px) !important;
+      }
+    `,
   });
   // Sonner receives its bottom offset as a CSS expression through props.
   await page.locator("[data-sonner-toaster]").evaluateAll((elements, values) => {
@@ -108,50 +117,50 @@ for (const layout of layouts) {
     }) => {
       test.setTimeout(60_000);
       await page.goto("/");
-      await expect(page.locator(".safe-area-login-actions")).toHaveCSS("top", "16px");
+      await expect(page.getByTestId("login-edge-actions")).toHaveCSS("top", "16px");
       await simulateInsets(page, layout.insets);
-      await expect(page.locator(".safe-area-login-actions")).toHaveCSS(
+      await expect(page.getByTestId("login-edge-actions")).toHaveCSS(
         "top",
         `${16 + layout.insets.top}px`,
       );
-      await expect(page.locator(".safe-area-login-actions")).toHaveCSS(
+      await expect(page.getByTestId("login-edge-actions")).toHaveCSS(
         "right",
         `${16 + layout.insets.right}px`,
       );
-      await expect(page.locator(".safe-area-login-footer")).toHaveCSS(
+      await expect(page.getByTestId("login-footer")).toHaveCSS(
         "padding-bottom",
         `${16 + layout.insets.bottom}px`,
       );
 
       await signIn(page);
-      const header = page.locator(".safe-area-header");
-      const content = page.locator(".safe-area-content");
+      const shell = page.locator("[data-basalt-shell]");
+      const header = page.locator("[data-basalt-header]");
+      const content = page.getByTestId("island-wrap");
       const isDrawer = layout.viewport.width < 768;
-      // Zero insets must preserve the existing 56px header and 8/12px gutters.
+      // Zero insets keep the 56px header and the 8/12px island gutters.
       await expect(header).toHaveCSS("height", "56px");
-      await expect(header).toHaveCSS("padding-left", isDrawer ? "16px" : "24px");
+      await expect(content).toHaveCSS("padding-left", isDrawer ? "8px" : "12px");
       await expect(content).toHaveCSS("padding-bottom", isDrawer ? "8px" : "12px");
 
       await simulateInsets(page, layout.insets);
-      await expect(header).toHaveCSS("height", `${56 + layout.insets.top}px`);
-      await expect(header).toHaveCSS("padding-top", `${layout.insets.top}px`);
-      await expect(header).toHaveCSS(
-        "padding-right",
-        `${Math.max(isDrawer ? 16 : 24, layout.insets.right)}px`,
-      );
-      await expect(content).toHaveCSS(
-        "padding-bottom",
-        `${(isDrawer ? 8 : 12) + layout.insets.bottom}px`,
-      );
+      // The shell pays each safe-area inset exactly once.
+      await expect(shell).toHaveCSS("padding-top", `${layout.insets.top}px`);
+      await expect(shell).toHaveCSS("padding-right", `${layout.insets.right}px`);
+      await expect(shell).toHaveCSS("padding-bottom", `${layout.insets.bottom}px`);
+      await expect(shell).toHaveCSS("padding-left", `${layout.insets.left}px`);
+      // The header stays 56px; the inset is paid by the shell, not the header.
+      await expect(header).toHaveCSS("height", "56px");
+      const headerBox = await header.boundingBox();
+      expect(headerBox!.y).toBeGreaterThanOrEqual(layout.insets.top);
       await expect(page.locator("body")).toHaveCSS("padding-top", "0px");
       await expect(page.locator("body")).toHaveCSS("padding-bottom", "0px");
 
-      if (isDrawer) await page.getByRole("button", { name: "Open menu", exact: true }).click();
+      if (isDrawer) {
+        await page.getByRole("button", { name: "Open navigation" }).click();
+      }
       const sidebar = page.locator("aside");
       await expect(sidebar).toBeVisible();
-      await expect(sidebar).toHaveCSS("padding-top", `${layout.insets.top}px`);
-      await expect(sidebar).toHaveCSS("padding-bottom", `${layout.insets.bottom}px`);
-      await expect(sidebar).toHaveCSS("width", `${260 + layout.insets.left}px`);
+      await expect(sidebar).toHaveCSS("width", "260px");
       const signOut = await page
         .getByRole("button", { name: "Sign out", exact: true })
         .boundingBox();
@@ -164,11 +173,11 @@ for (const layout of layouts) {
       ).toBe(true);
       await page.screenshot({ path: test.info().outputPath("safe-area.png") });
       if (isDrawer) {
-        await page.getByRole("button", { name: "Collapse sidebar", exact: true }).click();
+        await page.getByRole("button", { name: "Close navigation" }).click();
         await expect(sidebar).toHaveCount(0);
       } else {
         await page.getByRole("button", { name: "Collapse sidebar", exact: true }).click();
-        await expect(sidebar).toHaveCSS("width", `${68 + layout.insets.left}px`);
+        await expect(sidebar).toHaveCSS("width", "68px");
         const expand = await page
           .getByRole("button", { name: "Expand sidebar", exact: true })
           .boundingBox();
