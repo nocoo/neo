@@ -57,7 +57,6 @@ export default defineConfig({
         "hooks/**/*.tsx",
         "components/sidebar.tsx",
         "components/app-shell.tsx",
-        "components/sidebar-context.tsx",
         "components/breadcrumbs.tsx",
         "components/theme-toggle.tsx",
         "components/dashboard/**/*.tsx",

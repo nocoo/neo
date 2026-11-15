@@ -1,85 +1,71 @@
 /**
  * Sidebar component tests.
  *
- * Sidebar now consumes useSidebar() from context, so we wrap it
- * in a SidebarProvider for every render.
+ * The Sidebar is built from native Basalt chrome; every render is wrapped in
+ * a Basalt SidebarProvider which owns the collapsed state.
  */
 
+import { SidebarProvider } from "@nocoo/basalt";
 import { fireEvent, render, screen } from "@testing-library/react";
-import React from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 // ── Hoisted mocks ────────────────────────────────────────────────────────
 
-const { mockPathname, mockHandleSignOut, mockPush } = vi.hoisted(() => ({
+const { mockPathname, mockHandleSignOut } = vi.hoisted(() => ({
   mockPathname: vi.fn().mockReturnValue("/dashboard"),
   mockHandleSignOut: vi.fn(),
-  mockPush: vi.fn(),
 }));
 
 vi.mock("next/navigation", () => ({
   usePathname: mockPathname,
-  useRouter: () => ({ push: mockPush }),
 }));
 
 vi.mock("@/actions/auth", () => ({
   handleSignOut: mockHandleSignOut,
 }));
 
-// Mock sidebar context to control collapsed state
-const mockToggle = vi.fn();
-const mockSetMobileOpen = vi.fn();
-let mockCollapsed = false;
-
-vi.mock("@/components/sidebar-context", () => ({
-  useSidebar: () => ({
-    collapsed: mockCollapsed,
-    toggle: mockToggle,
-    setCollapsed: vi.fn(),
-    isMobile: false,
-    mobileOpen: false,
-    setMobileOpen: mockSetMobileOpen,
-  }),
-  SidebarProvider: ({ children }: { children: React.ReactNode }) => <>{children}</>,
-}));
-
+import type { SidebarUser } from "@/components/sidebar";
 import { Sidebar } from "@/components/sidebar";
 
-const defaultUser = {
+const defaultUser: SidebarUser = {
   name: "Test User",
   email: "test@example.com",
   image: null,
 };
 
+function renderSidebar(user = defaultUser, collapsed = false) {
+  return render(
+    <SidebarProvider collapsed={collapsed} onCollapsedChange={() => {}}>
+      <Sidebar user={user} />
+    </SidebarProvider>,
+  );
+}
+
 beforeEach(() => {
   vi.clearAllMocks();
   mockPathname.mockReturnValue("/dashboard");
-  mockCollapsed = false;
 });
 
 // ── Tests ────────────────────────────────────────────────────────────────
 
 describe("Sidebar — expanded", () => {
   it("renders logo and brand", () => {
-    render(<Sidebar user={defaultUser} />);
+    renderSidebar();
     expect(screen.getByText("neo.")).toBeDefined();
   });
 
-  it("renders version badge with font-medium", () => {
-    render(<Sidebar user={defaultUser} />);
-    const versionEl = screen.getByText(/^v\d/);
-    expect(versionEl).toBeDefined();
-    expect(versionEl.className).toContain("font-medium");
-    expect(versionEl.className).toContain("font-mono");
+  it("renders version badge", () => {
+    renderSidebar();
+    expect(screen.getByText(/^v\d/)).toBeDefined();
   });
 
   it("renders collapse toggle button", () => {
-    render(<Sidebar user={defaultUser} />);
+    renderSidebar();
     expect(screen.getByLabelText("Collapse sidebar")).toBeDefined();
   });
 
   it("renders all navigation rows", () => {
-    const { container } = render(<Sidebar user={defaultUser} />);
+    const { container } = renderSidebar();
     const rows = Array.from(container.querySelectorAll("[data-sidebar-row]")).map((row) =>
       row.textContent?.trim(),
     );
@@ -87,7 +73,7 @@ describe("Sidebar — expanded", () => {
   });
 
   it("collapses a group from its label", () => {
-    const { container } = render(<Sidebar user={defaultUser} />);
+    const { container } = renderSidebar();
     const secretGroup = screen.getByRole("button", { name: "Secret" });
     expect(secretGroup.getAttribute("aria-expanded")).toBe("true");
     fireEvent.click(secretGroup);
@@ -97,23 +83,26 @@ describe("Sidebar — expanded", () => {
     expect(labels).not.toContain("Secrets");
   });
 
-  it("navigates when a row is activated", () => {
-    render(<Sidebar user={defaultUser} />);
-    fireEvent.click(screen.getByRole("button", { name: "Tools" }));
-    expect(mockPush).toHaveBeenCalledWith("/dashboard/tools");
+  it("links rows to their routes", () => {
+    const { container } = renderSidebar();
+    const toolsRow = Array.from(container.querySelectorAll("[data-sidebar-row]")).find(
+      (row) => row.textContent?.trim() === "Tools",
+    );
+    const anchor = toolsRow?.closest("a");
+    expect(anchor?.getAttribute("href")).toBe("/dashboard/tools");
   });
 
-  it("renders sign out button as form submit", () => {
-    render(<Sidebar user={defaultUser} />);
-    const signOutBtn = screen.getByTitle("Sign out");
-    expect(signOutBtn).toBeDefined();
-    expect(signOutBtn.closest("form")).toBeDefined();
-    expect(signOutBtn.getAttribute("type")).toBe("submit");
+  it("renders sign out button that signs out", () => {
+    renderSidebar();
+    const signOutBtn = screen.getByLabelText("Sign out");
+    expect(signOutBtn.tagName).toBe("BUTTON");
+    fireEvent.click(signOutBtn);
+    expect(mockHandleSignOut).toHaveBeenCalledTimes(1);
   });
 
   it("marks the active row with aria-current", () => {
     mockPathname.mockReturnValue("/dashboard/backup");
-    const { container } = render(<Sidebar user={defaultUser} />);
+    const { container } = renderSidebar();
     const row = (label: string) =>
       Array.from(container.querySelectorAll("[data-sidebar-row]")).find(
         (candidate) => candidate.textContent?.trim() === label,
@@ -123,93 +112,90 @@ describe("Sidebar — expanded", () => {
   });
 
   it("displays user name and email", () => {
-    render(<Sidebar user={defaultUser} />);
+    renderSidebar();
     expect(screen.getByText("Test User")).toBeDefined();
     expect(screen.getByText("test@example.com")).toBeDefined();
   });
 
   it("shows avatar fallback initials when no image", () => {
-    render(<Sidebar user={defaultUser} />);
+    renderSidebar();
     expect(screen.getByText("TU")).toBeDefined();
   });
 
   it("shows avatar image when provided", () => {
-    render(<Sidebar user={{ ...defaultUser, image: "https://example.com/avatar.jpg" }} />);
-    // Radix Avatar renders AvatarImage with role="img" and the alt text.
-    // In jsdom AvatarImage may not mount the <img> until loaded, but the
-    // fallback ("TU") won't appear because src is set. Verify the Avatar
-    // root exists and the user section is rendered correctly.
+    renderSidebar({ ...defaultUser, image: "https://example.com/avatar.jpg" });
     expect(screen.getByText("Test User")).toBeDefined();
     expect(screen.getByText("test@example.com")).toBeDefined();
   });
 
   it("shows fallback for missing name", () => {
-    render(<Sidebar user={{ name: null, email: "a@b.com", image: null }} />);
+    renderSidebar({ name: null, email: "a@b.com", image: null });
     expect(screen.getByText("User")).toBeDefined();
     expect(screen.getByText("U")).toBeDefined();
   });
 });
 
 describe("Sidebar — collapsed", () => {
-  beforeEach(() => {
-    mockCollapsed = true;
-  });
-
   it("renders expand toggle button", () => {
-    render(<Sidebar user={defaultUser} />);
+    renderSidebar(defaultUser, true);
     expect(screen.getByLabelText("Expand sidebar")).toBeDefined();
   });
 
-  it("uses duration-300 for width transition", () => {
-    render(<Sidebar user={defaultUser} />);
-    const aside = screen.getByLabelText("Expand sidebar").closest("aside");
-    expect(aside?.className).toContain("duration-300");
-  });
-
   it("does not render nav labels as text", () => {
-    render(<Sidebar user={defaultUser} />);
+    renderSidebar(defaultUser, true);
     expect(screen.queryByText("Secrets")).toBeNull();
     expect(screen.queryByText("Backup")).toBeNull();
   });
 
   it("shows user avatar", () => {
-    render(<Sidebar user={defaultUser} />);
+    renderSidebar(defaultUser, true);
     expect(screen.getByText("TU")).toBeDefined();
   });
 
-  it("does not render version badge text", () => {
-    render(<Sidebar user={defaultUser} />);
-    expect(screen.queryByText(/^v\d/)).toBeNull();
+  it("marks the rail as collapsed", () => {
+    renderSidebar(defaultUser, true);
+    const aside = screen.getByLabelText("Expand sidebar").closest("aside");
+    expect(aside?.getAttribute("data-collapsed")).toBe("");
+  });
+
+  it("links icon rows to their routes", () => {
+    renderSidebar(defaultUser, true);
+    const secretsIcon = screen.getByLabelText("Secrets").closest("a");
+    expect(secretsIcon?.getAttribute("href")).toBe("/dashboard");
   });
 });
 
 // ── Branch coverage: nullish-coalescing fallbacks for user fields ──────────
 describe("Sidebar — user field fallbacks", () => {
-  beforeEach(() => {
-    mockCollapsed = false;
-  });
-
-  it("uses 'User' fallback and renders empty email when both are null", () => {
-    render(<Sidebar user={{ name: null, email: null, image: null }} />);
-    // user.name ?? "User"
+  it("uses 'User' fallback and renders no email when both are null", () => {
+    renderSidebar({ name: null, email: null, image: null });
     expect(screen.getAllByText("User").length).toBeGreaterThanOrEqual(1);
-    // user.email ?? "" — should not crash; no test@example.com text
     expect(screen.queryByText("test@example.com")).toBeNull();
   });
 
   it("renders AvatarImage when user.image is provided (truthy branch)", () => {
-    render(<Sidebar user={{ name: "X", email: "x@y.z", image: "https://example.com/a.png" }} />);
-    // truthy branch of `user.image && <AvatarImage>` is exercised by render
+    renderSidebar({ name: "X", email: "x@y.z", image: "https://example.com/a.png" });
     expect(screen.getByText("x@y.z")).toBeDefined();
   });
 
   it("uses 'User' as avatar alt fallback when name is null but image present", () => {
-    render(
-      <Sidebar user={{ name: null, email: "a@b.com", image: "https://example.com/avatar.png" }} />,
-    );
-    // Exercises `user.name ?? "User"` fallback inside AvatarImage alt.
-    // No assertion on the alt itself (Radix defers rendering until image load)
-    // — just ensure the render path completes without throwing.
+    renderSidebar({ name: null, email: "a@b.com", image: "https://example.com/avatar.png" });
     expect(screen.getByText("a@b.com")).toBeDefined();
+  });
+});
+
+describe("Sidebar — mobile drawer variant", () => {
+  it("renders a dismiss toggle instead of a collapse toggle", () => {
+    const onDismiss = vi.fn();
+    render(
+      <SidebarProvider collapsed={false} onCollapsedChange={() => {}}>
+        <Sidebar user={defaultUser} variant="mobile" onDismiss={onDismiss} />
+      </SidebarProvider>,
+    );
+    const dismissBtn = screen.getByLabelText("Close navigation");
+    expect(dismissBtn).toBeDefined();
+    expect(screen.queryByLabelText("Collapse sidebar")).toBeNull();
+    fireEvent.click(dismissBtn);
+    expect(onDismiss).toHaveBeenCalledTimes(1);
   });
 });

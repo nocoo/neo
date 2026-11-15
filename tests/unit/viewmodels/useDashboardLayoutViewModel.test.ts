@@ -1,5 +1,6 @@
 /**
- * Dashboard layout ViewModel tests — sidebar toggle and mobile drawer.
+ * Dashboard layout ViewModel tests — mobile drawer state.
+ * Desktop rail collapse is owned by the Basalt SidebarProvider.
  */
 
 import { act, renderHook } from "@testing-library/react";
@@ -23,47 +24,30 @@ describe("useDashboardLayoutViewModel", () => {
     mockUseIsMobile.mockReturnValue(false);
   });
 
-  it("starts with sidebar expanded and mobile closed", () => {
+  it("starts with the mobile drawer closed", () => {
     const { result } = renderHook(() => useDashboardLayoutViewModel());
-    expect(result.current.collapsed).toBe(false);
     expect(result.current.mobileOpen).toBe(false);
   });
 
-  it("toggles collapsed on desktop", () => {
+  it("opens and closes the drawer via setMobileOpen", () => {
     const { result } = renderHook(() => useDashboardLayoutViewModel());
 
     act(() => {
-      result.current.toggleSidebar();
-    });
-    expect(result.current.collapsed).toBe(true);
-
-    act(() => {
-      result.current.toggleSidebar();
-    });
-    expect(result.current.collapsed).toBe(false);
-  });
-
-  it("toggles mobileOpen on mobile", () => {
-    mockUseIsMobile.mockReturnValue(true);
-    const { result } = renderHook(() => useDashboardLayoutViewModel());
-
-    act(() => {
-      result.current.toggleSidebar();
+      result.current.setMobileOpen(true);
     });
     expect(result.current.mobileOpen).toBe(true);
 
     act(() => {
-      result.current.toggleSidebar();
+      result.current.setMobileOpen(false);
     });
     expect(result.current.mobileOpen).toBe(false);
   });
 
   it("closeMobileSidebar sets mobileOpen to false", () => {
-    mockUseIsMobile.mockReturnValue(true);
     const { result } = renderHook(() => useDashboardLayoutViewModel());
 
     act(() => {
-      result.current.toggleSidebar();
+      result.current.setMobileOpen(true);
     });
     expect(result.current.mobileOpen).toBe(true);
 

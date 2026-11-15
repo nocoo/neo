@@ -1,23 +1,20 @@
 "use client";
 
-import { Sheet, SheetContent, SheetTitle } from "@nocoo/basalt";
-import { AppHeader } from "@nocoo/basalt/components/app-header";
+import { SidebarDrawer } from "@nocoo/basalt";
+import { AppHeader, AppHeaderMenuButton, ProjectLinks } from "@nocoo/basalt/components/app-header";
 import {
   AppMain,
   AppSkipLink,
   AppShell as BasaltAppShell,
 } from "@nocoo/basalt/components/app-shell";
 import { ContentIsland } from "@nocoo/basalt/components/sidebar";
-import { Menu } from "lucide-react";
+import { TooltipProvider } from "@nocoo/basalt/components/tooltip";
 import { usePathname } from "next/navigation";
+import { useEffect, useId, useRef } from "react";
 import type { BreadcrumbItem } from "@/components/breadcrumbs";
-import { Github } from "@/components/icons/github";
-import type { SidebarUser } from "@/components/sidebar";
-import { Sidebar } from "@/components/sidebar";
-import { SidebarProvider, useSidebar } from "@/components/sidebar-context";
+import { Sidebar, SidebarProvider, type SidebarUser } from "@/components/sidebar";
 import { ThemeToggle } from "@/components/theme-toggle";
-import { cn } from "@/lib/utils";
-import { HeaderTooltip, HexlyLink } from "./header-links";
+import { useDashboardLayoutViewModel } from "@/viewmodels/useDashboardLayoutViewModel";
 
 export type { SidebarUser };
 
@@ -47,85 +44,83 @@ function usePageNav(): { breadcrumbs?: BreadcrumbItem[]; title: string } {
 }
 
 function AppShellInner({ children, user }: { children: React.ReactNode; user: SidebarUser }) {
-  const { isMobile, mobileOpen, toggle, setMobileOpen } = useSidebar();
+  const { isMobile, mobileOpen, setMobileOpen, closeMobileSidebar } = useDashboardLayoutViewModel();
   const { breadcrumbs, title } = usePageNav();
+  const menuButtonRef = useRef<HTMLButtonElement>(null);
+  const drawerId = useId();
+  const pathname = usePathname();
 
-  const leadingAction = isMobile ? (
-    <HeaderTooltip label="Open navigation menu">
-      <button
-        type="button"
-        onClick={toggle}
-        aria-label="Open menu"
-        className="flex h-8 w-8 items-center justify-center rounded-lg text-basalt-muted-foreground hover:text-basalt-foreground hover:bg-basalt-accent transition-colors"
-      >
-        <Menu className="h-5 w-5" strokeWidth={1.5} />
-      </button>
-    </HeaderTooltip>
-  ) : null;
+  // Close the drawer on route change.
+  // biome-ignore lint/correctness/useExhaustiveDependencies: pathname triggers close on route change
+  useEffect(() => {
+    setMobileOpen(false);
+  }, [pathname]);
 
-  const headerActions = (
-    <>
-      <HeaderTooltip label="GitHub repository">
-        <a
-          href="https://github.com/nocoo/neo"
-          target="_blank"
-          rel="noopener noreferrer"
-          className="flex h-8 w-8 items-center justify-center rounded-lg text-basalt-muted-foreground hover:text-basalt-foreground hover:bg-basalt-accent transition-colors"
-          aria-label="GitHub repository"
-        >
-          <Github className="h-[18px] w-[18px]" strokeWidth={1.5} />
-        </a>
-      </HeaderTooltip>
-      <HexlyLink />
-      <ThemeToggle />
-    </>
-  );
+  useEffect(() => {
+    if (!isMobile) setMobileOpen(false);
+  }, [isMobile, setMobileOpen]);
 
   return (
-    <BasaltAppShell className="h-dvh">
-      <AppSkipLink>Skip to main content</AppSkipLink>
+    <TooltipProvider delayDuration={0}>
+      <BasaltAppShell>
+        <AppSkipLink>Skip to main content</AppSkipLink>
 
-      {/* Desktop sidebar */}
-      {!isMobile && <Sidebar user={user} />}
-
-      {/* Mobile drawer */}
-      {isMobile && (
-        <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
-          <SheetContent
-            side="left"
-            className="w-auto max-w-none border-0 bg-transparent p-0 shadow-none"
-            aria-describedby={undefined}
-          >
-            <SheetTitle className="sr-only">Navigation</SheetTitle>
+        {/* Desktop sidebar */}
+        {!isMobile && (
+          <SidebarProvider>
             <Sidebar user={user} />
-          </SheetContent>
-        </Sheet>
-      )}
+          </SidebarProvider>
+        )}
 
-      <AppMain>
-        <AppHeader
-          className="safe-area-header"
-          leading={leadingAction}
-          {...(breadcrumbs ? { breadcrumbs } : {})}
-          title={title}
-          actions={headerActions}
-        />
+        {/* Mobile drawer */}
+        {isMobile && (
+          <SidebarDrawer
+            id={drawerId}
+            open={mobileOpen}
+            onOpenChange={setMobileOpen}
+            returnFocusRef={menuButtonRef}
+            title="Navigation"
+          >
+            <Sidebar
+              user={user}
+              variant="mobile"
+              onNavigate={closeMobileSidebar}
+              onDismiss={closeMobileSidebar}
+            />
+          </SidebarDrawer>
+        )}
 
-        {/* Content panel */}
-        <div
-          className={cn("safe-area-content flex-1 min-h-0 px-2 pb-2 md:px-3 md:pb-3 flex flex-col")}
-        >
-          <ContentIsland>{children}</ContentIsland>
-        </div>
-      </AppMain>
-    </BasaltAppShell>
+        <AppMain>
+          <AppHeader
+            leading={
+              isMobile ? (
+                <AppHeaderMenuButton
+                  ref={menuButtonRef}
+                  aria-controls={drawerId}
+                  aria-expanded={mobileOpen}
+                  onClick={() => setMobileOpen(true)}
+                />
+              ) : null
+            }
+            {...(breadcrumbs ? { breadcrumbs } : {})}
+            title={title}
+            actions={
+              <>
+                <ProjectLinks github="nocoo/neo" hexly="neo" name="Neo" />
+                <ThemeToggle />
+              </>
+            }
+          />
+
+          <div className="flex min-h-0 min-w-0 flex-1 flex-col px-basalt-space-lg pb-basalt-space-lg md:px-basalt-layout-sm md:pb-basalt-layout-sm">
+            <ContentIsland>{children}</ContentIsland>
+          </div>
+        </AppMain>
+      </BasaltAppShell>
+    </TooltipProvider>
   );
 }
 
 export function AppShell({ children, user }: { children: React.ReactNode; user: SidebarUser }) {
-  return (
-    <SidebarProvider>
-      <AppShellInner user={user}>{children}</AppShellInner>
-    </SidebarProvider>
-  );
+  return <AppShellInner user={user}>{children}</AppShellInner>;
 }

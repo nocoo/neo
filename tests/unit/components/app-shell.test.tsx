@@ -15,14 +15,13 @@ const { mockPathname, mockHandleSignOut } = vi.hoisted(() => ({
 
 vi.mock("next/navigation", () => ({
   usePathname: mockPathname,
-  useRouter: () => ({ push: vi.fn() }),
 }));
 
 vi.mock("@/actions/auth", () => ({
   handleSignOut: mockHandleSignOut,
 }));
 
-// Mock matchMedia for useIsMobile hook (jsdom doesn't support it)
+// Mock matchMedia for useIsMobile hook (happy-dom doesn't support it)
 beforeEach(() => {
   vi.clearAllMocks();
   mockPathname.mockReturnValue("/dashboard");
@@ -88,10 +87,20 @@ describe("AppShell", () => {
         <div>content</div>
       </AppShell>,
     );
-    const githubLink = screen.getByLabelText("GitHub repository");
+    const githubLink = screen.getByLabelText(/GitHub repository/);
     expect(githubLink).toBeDefined();
     expect(githubLink.getAttribute("href")).toBe("https://github.com/nocoo/neo");
     expect(githubLink.getAttribute("target")).toBe("_blank");
+  });
+
+  it("renders the hexly project link", () => {
+    renderAppShell(
+      <AppShell user={defaultUser}>
+        <div>content</div>
+      </AppShell>,
+    );
+    const hexlyLink = screen.getByLabelText(/Neo on hexly\.ai/);
+    expect(hexlyLink.getAttribute("href")).toBe("https://hexly.ai/projects/neo");
   });
 
   it("renders ThemeToggle in header", () => {
@@ -160,13 +169,11 @@ describe("AppShell — mobile mode", () => {
         <div>content</div>
       </AppShell>,
     );
-    const menuBtn = screen.getByLabelText("Open menu");
+    const menuBtn = screen.getByLabelText("Open navigation");
     expect(menuBtn).toBeDefined();
 
-    // Initially the mobile sidebar is closed — toggling opens it.
+    // Initially the mobile sidebar is closed — opening it renders the user.
     fireEvent.click(menuBtn);
-    // After opening, the user name should still be present (rendered inside the
-    // mobile sidebar drawer).
     expect(screen.getAllByText("Test User").length).toBeGreaterThanOrEqual(1);
   });
 
@@ -176,7 +183,7 @@ describe("AppShell — mobile mode", () => {
         <div>content</div>
       </AppShell>,
     );
-    fireEvent.click(screen.getByLabelText("Open menu"));
+    fireEvent.click(screen.getByLabelText("Open navigation"));
     expect(screen.getByRole("dialog")).toBeDefined();
 
     fireEvent.keyDown(document.activeElement ?? document.body, { key: "Escape" });

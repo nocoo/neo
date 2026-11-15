@@ -1,11 +1,10 @@
+import { ProjectLinks } from "@nocoo/basalt/components/app-header";
 import { Button } from "@nocoo/basalt/components/button";
 import { headers } from "next/headers";
 import Image from "next/image";
 import { redirect } from "next/navigation";
 import { auth, signIn } from "@/auth";
-import { Github } from "@/components/icons/github";
 import { ThemeToggle } from "@/components/theme-toggle";
-import { HeaderTooltip, HexlyLink } from "../components/header-links";
 
 function Barcode() {
   const bars: Array<{ id: string; w: number; dim: boolean }> = [
@@ -61,19 +60,8 @@ export default async function Home({
   return (
     <div className="relative flex min-h-screen flex-col bg-basalt-background overflow-hidden">
       {/* Top-right controls */}
-      <div className="safe-area-login-actions absolute top-4 right-4 z-10 flex items-center gap-1">
-        <HeaderTooltip label="GitHub repository">
-          <a
-            href="https://github.com/nocoo/neo"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="flex h-8 w-8 items-center justify-center rounded-lg text-basalt-muted-foreground hover:text-basalt-foreground hover:bg-basalt-accent transition-colors"
-            aria-label="GitHub repository"
-          >
-            <Github className="h-[18px] w-[18px]" strokeWidth={1.5} />
-          </a>
-        </HeaderTooltip>
-        <HexlyLink />
+      <div className="absolute top-4 right-4 z-10 flex items-center gap-1">
+        <ProjectLinks github="nocoo/neo" hexly="neo" name="Neo" />
         <ThemeToggle aria-label="Toggle theme" />
       </div>
 
