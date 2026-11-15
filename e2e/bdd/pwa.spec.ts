@@ -51,6 +51,30 @@ test("PWA metadata is emitted in the page head", async ({ page }) => {
   );
 });
 
+test("keeps mobile search controls visible with long queries", async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await signIn(page);
+
+  const query = "x".repeat(500);
+  await page.getByLabel("Search secrets").fill(query);
+
+  await expect(page.getByRole("button", { name: "Clear search" })).toBeVisible();
+  const add = page.getByTitle("Add secret");
+  const addBox = await add.boundingBox();
+  expect(addBox).not.toBeNull();
+  expect(addBox!.x + addBox!.width).toBeLessThanOrEqual(390);
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(
+    true,
+  );
+
+  await page.goto("/dashboard/recycle");
+  await page.getByLabel("Search secrets").fill(query);
+  await expect(page.getByRole("button", { name: "Clear search" })).toBeVisible();
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(
+    true,
+  );
+});
+
 const zeroInsets: Insets = { top: 0, right: 0, bottom: 0, left: 0 };
 const layouts = [
   {

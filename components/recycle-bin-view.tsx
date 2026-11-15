@@ -5,7 +5,7 @@
  */
 
 import { InputGroup } from "@nocoo/basalt/components/input-group";
-import { AlertTriangle, Search, Trash2, Undo2 } from "lucide-react";
+import { AlertTriangle, Search, Trash2, Undo2, X } from "lucide-react";
 import { useCallback, useRef, useState } from "react";
 import { CARD_THEMES, resolveThemeKey } from "@/components/secret-card";
 import {
@@ -184,7 +184,7 @@ export function RecycleBinView({ initialSecrets }: { initialSecrets: Secret[] })
     <div className="space-y-6">
       {/* Search + actions */}
       <div className="flex items-center gap-2">
-        <InputGroup className="flex-1">
+        <InputGroup className="min-w-0 flex-1">
           <InputGroup.Addon align="start">
             <Search className="h-4 w-4" />
           </InputGroup.Addon>
@@ -196,6 +196,13 @@ export function RecycleBinView({ initialSecrets }: { initialSecrets: Secret[] })
             onChange={(e) => vm.setSearchQuery(e.target.value)}
             aria-label="Search secrets"
           />
+          {vm.searchQuery && (
+            <InputGroup.Addon align="end">
+              <InputGroup.Button aria-label="Clear search" onClick={() => vm.setSearchQuery("")}>
+                <X className="h-4 w-4" />
+              </InputGroup.Button>
+            </InputGroup.Addon>
+          )}
           <InputGroup.Suffix>
             <kbd className="hidden sm:inline-flex h-5 items-center gap-0.5 rounded border border-basalt-border bg-basalt-muted px-1.5 text-[10px] font-medium text-basalt-muted-foreground">
               ⌘K

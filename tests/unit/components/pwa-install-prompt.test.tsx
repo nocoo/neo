@@ -71,6 +71,19 @@ describe("PwaInstallPrompt", () => {
     expect(screen.queryByTestId("pwa-install-prompt")).toBeNull();
   });
 
+  it("keeps fixed positioning on the wrapper outside the native Banner", () => {
+    render(<PwaInstallPrompt />);
+    fireBeforeInstallPrompt();
+
+    const wrapper = screen.getByTestId("pwa-install-prompt");
+    const banner = screen.getByTestId("pwa-install-banner");
+    expect(wrapper.className).toContain("fixed");
+    expect(wrapper.className).toContain("left-4");
+    expect(wrapper.className).toContain("right-4");
+    expect(banner.className).not.toContain("fixed");
+    expect(banner.className).toContain("w-full");
+  });
+
   it("renders banner after beforeinstallprompt event", () => {
     render(<PwaInstallPrompt />);
     fireBeforeInstallPrompt();

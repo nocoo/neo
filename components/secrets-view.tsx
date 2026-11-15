@@ -6,7 +6,7 @@
  */
 
 import { InputGroup } from "@nocoo/basalt/components/input-group";
-import { Download, Plus, Search, Upload } from "lucide-react";
+import { Download, Plus, Search, Upload, X } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { DeleteConfirmDialog } from "@/components/delete-confirm-dialog";
 import { ExportDialog } from "@/components/export-dialog";
@@ -96,7 +96,7 @@ export function SecretsView() {
     <div className="space-y-6">
       {/* Search + actions */}
       <div className="flex items-center gap-2">
-        <InputGroup className="flex-1">
+        <InputGroup className="min-w-0 flex-1">
           <InputGroup.Addon align="start">
             <Search className="h-4 w-4" />
           </InputGroup.Addon>
@@ -109,6 +109,13 @@ export function SecretsView() {
             onKeyDown={handleSearchKeyDown}
             aria-label="Search secrets"
           />
+          {vm.searchQuery && (
+            <InputGroup.Addon align="end">
+              <InputGroup.Button aria-label="Clear search" onClick={() => vm.setSearchQuery("")}>
+                <X className="h-4 w-4" />
+              </InputGroup.Button>
+            </InputGroup.Addon>
+          )}
           <InputGroup.Suffix>
             <kbd className="hidden sm:inline-flex h-5 items-center gap-0.5 rounded border border-basalt-border bg-basalt-muted px-1.5 text-[10px] font-medium text-basalt-muted-foreground">
               ⌘K

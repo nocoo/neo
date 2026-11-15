@@ -91,19 +91,31 @@ describe("SecretsView", () => {
     expect(screen.getByTitle("Add secret")).toBeDefined();
   });
 
-  it("renders action buttons as icon-only", () => {
-    render(<SecretsView />);
-    // Buttons should NOT have text labels
-    expect(screen.queryByText("Import")).toBeNull();
-    expect(screen.queryByText("Export")).toBeNull();
-    expect(screen.queryByText("Add Secret")).toBeNull();
-  });
-
   it("renders empty state when no secrets", () => {
     render(<SecretsView />);
     expect(screen.getByText("No secrets yet. Add your first secret to get started.")).toBeDefined();
   });
 
+  it("renders action buttons as icon-only", () => {
+    render(<SecretsView />);
+    expect(screen.queryByText("Import")).toBeNull();
+    expect(screen.queryByText("Export")).toBeNull();
+    expect(screen.queryByText("Add Secret")).toBeNull();
+  });
+
+  it("keeps action buttons visible with a long search query", () => {
+    mockSecretsVM.searchQuery = "x".repeat(500);
+    render(<SecretsView />);
+
+    const search = screen.getByLabelText("Search secrets");
+    expect(search).toBeDefined();
+    expect(search.getAttribute("value")).toBe("x".repeat(500));
+    expect(screen.getByLabelText("Clear search")).toBeDefined();
+    expect(screen.getByTitle("Add secret")).toBeDefined();
+
+    fireEvent.click(screen.getByLabelText("Clear search"));
+    expect(mockSecretsVM.setSearchQuery).toHaveBeenCalledWith("");
+  });
   it("renders secrets from viewmodel", () => {
     mockSecretsVM.filteredSecrets = [sampleSecret];
     mockSecretsVM.otpMap = new Map([
