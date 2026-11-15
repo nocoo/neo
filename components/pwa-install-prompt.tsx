@@ -10,7 +10,7 @@
 
 import { Download, X } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
-import { Button } from "@/components/ui/button";
+import { Banner } from "@/components/ui/banner";
 
 // ── Types ────────────────────────────────────────────────────────────────
 
@@ -57,38 +57,34 @@ export function PwaInstallPrompt() {
   }
 
   return (
-    <header
-      data-basalt-surface-root=""
-      className="fixed bottom-4 left-4 right-4 z-50 mx-auto max-w-md rounded-basalt-lg border border-basalt-border bg-basalt-card p-4 shadow-lg"
-      data-testid="pwa-install-prompt"
-    >
-      <div className="flex items-start gap-3">
+    <Banner
+      variant="secondary"
+      size="sm"
+      title="Install Neo"
+      description="Add Neo to your home screen for quick access and offline support."
+      icon={
         <div className="rounded-full bg-basalt-primary/10 p-2">
           <Download className="h-5 w-5 text-basalt-primary" />
         </div>
-        <div className="flex-1 space-y-1">
-          <p className="text-sm font-medium">Install Neo</p>
-          <p className="text-xs text-basalt-muted-foreground">
-            Add Neo to your home screen for quick access and offline support.
-          </p>
-        </div>
-        <button
-          type="button"
-          onClick={handleDismiss}
-          className="text-basalt-muted-foreground hover:text-basalt-foreground"
-          aria-label="Dismiss install prompt"
-        >
-          <X className="h-4 w-4" />
-        </button>
-      </div>
-      <div className="mt-3 flex gap-2">
-        <Button size="sm" onClick={handleInstall} className="flex-1">
-          Install
-        </Button>
-        <Button size="sm" variant="outline" onClick={handleDismiss} className="flex-1">
-          Not Now
-        </Button>
-      </div>
-    </header>
+      }
+      action={
+        <>
+          <Banner.Action
+            variant="ghost"
+            size="icon"
+            onClick={handleDismiss}
+            aria-label="Dismiss install prompt"
+          >
+            <X className="h-4 w-4" />
+          </Banner.Action>
+          <Banner.Action variant="outline" onClick={handleDismiss}>
+            Not Now
+          </Banner.Action>
+          <Banner.Action onClick={handleInstall}>Install</Banner.Action>
+        </>
+      }
+      data-testid="pwa-install-prompt"
+      className="fixed bottom-4 left-4 right-4 z-50 mx-auto max-w-md border border-basalt-border bg-basalt-card p-4 shadow-lg"
+    />
   );
 }

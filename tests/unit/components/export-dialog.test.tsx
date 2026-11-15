@@ -50,9 +50,8 @@ describe("ExportDialog", () => {
       />,
     );
 
-    fireEvent.change(screen.getByLabelText("Export Format"), {
-      target: { value: "aegis" },
-    });
+    fireEvent.keyDown(screen.getByLabelText("Export Format"), { key: "ArrowDown" });
+    fireEvent.click(screen.getByText("Aegis"));
     fireEvent.click(screen.getByText("Generate Export"));
 
     expect(onExport).toHaveBeenCalledWith("aegis");
@@ -128,9 +127,8 @@ describe("ExportDialog", () => {
       />,
     );
 
-    fireEvent.change(screen.getByLabelText("Export Format"), {
-      target: { value: "generic-csv" },
-    });
+    fireEvent.keyDown(screen.getByLabelText("Export Format"), { key: "ArrowDown" });
+    fireEvent.click(screen.getByText("CSV"));
     fireEvent.click(screen.getByText("Generate Export"));
 
     expect(onExport).toHaveBeenCalledWith("generic-csv");

@@ -4,6 +4,7 @@
  * SettingsView — user preferences, encryption key management, and Backy config.
  */
 
+import { CodeBlock } from "@nocoo/basalt/components/code";
 import { LayerCard } from "@nocoo/basalt/components/layer-card";
 import { Check, Copy, Eye, EyeOff, Key, Link, RefreshCw, Shield, Trash2 } from "lucide-react";
 import { useEffect, useState } from "react";
@@ -69,9 +70,9 @@ export function SettingsView() {
           role="alert"
         >
           {vm.error}
-          <button type="button" onClick={vm.clearError} className="ml-2 underline cursor-pointer">
+          <Button variant="link" size="sm" onClick={vm.clearError} className="ml-2 cursor-pointer">
             Dismiss
-          </button>
+          </Button>
         </div>
       )}
 
@@ -94,12 +95,13 @@ export function SettingsView() {
             <div className="space-y-2">
               <h3 className="block text-sm font-medium">Your Encryption Key</h3>
               <div className="flex items-center gap-2">
-                <code
-                  className="flex-1 rounded-md border border-basalt-border bg-basalt-muted px-3 py-2 text-sm font-mono break-all"
+                <CodeBlock
+                  copyable={false}
+                  className="flex-1 break-all"
                   data-testid="encryption-key-display"
                 >
                   {vm.keyRevealed ? vm.encryptionKey : "••••••••••••••••••••••••"}
-                </code>
+                </CodeBlock>
                 <Button
                   variant="outline"
                   size="sm"
@@ -198,9 +200,9 @@ export function SettingsView() {
             </label>
             {vm.backyMaskedApiKey && !backyApiKey ? (
               <div className="flex items-center gap-2">
-                <code className="flex-1 rounded-md border border-basalt-border bg-basalt-muted px-3 py-2 text-sm font-mono">
+                <CodeBlock copyable={false} className="flex-1">
                   {vm.backyMaskedApiKey}
-                </code>
+                </CodeBlock>
                 <Button
                   variant="outline"
                   size="sm"
@@ -263,12 +265,9 @@ export function SettingsView() {
           </p>
           {vm.backyPullKey ? (
             <div className="space-y-2">
-              <code
-                className="block rounded-md border border-basalt-border bg-basalt-muted px-3 py-2 text-sm font-mono break-all"
-                data-testid="pull-key-display"
-              >
+              <CodeBlock copyable={false} className="break-all" data-testid="pull-key-display">
                 {vm.backyPullKey}
-              </code>
+              </CodeBlock>
               <div className="flex items-center gap-2">
                 <Button
                   variant="outline"

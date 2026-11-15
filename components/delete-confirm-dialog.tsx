@@ -5,6 +5,7 @@
  */
 
 import { AlertTriangle } from "lucide-react";
+import { useRef } from "react";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -27,6 +28,8 @@ export interface DeleteConfirmDialogProps {
   onClose: () => void;
   /** Confirm deletion. */
   onConfirm: () => void;
+  /** Optional element that should regain focus after the dialog closes. */
+  returnFocusRef?: React.RefObject<HTMLElement | null>;
   /** Whether an operation is in progress. */
   busy?: boolean;
 }
@@ -39,10 +42,23 @@ export function DeleteConfirmDialog({
   onClose,
   onConfirm,
   busy = false,
+  returnFocusRef,
 }: DeleteConfirmDialogProps) {
+  const triggerFocusRef = useRef<HTMLElement | null>(null);
   return (
     <AlertDialog open={open} onOpenChange={(next) => (!next ? onClose() : undefined)}>
-      <AlertDialogContent aria-label="Confirm delete">
+      <AlertDialogContent
+        aria-label="Confirm delete"
+        onOpenAutoFocus={() => {
+          triggerFocusRef.current =
+            returnFocusRef?.current ??
+            (document.activeElement instanceof HTMLElement ? document.activeElement : null);
+        }}
+        onCloseAutoFocus={(event) => {
+          event.preventDefault();
+          if (triggerFocusRef.current?.isConnected) triggerFocusRef.current.focus();
+        }}
+      >
         <AlertDialogHeader>
           <div className="flex items-center gap-3 mb-2">
             <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-basalt-destructive/10">

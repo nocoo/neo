@@ -100,7 +100,8 @@
         "useExhaustiveDependencies": "error",
         "useHookAtTopLevel": "error",
         "useYield": "error",
-        "noInvalidUseBeforeDeclaration": "error"
+        "noInvalidUseBeforeDeclaration": "error",
+        "noInvalidPositionAtImportRule": "off"
       },
       "security": {
         "noDangerouslySetInnerHtml": "error"

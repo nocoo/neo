@@ -2,7 +2,8 @@
  * SecretFormDialog component tests.
  */
 
-import { act, fireEvent, render, screen } from "@testing-library/react";
+import { act, fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { useRef, useState } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { SecretFormDialog } from "@/components/secret-form-dialog";
 import type { Secret } from "@/models/types";
@@ -26,6 +27,24 @@ const sampleSecret: Secret = {
   updatedAt: new Date(),
 };
 
+function FocusHarness() {
+  const [open, setOpen] = useState(false);
+  const triggerRef = useRef<HTMLButtonElement>(null);
+  return (
+    <>
+      <button ref={triggerRef} type="button" onClick={() => setOpen(true)}>
+        Open secret
+      </button>
+      <SecretFormDialog
+        open={open}
+        onClose={() => setOpen(false)}
+        onCreate={vi.fn()}
+        returnFocusRef={triggerRef}
+      />
+    </>
+  );
+}
+
 beforeEach(() => {
   vi.clearAllMocks();
 });
@@ -39,6 +58,15 @@ describe("SecretFormDialog", () => {
       expect(screen.getByText("Add Secret")).toBeDefined();
       expect(screen.getByLabelText("Name *")).toBeDefined();
       expect(screen.getByLabelText("Secret Key *")).toBeDefined();
+    });
+
+    it("returns focus to the trigger after Escape", async () => {
+      render(<FocusHarness />);
+      const trigger = screen.getByRole("button", { name: "Open secret" });
+      fireEvent.click(trigger);
+      fireEvent.keyDown(screen.getByRole("dialog"), { key: "Escape" });
+
+      await waitFor(() => expect(document.activeElement).toBe(trigger));
     });
 
     it("shows validation error when name is empty", async () => {
@@ -169,7 +197,7 @@ describe("SecretFormDialog", () => {
       );
 
       const blueRadio = screen.getByLabelText("Blue");
-      expect(blueRadio.getAttribute("aria-pressed")).toBe("true");
+      expect(blueRadio.getAttribute("data-state")).toBe("on");
     });
   });
 
@@ -187,8 +215,8 @@ describe("SecretFormDialog", () => {
       render(<SecretFormDialog open={true} onClose={vi.fn()} onCreate={vi.fn()} />);
 
       fireEvent.click(screen.getByLabelText("Red"));
-      expect(screen.getByLabelText("Red").getAttribute("aria-pressed")).toBe("true");
-      expect(screen.getByLabelText("Blue").getAttribute("aria-pressed")).toBe("false");
+      expect(screen.getByLabelText("Red").getAttribute("data-state")).toBe("on");
+      expect(screen.getByLabelText("Blue").getAttribute("data-state")).toBe("off");
     });
 
     it("includes color in create submission", async () => {
@@ -250,9 +278,9 @@ describe("SecretFormDialog", () => {
 
       // At least one color button should be pressed (the hash-derived color)
       const allSwatches = screen
-        .getAllByRole("button")
-        .filter((btn) => btn.hasAttribute("aria-pressed"));
-      const pressed = allSwatches.find((r) => r.getAttribute("aria-pressed") === "true");
+        .getAllByRole("radio")
+        .filter((button) => button.getAttribute("role") === "radio");
+      const pressed = allSwatches.find((button) => button.getAttribute("data-state") === "on");
       expect(pressed).toBeDefined();
     });
   });

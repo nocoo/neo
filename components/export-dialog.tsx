@@ -4,8 +4,16 @@
  * ExportDialog — allows users to export secrets in various formats.
  */
 
+import { CodeBlock } from "@nocoo/basalt/components/code";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@nocoo/basalt/components/select";
 import { Check, Copy, Download, X } from "lucide-react";
-import { useCallback, useState } from "react";
+import { useCallback, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import type { ExportFormat } from "@/models/types";
@@ -29,13 +37,23 @@ export interface ExportDialogProps {
   onExport: (format: ExportFormat) => void;
   exportOutput: string;
   error: string | null;
+  /** Optional element that should regain focus after the dialog closes. */
+  returnFocusRef?: React.RefObject<HTMLElement | null>;
 }
 
 // ── Component ────────────────────────────────────────────────────────────
 
-export function ExportDialog({ open, onClose, onExport, exportOutput, error }: ExportDialogProps) {
+export function ExportDialog({
+  open,
+  onClose,
+  onExport,
+  exportOutput,
+  error,
+  returnFocusRef,
+}: ExportDialogProps) {
   const [selectedFormat, setSelectedFormat] = useState<ExportFormat>("otpauth-uri");
   const [copied, setCopied] = useState(false);
+  const triggerFocusRef = useRef<HTMLElement | null>(null);
 
   const handleExport = useCallback(() => {
     onExport(selectedFormat);
@@ -67,7 +85,18 @@ export function ExportDialog({ open, onClose, onExport, exportOutput, error }: E
 
   return (
     <Dialog open={open} onOpenChange={(next) => (!next ? onClose() : undefined)}>
-      <DialogContent aria-label="Export secrets">
+      <DialogContent
+        aria-label="Export secrets"
+        onOpenAutoFocus={() => {
+          triggerFocusRef.current =
+            returnFocusRef?.current ??
+            (document.activeElement instanceof HTMLElement ? document.activeElement : null);
+        }}
+        onCloseAutoFocus={(event) => {
+          event.preventDefault();
+          if (triggerFocusRef.current?.isConnected) triggerFocusRef.current.focus();
+        }}
+      >
         <div className="flex items-center justify-between mb-4">
           <DialogTitle className="text-lg font-semibold">Export Secrets</DialogTitle>
           <Button variant="ghost" size="icon" onClick={onClose} aria-label="Close dialog">
@@ -81,18 +110,21 @@ export function ExportDialog({ open, onClose, onExport, exportOutput, error }: E
             <label htmlFor="export-format" className="block text-sm font-medium mb-1">
               Export Format
             </label>
-            <select
-              id="export-format"
+            <Select
               value={selectedFormat}
-              onChange={(e) => setSelectedFormat(e.target.value as ExportFormat)}
-              className="w-full rounded-md border border-basalt-border bg-basalt-control px-3 py-2 text-sm text-basalt-foreground"
+              onValueChange={(value) => setSelectedFormat(value as ExportFormat)}
             >
-              {EXPORT_FORMATS.map((f) => (
-                <option key={f.value} value={f.value}>
-                  {f.label}
-                </option>
-              ))}
-            </select>
+              <SelectTrigger id="export-format" aria-label="Export Format">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {EXPORT_FORMATS.map((format) => (
+                  <SelectItem key={format.value} value={format.value}>
+                    {format.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
 
           <Button onClick={handleExport} className="w-full">
@@ -119,9 +151,9 @@ export function ExportDialog({ open, onClose, onExport, exportOutput, error }: E
                   </Button>
                 </div>
               </div>
-              <pre className="max-h-48 overflow-auto rounded-md bg-basalt-muted p-3 text-xs font-mono">
+              <CodeBlock copyable={false} className="max-h-48 font-mono">
                 {exportOutput}
-              </pre>
+              </CodeBlock>
             </div>
           )}
 

@@ -2,7 +2,7 @@
  * ImportDialog component tests.
  */
 
-import { act, fireEvent, render, screen } from "@testing-library/react";
+import { act, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { ImportDialog } from "@/components/import-dialog";
 import type { ParsedSecret } from "@/models/types";
@@ -76,6 +76,32 @@ describe("ImportDialog", () => {
     fireEvent.click(screen.getByText("Parse"));
 
     expect(onParse).toHaveBeenCalled();
+  });
+
+  it("accepts a file through the native dropzone", async () => {
+    const onParse = vi.fn();
+    render(
+      <ImportDialog
+        open={true}
+        onClose={vi.fn()}
+        onParse={onParse}
+        onImport={vi.fn()}
+        parsedSecrets={[]}
+        detectedFormat={null}
+        error={null}
+      />,
+    );
+
+    const file = new File(["otpauth://totp/GitHub?secret=JBSWY3DPEHPK3PXP"], "secrets.txt", {
+      type: "text/plain",
+    });
+    fireEvent.change(screen.getByLabelText("Import secrets file", { selector: "input" }), {
+      target: { files: [file] },
+    });
+
+    await waitFor(() => {
+      expect(onParse).toHaveBeenCalledWith("otpauth://totp/GitHub?secret=JBSWY3DPEHPK3PXP");
+    });
   });
 
   it("shows detected format", () => {

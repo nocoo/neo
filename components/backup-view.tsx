@@ -57,9 +57,9 @@ export function BackupView() {
           role="alert"
         >
           {vm.error}
-          <button type="button" onClick={vm.clearError} className="ml-2 underline cursor-pointer">
+          <Button variant="link" size="sm" onClick={vm.clearError} className="ml-2 cursor-pointer">
             Dismiss
-          </button>
+          </Button>
         </div>
       )}
 

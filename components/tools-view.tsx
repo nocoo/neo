@@ -6,7 +6,7 @@
 
 import { LayerCard } from "@nocoo/basalt/components/layer-card";
 import { Download, TestTube, Upload } from "lucide-react";
-import { useCallback, useState } from "react";
+import { useCallback, useRef, useState } from "react";
 import { ExportDialog } from "@/components/export-dialog";
 import { ImportDialog } from "@/components/import-dialog";
 import { Button } from "@/components/ui/button";
@@ -22,6 +22,8 @@ export function ToolsView() {
 
   const [showImport, setShowImport] = useState(false);
   const [showExport, setShowExport] = useState(false);
+  const importTriggerRef = useRef<HTMLButtonElement>(null);
+  const exportTriggerRef = useRef<HTMLButtonElement>(null);
 
   // OTP test state
   const [testSecret, setTestSecret] = useState("");
@@ -44,13 +46,14 @@ export function ToolsView() {
           role="alert"
         >
           {devTools.error}
-          <button
-            type="button"
+          <Button
+            variant="link"
+            size="sm"
             onClick={devTools.clearError}
-            className="ml-2 underline cursor-pointer"
+            className="ml-2 cursor-pointer"
           >
             Dismiss
-          </button>
+          </Button>
         </div>
       )}
 
@@ -65,7 +68,12 @@ export function ToolsView() {
           <p className="text-sm text-basalt-muted-foreground">
             Import secrets from other authenticator apps
           </p>
-          <Button variant="outline" onClick={() => setShowImport(true)} className="w-full">
+          <Button
+            ref={importTriggerRef}
+            variant="outline"
+            onClick={() => setShowImport(true)}
+            className="w-full"
+          >
             Open Import Tool
           </Button>
         </LayerCard>
@@ -79,7 +87,12 @@ export function ToolsView() {
           <p className="text-sm text-basalt-muted-foreground">
             Export your secrets in various formats
           </p>
-          <Button variant="outline" onClick={() => setShowExport(true)} className="w-full">
+          <Button
+            ref={exportTriggerRef}
+            variant="outline"
+            onClick={() => setShowExport(true)}
+            className="w-full"
+          >
             Open Export Tool
           </Button>
         </LayerCard>
@@ -154,6 +167,7 @@ export function ToolsView() {
         detectedFormat={devTools.detectedFormat}
         error={devTools.error}
         busy={secretsVM.busy}
+        returnFocusRef={importTriggerRef}
       />
 
       <ExportDialog
@@ -165,6 +179,7 @@ export function ToolsView() {
         onExport={devTools.handleExport}
         exportOutput={devTools.exportOutput}
         error={devTools.error}
+        returnFocusRef={exportTriggerRef}
       />
     </div>
   );

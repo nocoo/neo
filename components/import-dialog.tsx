@@ -4,8 +4,9 @@
  * ImportDialog — allows users to import secrets from various formats.
  */
 
-import { Upload, X } from "lucide-react";
-import { useCallback, useState } from "react";
+import { FileDropzone } from "@nocoo/basalt/components/file-dropzone";
+import { X } from "lucide-react";
+import { useCallback, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { InputArea } from "@/components/ui/input-area";
@@ -23,7 +24,10 @@ export interface ImportDialogProps {
   parsedSecrets: ParsedSecret[];
   detectedFormat: ImportFormat | null;
   error: string | null;
+  /** Whether an operation is in progress. */
   busy?: boolean;
+  /** Optional element that should regain focus after the dialog closes. */
+  returnFocusRef?: React.RefObject<HTMLElement | null>;
 }
 
 // ── Component ────────────────────────────────────────────────────────────
@@ -37,12 +41,14 @@ export function ImportDialog({
   detectedFormat,
   error,
   busy = false,
+  returnFocusRef,
 }: ImportDialogProps) {
   const [content, setContent] = useState("");
+  const triggerFocusRef = useRef<HTMLElement | null>(null);
 
-  const handleFileUpload = useCallback(
-    (e: React.ChangeEvent<HTMLInputElement>) => {
-      const file = e.target.files?.[0];
+  const handleFilesAccepted = useCallback(
+    (files: File[]) => {
+      const file = files[0];
       if (!file) return;
 
       const reader = new FileReader();
@@ -76,7 +82,19 @@ export function ImportDialog({
 
   return (
     <Dialog open={open} onOpenChange={(next) => (!next ? onClose() : undefined)}>
-      <DialogContent size="lg" aria-label="Import secrets">
+      <DialogContent
+        size="lg"
+        aria-label="Import secrets"
+        onOpenAutoFocus={() => {
+          triggerFocusRef.current =
+            returnFocusRef?.current ??
+            (document.activeElement instanceof HTMLElement ? document.activeElement : null);
+        }}
+        onCloseAutoFocus={(event) => {
+          event.preventDefault();
+          if (triggerFocusRef.current?.isConnected) triggerFocusRef.current.focus();
+        }}
+      >
         <div className="flex items-center justify-between mb-4">
           <DialogTitle className="text-lg font-semibold">Import Secrets</DialogTitle>
           <Button variant="ghost" size="icon" onClick={onClose} aria-label="Close dialog">
@@ -87,20 +105,12 @@ export function ImportDialog({
         <div className="space-y-4">
           {/* File upload */}
           <div>
-            <label
-              htmlFor="import-file"
-              className="flex cursor-pointer items-center justify-center gap-2 rounded-lg border-2 border-dashed border-basalt-border p-6 text-sm text-basalt-muted-foreground hover:border-basalt-primary transition-colors"
-            >
-              <Upload className="h-5 w-5" />
-              <span>Drop a file or click to upload</span>
-            </label>
-            <input
-              id="import-file"
-              type="file"
+            <FileDropzone
+              label="Import secrets file"
+              description="JSON, text, CSV or RTF import source"
               accept=".json,.txt,.csv,.rtf"
-              onChange={handleFileUpload}
-              className="hidden"
-              aria-label="Upload import file"
+              multiple={false}
+              onFilesAccepted={handleFilesAccepted}
             />
           </div>
 

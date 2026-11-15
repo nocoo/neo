@@ -5,6 +5,7 @@
  * with all the presentation components.
  */
 
+import { InputGroup } from "@nocoo/basalt/components/input-group";
 import { Download, Plus, Search, Upload } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { DeleteConfirmDialog } from "@/components/delete-confirm-dialog";
@@ -13,7 +14,6 @@ import { ImportDialog } from "@/components/import-dialog";
 import { SecretFormDialog } from "@/components/secret-form-dialog";
 import { SecretList } from "@/components/secret-list";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { useHotkey } from "@/hooks/use-hotkey";
 import type { Secret } from "@/models/types";
 import { useDevToolsViewModel } from "@/viewmodels/useDevToolsViewModel";
@@ -35,6 +35,10 @@ export function SecretsView() {
   const [deletingSecret, setDeletingSecret] = useState<Secret | null>(null);
   const [showImport, setShowImport] = useState(false);
   const [showExport, setShowExport] = useState(false);
+  const createTriggerRef = useRef<HTMLButtonElement>(null);
+  const importTriggerRef = useRef<HTMLButtonElement>(null);
+  const exportTriggerRef = useRef<HTMLButtonElement>(null);
+  const editTriggerRef = useRef<HTMLElement | null>(null);
 
   // Keyboard navigation state
   const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
@@ -69,6 +73,8 @@ export function SecretsView() {
   // ── Handlers ──────────────────────────────────────────────────────────
 
   const handleEdit = useCallback((secret: Secret) => {
+    editTriggerRef.current =
+      document.activeElement instanceof HTMLElement ? document.activeElement : null;
     setEditingSecret(secret);
   }, []);
 
@@ -90,29 +96,49 @@ export function SecretsView() {
     <div className="space-y-6">
       {/* Search + actions */}
       <div className="flex items-center gap-2">
-        <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-basalt-muted-foreground" />
-          <Input
+        <InputGroup className="flex-1">
+          <InputGroup.Addon align="start">
+            <Search className="h-4 w-4" />
+          </InputGroup.Addon>
+          <InputGroup.Input
             ref={searchRef}
             type="text"
             placeholder="Search secrets..."
             value={vm.searchQuery}
             onChange={(e) => vm.setSearchQuery(e.target.value)}
             onKeyDown={handleSearchKeyDown}
-            className="w-full rounded-lg pl-10 pr-14"
             aria-label="Search secrets"
           />
-          <kbd className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 hidden sm:inline-flex h-5 items-center gap-0.5 rounded border border-basalt-border bg-basalt-muted px-1.5 text-[10px] font-medium text-basalt-muted-foreground">
-            ⌘K
-          </kbd>
-        </div>
-        <Button variant="outline" size="icon" onClick={() => setShowImport(true)} title="Import">
+          <InputGroup.Suffix>
+            <kbd className="hidden sm:inline-flex h-5 items-center gap-0.5 rounded border border-basalt-border bg-basalt-muted px-1.5 text-[10px] font-medium text-basalt-muted-foreground">
+              ⌘K
+            </kbd>
+          </InputGroup.Suffix>
+        </InputGroup>
+        <Button
+          ref={importTriggerRef}
+          variant="outline"
+          size="icon"
+          onClick={() => setShowImport(true)}
+          title="Import"
+        >
           <Upload className="h-4 w-4" />
         </Button>
-        <Button variant="outline" size="icon" onClick={() => setShowExport(true)} title="Export">
+        <Button
+          ref={exportTriggerRef}
+          variant="outline"
+          size="icon"
+          onClick={() => setShowExport(true)}
+          title="Export"
+        >
           <Download className="h-4 w-4" />
         </Button>
-        <Button size="icon" onClick={() => setShowCreate(true)} title="Add secret">
+        <Button
+          ref={createTriggerRef}
+          size="icon"
+          onClick={() => setShowCreate(true)}
+          title="Add secret"
+        >
           <Plus className="h-4 w-4" />
         </Button>
       </div>
@@ -124,9 +150,9 @@ export function SecretsView() {
           role="alert"
         >
           {vm.error}
-          <button type="button" onClick={vm.clearError} className="ml-2 underline cursor-pointer">
+          <Button variant="link" size="sm" onClick={vm.clearError} className="ml-2 cursor-pointer">
             Dismiss
-          </button>
+          </Button>
         </div>
       )}
 
@@ -147,6 +173,7 @@ export function SecretsView() {
         onClose={() => setShowCreate(false)}
         onCreate={vm.handleCreate}
         busy={vm.busy}
+        returnFocusRef={createTriggerRef}
       />
 
       <SecretFormDialog
@@ -155,6 +182,7 @@ export function SecretsView() {
         onClose={() => setEditingSecret(null)}
         onUpdate={vm.handleUpdate}
         busy={vm.busy}
+        returnFocusRef={editTriggerRef}
       />
 
       <DeleteConfirmDialog
@@ -177,6 +205,7 @@ export function SecretsView() {
         detectedFormat={devTools.detectedFormat}
         error={devTools.error}
         busy={vm.busy}
+        returnFocusRef={importTriggerRef}
       />
 
       <ExportDialog
@@ -188,6 +217,7 @@ export function SecretsView() {
         onExport={devTools.handleExport}
         exportOutput={devTools.exportOutput}
         error={devTools.error}
+        returnFocusRef={exportTriggerRef}
       />
     </div>
   );

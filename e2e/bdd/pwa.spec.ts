@@ -3,40 +3,11 @@ import { expect, type Page, test } from "@playwright/test";
 type Insets = { top: number; right: number; bottom: number; left: number };
 
 // Browser emulators do not expose physical notch/home-indicator insets.
-// Basalt's AppShell owns the safe-area padding for the authenticated shell
-// ([data-basalt-shell]), while the login page (outside the shell) and the
-// toaster keep their own env() offsets. Mirror those exact formulas with
-// concrete pixel values, without adding test controls to production styles.
+// Exercise the real Chromium env(safe-area-inset-*) values through CDP;
+// no test stylesheet or production selector injection is used.
 async function simulateInsets(page: Page, insets: Insets) {
-  await page.addStyleTag({
-    content: `
-      [data-basalt-shell] {
-        --basalt-safe-top: ${insets.top}px;
-        --basalt-sticky-top: ${insets.top}px;
-        padding: ${insets.top}px ${insets.right}px ${insets.bottom}px ${insets.left}px;
-      }
-      [data-basalt-sheet] [data-basalt-sidebar] {
-        padding: ${insets.top}px ${insets.right}px ${insets.bottom}px ${insets.left}px;
-      }
-      [data-testid="login-edge-actions"] {
-        top: calc(1rem + ${insets.top}px) !important;
-        right: calc(1rem + ${insets.right}px) !important;
-      }
-      [data-testid="login-footer"] {
-        padding-bottom: calc(1rem + ${insets.bottom}px) !important;
-      }
-    `,
-  });
-  // Sonner receives its bottom offset as a CSS expression through props.
-  await page.locator("[data-sonner-toaster]").evaluateAll((elements, values) => {
-    for (const element of elements) {
-      const style = element.getAttribute("style") ?? "";
-      element.setAttribute(
-        "style",
-        style.replace(/env\(safe-area-inset-bottom,\s*0px\)/g, `${values.bottom}px`),
-      );
-    }
-  }, insets);
+  const cdp = await page.context().newCDPSession(page);
+  await cdp.send("Emulation.setSafeAreaInsetsOverride", { insets });
 }
 
 async function signIn(page: Page) {

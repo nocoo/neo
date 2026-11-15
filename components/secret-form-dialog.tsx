@@ -5,8 +5,9 @@
  * Includes a color picker for assigning card colors.
  */
 
+import { ToggleGroup, ToggleGroupItem } from "@nocoo/basalt/components/toggle-group";
 import { Check, X } from "lucide-react";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import type { CardThemeKey } from "@/components/secret-card";
 import { resolveThemeKey } from "@/components/secret-card";
 import { Button } from "@/components/ui/button";
@@ -45,6 +46,8 @@ export interface SecretFormDialogProps {
   onCreate?: (input: CreateSecretInput) => Promise<boolean>;
   /** Update handler (edit mode). */
   onUpdate?: (input: UpdateSecretInput) => Promise<boolean>;
+  /** Optional element that should regain focus after the dialog closes. */
+  returnFocusRef?: React.RefObject<HTMLElement | null>;
   /** Whether an operation is in progress. */
   busy?: boolean;
 }
@@ -57,6 +60,7 @@ export function SecretFormDialog({
   onClose,
   onCreate,
   onUpdate,
+  returnFocusRef,
   busy = false,
 }: SecretFormDialogProps) {
   const isEdit = !!secret;
@@ -66,6 +70,7 @@ export function SecretFormDialog({
   const [secretValue, setSecretValue] = useState("");
   const [color, setColor] = useState<string>("");
   const [formError, setFormError] = useState<string | null>(null);
+  const triggerFocusRef = useRef<HTMLElement | null>(null);
 
   // Sync form when opening in edit mode
   useEffect(() => {
@@ -122,7 +127,18 @@ export function SecretFormDialog({
 
   return (
     <Dialog open={open} onOpenChange={(next) => (!next ? onClose() : undefined)}>
-      <DialogContent aria-label={isEdit ? "Edit secret" : "Create secret"}>
+      <DialogContent
+        aria-label={isEdit ? "Edit secret" : "Create secret"}
+        onOpenAutoFocus={() => {
+          triggerFocusRef.current =
+            returnFocusRef?.current ??
+            (document.activeElement instanceof HTMLElement ? document.activeElement : null);
+        }}
+        onCloseAutoFocus={(event) => {
+          event.preventDefault();
+          if (triggerFocusRef.current?.isConnected) triggerFocusRef.current.focus();
+        }}
+      >
         <div className="flex items-center justify-between mb-4">
           <DialogTitle className="text-lg font-semibold">
             {isEdit ? "Edit Secret" : "Add Secret"}
@@ -180,16 +196,19 @@ export function SecretFormDialog({
           {/* Color picker */}
           <fieldset>
             <legend className="block text-sm font-medium mb-2">Color</legend>
-            <div className="flex flex-wrap gap-2">
+            <ToggleGroup
+              type="single"
+              value={color}
+              onValueChange={(value) => value && setColor(value)}
+              className="flex flex-wrap gap-2"
+            >
               {COLOR_OPTIONS.map((opt) => (
-                <button
+                <ToggleGroupItem
                   key={opt.key}
-                  type="button"
-                  aria-pressed={color === opt.key}
+                  value={opt.key}
                   aria-label={opt.label}
-                  onClick={() => setColor(opt.key)}
                   className={cn(
-                    "h-7 w-7 rounded-full border-2 transition-all flex items-center justify-center",
+                    "h-7 w-7 rounded-full border-2 p-0 flex items-center justify-center",
                     opt.swatch,
                     color === opt.key
                       ? "border-basalt-foreground scale-110"
@@ -197,9 +216,9 @@ export function SecretFormDialog({
                   )}
                 >
                   {color === opt.key && <Check className="h-3.5 w-3.5 text-white drop-shadow" />}
-                </button>
+                </ToggleGroupItem>
               ))}
-            </div>
+            </ToggleGroup>
           </fieldset>
 
           {formError && (
