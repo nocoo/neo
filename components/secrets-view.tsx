@@ -109,18 +109,16 @@ export function SecretsView() {
             onKeyDown={handleSearchKeyDown}
             aria-label="Search secrets"
           />
-          {vm.searchQuery && (
-            <InputGroup.Addon align="end">
+          <InputGroup.Addon align="end">
+            {vm.searchQuery && (
               <InputGroup.Button aria-label="Clear search" onClick={() => vm.setSearchQuery("")}>
                 <X className="h-4 w-4" />
               </InputGroup.Button>
-            </InputGroup.Addon>
-          )}
-          <InputGroup.Suffix>
+            )}
             <kbd className="hidden sm:inline-flex h-5 items-center gap-0.5 rounded border border-basalt-border bg-basalt-muted px-1.5 text-[10px] font-medium text-basalt-muted-foreground">
               ⌘K
             </kbd>
-          </InputGroup.Suffix>
+          </InputGroup.Addon>
         </InputGroup>
         <Button
           ref={importTriggerRef}
