@@ -1,1 +1,10 @@
-IgnoredVulns = []
+# OSV Scanner waivers for G2 (scripts/run-security.ts passes this file to every lockfile scan).
+#
+# GHSA-fc5q-39xc-vjpf: picomatch <= 4.0.7 (ReDoS-class, CVSS 8.7, High).
+# Resolved picomatch is 4.0.4, used only through dev tooling (build/lint/test),
+# not by the runtime server. OSV reports no fixed version yet.
+# Re-review by 2026-12-18 and remove this waiver once a fixed picomatch is available.
+[[IgnoredVulns]]
+id = "GHSA-fc5q-39xc-vjpf"
+ignoreUntil = 2026-12-18
+reason = "picomatch <= 4.0.7 has no upstream fix; dev-only transitive dependency. Re-review by 2026-12-18."
