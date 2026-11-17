@@ -2,6 +2,26 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.3.11] - 2026-11-18
+
+### Changed
+
+- Migrate to `@nocoo/basalt` 3.5.1: UI imports come from `@nocoo/basalt/components/*` and `@nocoo/basalt/icons`; the local shadcn copies in `components/ui/` and the `lucide-react` dependency are removed.
+- Bump Next.js 16.4.3 → 16.4.5.
+- Waive the `picomatch` advisory GHSA-fc5q-39xc-vjpf in the G2 scan until 2026-12-18 (no upstream fix; dev-only dependency).
+
+### Fixed
+
+- Prevent mobile search and PWA banner overflow; keep the mobile search input shrinkable.
+- Return focus to the opener after the delete-confirm dialog closes.
+
+## [1.3.10] - 2026-11-10
+
+### Changed
+
+- Bump `@playwright/test` 1.64.1 → 1.65.0, `vitest` and `@vitest/coverage-v8` 5.0.5 → 5.1.0, `tailwindcss` and `@tailwindcss/postcss` 4.3.3 → 4.3.5, `@types/node` 26.6.5 → 26.6.6, `lucide-react` 1.61.0 → 1.70.0, `@biomejs/biome` 2.6.2 → 2.6.6.
+- Run the full L1 pre-commit on every commit.
+
 ## [1.3.9] - 2026-10-31
 
 ### Changed
