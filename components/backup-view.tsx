@@ -9,6 +9,8 @@
  *   3. Restore — upload ZIP + encryption key → POST /api/backup/restore
  */
 
+import { Button } from "@nocoo/basalt/components/button";
+import { Input } from "@nocoo/basalt/components/input";
 import { LayerCard } from "@nocoo/basalt/components/layer-card";
 import {
   AlertTriangle,
@@ -20,10 +22,8 @@ import {
   RefreshCw,
   Send,
   Upload,
-} from "lucide-react";
+} from "@nocoo/basalt/icons";
 import { useRef, useState } from "react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { useDashboardState } from "@/contexts/dashboard-context";
 import { formatFileSize, formatTimeAgo } from "@/models/backy";
 import { useBackupViewModel } from "@/viewmodels/useBackupViewModel";

@@ -4,13 +4,13 @@
  * ToolsView — developer tools for import/export and OTP testing.
  */
 
+import { Button } from "@nocoo/basalt/components/button";
+import { Input } from "@nocoo/basalt/components/input";
 import { LayerCard } from "@nocoo/basalt/components/layer-card";
-import { Download, TestTube, Upload } from "lucide-react";
+import { Download, TestTube, Upload } from "@nocoo/basalt/icons";
 import { useCallback, useRef, useState } from "react";
 import { ExportDialog } from "@/components/export-dialog";
 import { ImportDialog } from "@/components/import-dialog";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { useDevToolsViewModel } from "@/viewmodels/useDevToolsViewModel";
 import { useSecretsViewModel } from "@/viewmodels/useSecretsViewModel";
 

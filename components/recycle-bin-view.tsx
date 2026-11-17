@@ -4,10 +4,6 @@
  * RecycleBinView — client component for browsing and managing soft-deleted secrets.
  */
 
-import { InputGroup } from "@nocoo/basalt/components/input-group";
-import { AlertTriangle, Search, Trash2, Undo2, X } from "lucide-react";
-import { useCallback, useRef, useState } from "react";
-import { CARD_THEMES, resolveThemeKey } from "@/components/secret-card";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -17,8 +13,12 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
-import { Button } from "@/components/ui/button";
+} from "@nocoo/basalt/components/alert-dialog";
+import { Button } from "@nocoo/basalt/components/button";
+import { InputGroup } from "@nocoo/basalt/components/input-group";
+import { AlertTriangle, Search, Trash2, Undo2, X } from "@nocoo/basalt/icons";
+import { useCallback, useRef, useState } from "react";
+import { CARD_THEMES, resolveThemeKey } from "@/components/secret-card";
 import { useHotkey } from "@/hooks/use-hotkey";
 import { cn } from "@/lib/utils";
 import type { Secret } from "@/models/types";

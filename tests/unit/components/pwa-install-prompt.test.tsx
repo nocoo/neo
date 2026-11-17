@@ -7,7 +7,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 // ── Mocks ────────────────────────────────────────────────────────────────
 
-vi.mock("@/components/ui/button", () => ({
+vi.mock("@nocoo/basalt/components/button", () => ({
   Button: ({
     children,
     onClick,
@@ -25,7 +25,7 @@ vi.mock("@/components/ui/button", () => ({
   ),
 }));
 
-vi.mock("lucide-react", () => ({
+vi.mock("@nocoo/basalt/icons", () => ({
   Download: () => <svg data-testid="download-icon" />,
   X: () => <svg data-testid="x-icon" />,
 }));

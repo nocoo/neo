@@ -13,6 +13,9 @@ const nextConfig: NextConfig = {
   output: "standalone",
   distDir: process.env.NEXT_DIST_DIR ?? ".next",
   allowedDevOrigins: ["neo.dev.hexly.ai"],
+  experimental: {
+    optimizePackageImports: ["@nocoo/basalt/icons"],
+  },
   // Suppress Edge Runtime warnings from next-auth's jose dependency.
   // The CompressionStream/DecompressionStream APIs are not actually used
   // at runtime (JWE compression is disabled by default), but Next.js

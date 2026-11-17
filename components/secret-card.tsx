@@ -7,9 +7,9 @@
  * Supports colored backgrounds via user-defined color or deterministic hash.
  */
 
-import { ClipboardCheck, Pencil, Trash2 } from "lucide-react";
+import { Button } from "@nocoo/basalt/components/button";
+import { ClipboardCheck, Pencil, Trash2 } from "@nocoo/basalt/icons";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import type { OtpResult, Secret } from "@/models/types";
 

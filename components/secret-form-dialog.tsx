@@ -5,14 +5,14 @@
  * Includes a color picker for assigning card colors.
  */
 
+import { Button } from "@nocoo/basalt/components/button";
+import { Dialog, DialogContent, DialogTitle } from "@nocoo/basalt/components/dialog";
+import { Input } from "@nocoo/basalt/components/input";
 import { ToggleGroup, ToggleGroupItem } from "@nocoo/basalt/components/toggle-group";
-import { Check, X } from "lucide-react";
+import { Check, X } from "@nocoo/basalt/icons";
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { CardThemeKey } from "@/components/secret-card";
 import { resolveThemeKey } from "@/components/secret-card";
-import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 import type { CreateSecretInput, Secret, UpdateSecretInput } from "@/models/types";
 

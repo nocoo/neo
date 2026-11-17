@@ -78,8 +78,6 @@ export default defineConfig({
         "models/types.ts",
         // Thin wrappers
         "app/api/auth/**",
-        // Shadcn/UI auto-generated primitives
-        "components/ui/",
         // Thin page wrappers (SSR data fetch → context → view, no testable logic)
         "app/page.tsx",
         // Parens (route group syntax) are picomatch metachars — match the

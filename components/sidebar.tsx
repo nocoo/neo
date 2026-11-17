@@ -17,12 +17,16 @@ import {
   SidebarUser as SidebarUserRow,
 } from "@nocoo/basalt";
 import { useSidebar } from "@nocoo/basalt/components/sidebar";
-import { Tooltip, TooltipContent, TooltipTrigger } from "@nocoo/basalt/components/tooltip";
-import { Archive, Key, Settings, Trash2, Wrench } from "lucide-react";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@nocoo/basalt/components/tooltip";
+import { Archive, Key, Settings, Trash2, Wrench } from "@nocoo/basalt/icons";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { handleSignOut } from "@/actions/auth";
-import { TooltipProvider } from "@/components/ui/tooltip";
 import { VERSION } from "@/lib/version";
 
 // ── Navigation data model ──

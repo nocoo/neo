@@ -4,12 +4,22 @@
  * SettingsView — user preferences, encryption key management, and Backy config.
  */
 
+import { Button } from "@nocoo/basalt/components/button";
 import { CodeBlock } from "@nocoo/basalt/components/code";
+import { Input } from "@nocoo/basalt/components/input";
 import { LayerCard } from "@nocoo/basalt/components/layer-card";
-import { Check, Copy, Eye, EyeOff, Key, Link, RefreshCw, Shield, Trash2 } from "lucide-react";
+import {
+  Check,
+  Copy,
+  Eye,
+  EyeOff,
+  Key,
+  Link,
+  RefreshCw,
+  Shield,
+  Trash2,
+} from "@nocoo/basalt/icons";
 import { useEffect, useState } from "react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { useSettingsViewModel } from "@/viewmodels/useSettingsViewModel";
 
 // ── Component ────────────────────────────────────────────────────────────

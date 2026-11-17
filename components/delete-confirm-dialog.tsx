@@ -4,8 +4,6 @@
  * DeleteConfirmDialog — confirmation dialog for secret deletion.
  */
 
-import { AlertTriangle } from "lucide-react";
-import { useRef } from "react";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -15,7 +13,9 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
+} from "@nocoo/basalt/components/alert-dialog";
+import { AlertTriangle } from "@nocoo/basalt/icons";
+import { useRef } from "react";
 
 // ── Types ────────────────────────────────────────────────────────────────
 

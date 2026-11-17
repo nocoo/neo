@@ -5,15 +5,15 @@
  * with all the presentation components.
  */
 
+import { Button } from "@nocoo/basalt/components/button";
 import { InputGroup } from "@nocoo/basalt/components/input-group";
-import { Download, Plus, Search, Upload, X } from "lucide-react";
+import { Download, Plus, Search, Upload, X } from "@nocoo/basalt/icons";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { DeleteConfirmDialog } from "@/components/delete-confirm-dialog";
 import { ExportDialog } from "@/components/export-dialog";
 import { ImportDialog } from "@/components/import-dialog";
 import { SecretFormDialog } from "@/components/secret-form-dialog";
 import { SecretList } from "@/components/secret-list";
-import { Button } from "@/components/ui/button";
 import { useHotkey } from "@/hooks/use-hotkey";
 import type { Secret } from "@/models/types";
 import { useDevToolsViewModel } from "@/viewmodels/useDevToolsViewModel";

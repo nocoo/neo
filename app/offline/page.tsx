@@ -5,8 +5,8 @@
  * and the requested page is not in the service worker cache.
  */
 
-import { RefreshCw, WifiOff } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { Button } from "@nocoo/basalt/components/button";
+import { RefreshCw, WifiOff } from "@nocoo/basalt/icons";
 
 export default function OfflinePage() {
   return (

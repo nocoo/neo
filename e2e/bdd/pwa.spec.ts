@@ -155,7 +155,7 @@ for (const layout of layouts) {
       }
       const sidebar = page.locator("aside");
       await expect(sidebar).toBeVisible();
-      await expect(sidebar).toHaveCSS("width", "260px");
+      await expect(sidebar).toHaveCSS("width", "240px");
       const signOut = await page
         .getByRole("button", { name: "Sign out", exact: true })
         .boundingBox();

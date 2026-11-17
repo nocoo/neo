@@ -8,9 +8,9 @@
  * prompt is triggered.
  */
 
-import { Download, X } from "lucide-react";
+import { Banner } from "@nocoo/basalt/components/banner";
+import { Download, X } from "@nocoo/basalt/icons";
 import { useCallback, useEffect, useState } from "react";
-import { Banner } from "@/components/ui/banner";
 
 // ── Types ────────────────────────────────────────────────────────────────
 

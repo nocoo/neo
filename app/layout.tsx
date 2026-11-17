@@ -1,7 +1,7 @@
+import { Toaster } from "@nocoo/basalt/components/toast";
 import type { Metadata, Viewport } from "next";
 import { DM_Sans, Inter } from "next/font/google";
 import { AppProviders } from "@/components/app-providers";
-import { Toaster } from "@/components/ui/sonner";
 import "./globals.css";
 
 const inter = Inter({

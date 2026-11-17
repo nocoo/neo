@@ -1,5 +1,5 @@
 import { LayerCard } from "@nocoo/basalt/components/layer-card";
-import { Skeleton } from "@/components/ui/skeleton";
+import { Skeleton } from "@/components/skeleton";
 
 /**
  * Loading skeleton for the Settings page.

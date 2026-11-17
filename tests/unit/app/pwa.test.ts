@@ -13,7 +13,7 @@ const { mockToaster } = vi.hoisted(() => ({
 vi.mock("@/components/app-providers", () => ({
   AppProviders: ({ children }: { children: ReactNode }) => children,
 }));
-vi.mock("@/components/ui/sonner", () => ({ Toaster: mockToaster }));
+vi.mock("@nocoo/basalt/components/toast", () => ({ Toaster: mockToaster }));
 
 vi.mock("next/font/google", () => ({
   Inter: () => ({ variable: "--font-inter" }),

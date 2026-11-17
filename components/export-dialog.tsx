@@ -4,7 +4,9 @@
  * ExportDialog — allows users to export secrets in various formats.
  */
 
+import { Button } from "@nocoo/basalt/components/button";
 import { CodeBlock } from "@nocoo/basalt/components/code";
+import { Dialog, DialogContent, DialogTitle } from "@nocoo/basalt/components/dialog";
 import {
   Select,
   SelectContent,
@@ -12,10 +14,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@nocoo/basalt/components/select";
-import { Check, Copy, Download, X } from "lucide-react";
+import { Check, Copy, Download, X } from "@nocoo/basalt/icons";
 import { useCallback, useRef, useState } from "react";
-import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import type { ExportFormat } from "@/models/types";
 
 // ── Types ────────────────────────────────────────────────────────────────

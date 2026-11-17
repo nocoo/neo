@@ -4,12 +4,12 @@
  * ImportDialog — allows users to import secrets from various formats.
  */
 
+import { Button } from "@nocoo/basalt/components/button";
+import { Dialog, DialogContent, DialogTitle } from "@nocoo/basalt/components/dialog";
 import { FileDropzone } from "@nocoo/basalt/components/file-dropzone";
-import { X } from "lucide-react";
+import { InputArea } from "@nocoo/basalt/components/input-area";
+import { X } from "@nocoo/basalt/icons";
 import { useCallback, useRef, useState } from "react";
-import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
-import { InputArea } from "@/components/ui/input-area";
 import type { ImportFormat, ParsedSecret } from "@/models/types";
 
 // ── Types ────────────────────────────────────────────────────────────────
