@@ -56,7 +56,7 @@
     "happy-dom": "21.0.4",
     "husky": "^9.1.7",
     "postcss": "8.5.33",
-    "serwist": "9.5.13",
+    "serwist": "9.5.15",
     "tailwindcss": "^4.3.5",
     "typescript": "^7.0.2",
     "vitest": "5.1.0"
