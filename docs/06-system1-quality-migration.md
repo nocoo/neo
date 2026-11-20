@@ -4,27 +4,28 @@ Neo now follows the System1 quality standard (1.3.0) with base-ci v2026.15 in na
 
 ## Slots
 
-| Slot            | Status | Check                                                            | Stage                                |
-| --------------- | ------ | ---------------------------------------------------------------- | ------------------------------------ |
-| S1 Types        | impl   | Root `tsc`, `tsconfig.scripts.json`, Worker `tsc --noEmit`       | pre-commit, pre-push, CI             |
-| S2 Lint         | impl   | Biome check-only                                                 | pre-commit, pre-push, CI             |
-| S3 Workflow     | impl   | actionlint + full-SHA base-ci pins                               | pre-commit when workflows change, CI |
-| G1 Secrets      | impl   | gitleaks over index snapshot / pushed range / tracked HEAD       | pre-commit, pre-push, CI             |
-| G2 Dependencies | impl   | osv-scanner over `bun.lock` and `worker/bun.lock`                | pre-push, CI                         |
-| B1 Build        | impl   | Next/Webpack/Serwist build                                       | pre-push, CI                         |
-| L1 Unit         | impl   | Root and Worker Vitest coverage                                  | pre-commit, pre-push, CI             |
-| L2 Runtime      | na     | Worker tests are Node + mocked `Env`; no workerd/Miniflare suite | skipped in CI                        |
-| L3 Integration  | impl   | Real HTTP on 17026, memory adapter, 35 tests                     | pre-push, CI                         |
-| L4 E2E          | impl   | Playwright chromium on 27026, 6 tests                            | pre-push, CI                         |
-| P1 Package      | na     | Private root package; nothing is published                       | skipped in CI                        |
-| Z1 Gate         | impl   | Local `gate.ts`; CI `ci-gate.ts`                                 | every gate, CI                       |
+| Slot            | Status | Check                                                                                     | Stage                                |
+| --------------- | ------ | ----------------------------------------------------------------------------------------- | ------------------------------------ |
+| S1 Types        | impl   | Root `tsc`, `tsconfig.scripts.json`, Worker `tsc --noEmit`                                | pre-commit, pre-push, CI             |
+| S2 Lint         | impl   | Biome check-only                                                                          | pre-commit, pre-push, CI             |
+| S3 Workflow     | impl   | actionlint + full-SHA base-ci pins                                                        | pre-commit when workflows change, CI |
+| G1 Secrets      | impl   | gitleaks over index snapshot / pushed range / tracked HEAD                                | pre-commit, pre-push, CI             |
+| G2 Dependencies | impl   | osv-scanner over `bun.lock` and `worker/bun.lock`                                         | pre-push, CI                         |
+| B1 Build        | impl   | Next/Webpack/Serwist build                                                                | pre-push, CI                         |
+| L1 Unit         | impl   | Root and Worker Vitest coverage                                                           | pre-commit, pre-push, CI             |
+| L2 Runtime      | na     | Worker tests are Node + mocked `Env`; no workerd/Miniflare suite                          | skipped in CI                        |
+| L3 Integration  | impl   | Real HTTP on 17026, memory adapter, 35 tests (create → encrypted export → decrypt → TOTP) | pre-push, CI                         |
+| L4 E2E          | impl   | Playwright chromium on 27026, 6 tests                                                     | pre-push, CI                         |
+| P1 Package      | na     | Private root package; nothing is published                                                | skipped in CI                        |
+| Z1 Gate         | impl   | Local `gate.ts`; CI `ci-gate.ts`                                                          | every gate, CI                       |
 
 ## Enforcement
 
 - `scripts/quality/slot-status.json` is the single declaration. The local gate and `ci-gate.ts` both reject missing, duplicate, unknown, or illegally justified slots.
 - `.github/workflows/ci.yml` only calls `quality-slots.yml`. The caller key is `quality`, so the required check is exactly `quality / Z1: Gate`.
 - `ci-gate.ts` requires the exact blocking-job set: 12 slot jobs plus `Hook Self-Test` and `Container Smoke`. Implemented slots must succeed with the same `tested-sha` as `github.sha`; na slots must be skipped.
-- `.github/workflows/release.yml` is `workflow_dispatch` only. It passes the operator's CI run ID to base-ci v2026.15 `deploy-docker` with `required-quality-check: "quality / Z1: Gate"`.
+- `.github/workflows/release.yml` deploys `ghcr.io/nocoo/neo` to jp4 `/data/neo` via base-ci v2026.15 `deploy-docker.yml` (`environment: neo / production`, `required-quality-check: "quality / Z1: Gate"` on the exact SHA). It runs automatically on green `main` push CI (`workflow_run`) or manually via `workflow_dispatch` with a successful main-push CI run ID, then verifies container `/api/live` on `:7026` and `https://neo.hexly.ai/`. Optional Worker deployment is separate (`bun run --cwd worker deploy`); apply D1 schema files before dependent code.
+- `bun run check:hooks` covers 29 self-test cases proving staged and pushed fake-key blocking, per-slot failures, missing tools, preparation and step timeouts, empty runs, lockfile drift, pushed-OID selection, and deleted-ref skipping.
 - L3 and L4 use repo-local lane dist directories, fail on an occupied port, and never kill another process.
 
 ## Evidence
@@ -33,6 +34,10 @@ Measured on macOS arm64, Bun 1.4.4, Node 26.13.0:
 
 | Gate           | Result                                                                                |
 | -------------- | ------------------------------------------------------------------------------------- |
+| S1 Types       | 0.7–1.1s local (root `tsc`, `tsconfig.scripts.json`, Worker `tsc --noEmit`)           |
+| S2 Lint        | 0.2–0.3s local (Biome check-only, 0 error / 0 warning)                                |
+| S3 Workflow    | 0.0s local when workflows are unchanged                                               |
+| G1 Secrets     | 0.3–0.6s local (gitleaks over index snapshot / pushed range / tracked HEAD)           |
 | L1 Web         | Statements 97.57%, branches 95.75%, functions 95.90%, lines 98.60% (threshold 95.5%)  |
 | L1 Worker      | Statements 99.43%, branches 97.65%, functions 100%, lines 99.40% (threshold 95%)      |
 | L3             | 35 tests pass in ~9s                                                                  |
