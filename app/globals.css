@@ -41,3 +41,8 @@
 @utility animate-fade-up {
   animation: fade-up 0.4s ease-out both;
 }
+
+/* Basalt 3.6.0 SidebarDrawer inherits SheetContent's default close button, overlapping SidebarToggle. */
+[data-slot="sidebar-drawer"] > [data-slot="sheet-close"] {
+  display: none;
+}
