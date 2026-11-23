@@ -7,7 +7,7 @@
 import { Button } from "@nocoo/basalt/components/button";
 import { Dialog, DialogContent, DialogTitle } from "@nocoo/basalt/components/dialog";
 import { FileDropzone } from "@nocoo/basalt/components/file-dropzone";
-import { InputArea } from "@nocoo/basalt/components/input-area";
+import { Textarea } from "@nocoo/basalt/components/textarea";
 import { X } from "@nocoo/basalt/icons";
 import { useCallback, useRef, useState } from "react";
 import type { ImportFormat, ParsedSecret } from "@/models/types";
@@ -119,7 +119,7 @@ export function ImportDialog({
             <label htmlFor="import-content" className="block text-sm font-medium mb-1">
               Or paste content
             </label>
-            <InputArea
+            <Textarea
               id="import-content"
               value={content}
               onChange={(e) => setContent(e.target.value)}

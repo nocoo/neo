@@ -62,7 +62,7 @@ export function PwaInstallPrompt() {
       className="fixed bottom-4 left-4 right-4 z-50 mx-auto max-w-md"
     >
       <Banner
-        variant="secondary"
+        tone="neutral"
         size="sm"
         title="Install Neo"
         description="Add Neo to your home screen for quick access and offline support."
