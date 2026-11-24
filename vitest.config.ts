@@ -14,6 +14,8 @@ export default defineConfig({
     include: ["react", "react-dom", "@testing-library/react"],
   },
   test: {
+    allowOnly: false,
+    passWithNoTests: false,
     environment: "happy-dom",
     globals: true,
     setupFiles: ["./tests/setup.ts"],
