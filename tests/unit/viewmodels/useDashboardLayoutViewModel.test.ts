@@ -1,3 +1,4 @@
+// @vitest-environment happy-dom
 /**
  * Dashboard layout ViewModel tests — mobile drawer state.
  * Desktop rail collapse is owned by the Basalt SidebarProvider.

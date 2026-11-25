@@ -1,3 +1,4 @@
+// @vitest-environment happy-dom
 /**
  * Dashboard context tests.
  */

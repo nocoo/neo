@@ -1,3 +1,4 @@
+// @vitest-environment happy-dom
 /**
  * Backup ViewModel tests.
  *

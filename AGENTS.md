@@ -43,7 +43,7 @@ No root `.env.example` exists (uses ignored `.env.local`); Worker uses `worker/w
 Follows `system1-quality`; CI slots and pinned `base-ci` revision live in `.github/workflows/quality-slots.yml` (`quality / Z1: Gate` required on `main`), with `scripts/quality/slot-status.json` as the single declaration. Full slot map and timings: [docs/06-system1-quality-migration.md](docs/06-system1-quality-migration.md). Status vocabulary: `enforced`, `planned`, `manual`, `N/A`.
 
 - **Exceptions**: `L2 Runtime` is `N/A` (mocked-`Env` Worker tests count as `L1`, never `L2`, without workerd/Miniflare); `P1 Package` is `N/A` (private root package, nothing published).
-- **Thresholds**: no focused/skipped tests, hook bypasses, or lowered thresholds; Web coverage >= 95.5% and Worker >= 95% on all four metrics.
+- **Thresholds**: no focused/skipped tests, hook bypasses, or lowered thresholds; Web coverage >= 95.5% (pure View components/pages excluded in `vitest.config.ts`) and Worker >= 95% on all four metrics.
 - **Pre-commit (`.husky/`, via `prepare`)**: runs `S1/S2/G1/L1` (plus `S3` on staged workflows) on an isolated index snapshot (target 15s, hard 30s).
 - **Pre-push (`.husky/`)**: runs `S1/S2/G1/L1/G2/B1/L3/L4` plus per-ref G1 ranges on exported pushed OIDs (target 150s, hard 300s).
 

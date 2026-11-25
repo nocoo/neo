@@ -1,3 +1,4 @@
+// @vitest-environment happy-dom
 /**
  * Settings ViewModel tests.
  */
