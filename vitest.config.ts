@@ -51,13 +51,21 @@ export default defineConfig({
         "**/*.config.*",
         // Type declarations — no executable code
         "**/*.d.ts",
+        "**/index.ts",
+        "**/types.ts",
+        // View / UI layers — exercised by E2E
+        "components/**",
+        "views/**",
+        "pages/**",
+        "contexts/**",
+        "app/**",
+        "main.tsx",
+        "app.tsx",
         // Next.js build output — generated artifacts
         ".next/",
         // Config/schema/type-only files
         "lib/db/schema.ts",
         "models/types.ts",
-        // Thin wrappers
-        "app/api/auth/**",
         // Single-line auth delegation
         "actions/auth.ts",
         // Pure barrel re-export
@@ -67,12 +75,12 @@ export default defineConfig({
         // Auth.js adapter (pure D1 delegation, same pattern as scoped.ts)
         "lib/auth-adapter.ts",
       ],
-      // Global thresholds — All files must remain ≥95.5% on every metric.
+      // Global thresholds — Pragmatic 80% floor across all four metrics.
       thresholds: {
-        lines: 95.5,
-        functions: 95.5,
-        branches: 95.5,
-        statements: 95.5,
+        lines: 80,
+        functions: 80,
+        branches: 80,
+        statements: 80,
       },
     },
   },

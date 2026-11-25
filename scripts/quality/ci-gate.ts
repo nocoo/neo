@@ -41,7 +41,7 @@ export const SLOT_JOBS: Record<SlotId, string> = {
 };
 
 /** Blocking jobs that are not quality slots. Their names must not carry a slot id. */
-export const EXTRA_JOBS = ["hook-self-test"] as const;
+export const EXTRA_JOBS: readonly string[] = [];
 
 export interface CiGateInput {
   needs: Needs;

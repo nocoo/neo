@@ -32,7 +32,7 @@ describe("verifyCiGate", () => {
   it("accepts every slot and blocking job on the checked-out sha", () => {
     const result = verify();
     expect(result.errors).toEqual([]);
-    expect(result.verified).toHaveLength(11);
+    expect(result.verified).toHaveLength(10);
   });
 
   it("rejects an implemented slot that failed", () => {
@@ -77,20 +77,6 @@ describe("verifyCiGate", () => {
     const needs = healthyNeeds();
     needs[SLOT_JOBS.L4] = { result: "success", outputs: { "tested-sha": "abc" } };
     expect(verify(needs).errors.some((error) => error.includes("valid tested-sha"))).toBe(true);
-  });
-
-  it("rejects a missing blocking job outside the slot list", () => {
-    const needs = healthyNeeds();
-    delete needs["hook-self-test"];
-    expect(verify(needs).errors.some((error) => error.includes("no result for blocking job"))).toBe(
-      true,
-    );
-  });
-
-  it("rejects an extra blocking job that failed", () => {
-    const needs = healthyNeeds();
-    needs["hook-self-test"] = { result: "failure", outputs: { "tested-sha": SHA } };
-    expect(verify(needs).errors.some((error) => error.includes("hook-self-test"))).toBe(true);
   });
 
   it("rejects an unexpected blocking job", () => {

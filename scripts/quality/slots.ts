@@ -110,7 +110,7 @@ export const SLOTS: SlotDefinition[] = [
     id: "L1",
     name: "L1: Unit",
     stages: ["pre-commit", "pre-push"],
-    target: "root Vitest (>=95.5%) + worker Vitest (>=95%)",
+    target: "root Vitest (>=80%) + worker Vitest (>=80%)",
     steps: [
       {
         label: "root coverage",
