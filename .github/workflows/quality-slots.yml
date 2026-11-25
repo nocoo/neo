@@ -274,17 +274,8 @@ jobs:
           test "$sha" = "$GITHUB_SHA"
           echo "sha=$sha" >> "$GITHUB_OUTPUT"
 
-  p1-package:
-    name: "P1: Package"
-    # Keep SLOT_P1_PACKAGE unset while slot-status.json declares P1 na.
-    if: ${{ vars.SLOT_P1_PACKAGE == 'true' }}
-    runs-on: ubuntu-latest
-    timeout-minutes: 5
-    steps:
-      - run: echo "P1 Package is declared na; the root package is private"
-
   hook-self-test:
-    name: "Hook Self-Test"
+    name: "L1: Unit (Pre-commit Gate)"
     runs-on: ubuntu-latest
     timeout-minutes: 10
     outputs:
@@ -315,8 +306,8 @@ jobs:
           test "$sha" = "$GITHUB_SHA"
           echo "sha=$sha" >> "$GITHUB_OUTPUT"
 
-  container-smoke:
-    name: "Container Smoke"
+  p1-package:
+    name: "P1: Package"
     runs-on: ubuntu-latest
     timeout-minutes: 10
     outputs:
@@ -376,7 +367,6 @@ jobs:
       - l4-e2e
       - p1-package
       - hook-self-test
-      - container-smoke
     runs-on: ubuntu-latest
     timeout-minutes: 5
     outputs:

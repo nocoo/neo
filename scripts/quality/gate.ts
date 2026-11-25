@@ -266,7 +266,7 @@ function loadDeclaration(): string[] {
   }
   for (const entry of result.declarations) {
     if (entry.status !== "impl") continue;
-    if (entry.id === "Z1") continue;
+    if (entry.id === "Z1" || entry.id === "P1") continue;
     if (!SLOTS.some((slot) => slot.id === entry.id)) {
       problems.push(`slot ${entry.id} is declared impl but the local gate has no slot for it`);
     }

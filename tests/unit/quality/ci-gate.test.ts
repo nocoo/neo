@@ -5,9 +5,7 @@ import { SLOT_IDS, type SlotDeclaration } from "../../../scripts/quality/z1";
 const SHA = "a".repeat(40);
 
 const declarations: SlotDeclaration[] = SLOT_IDS.map((id) =>
-  id === "L2" || id === "P1"
-    ? { id, status: "na", reason: "not applicable" }
-    : { id, status: "impl" },
+  id === "L2" ? { id, status: "na", reason: "not applicable" } : { id, status: "impl" },
 );
 
 function healthyNeeds(): Needs {
@@ -83,7 +81,7 @@ describe("verifyCiGate", () => {
 
   it("rejects a missing blocking job outside the slot list", () => {
     const needs = healthyNeeds();
-    delete needs["container-smoke"];
+    delete needs["hook-self-test"];
     expect(verify(needs).errors.some((error) => error.includes("no result for blocking job"))).toBe(
       true,
     );

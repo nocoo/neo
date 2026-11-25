@@ -185,11 +185,6 @@ export const NOT_APPLICABLE: { id: string; name: string; reason: string }[] = [
     reason:
       "worker tests run in Node with a mocked Env binding (L1 evidence); no workerd or Miniflare runtime suite exists",
   },
-  {
-    id: "P1",
-    name: "P1: Package",
-    reason: "root package.json is private and nothing is published to npm",
-  },
 ];
 
 export function slotsForStage(stage: Stage): SlotDefinition[] {

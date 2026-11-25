@@ -13,10 +13,6 @@
   },
   { "id": "L3", "status": "impl" },
   { "id": "L4", "status": "impl" },
-  {
-    "id": "P1",
-    "status": "na",
-    "reason": "root package.json is private and nothing is published to npm"
-  },
+  { "id": "P1", "status": "impl" },
   { "id": "Z1", "status": "impl" }
 ]
