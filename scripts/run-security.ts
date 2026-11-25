@@ -14,7 +14,7 @@ import { checkTool } from "./quality/tools";
 
 const root = resolve(import.meta.dir, "..");
 const LOCKFILES = ["bun.lock", "worker/bun.lock"];
-const config = join(root, ".osv-scanner.toml");
+const config = join(root, "osv-scanner.toml");
 
 console.log("=== G2: Dependencies ===\n");
 

@@ -1,4 +1,4 @@
-# System0 quality slots — native mode (base-ci v2026.15).
+# System0 quality slots — native mode (base-ci v2026.17).
 # Job display names are exactly `<ID>: <Name>`; ci.yml's `quality` caller
 # renders `quality / Z1: Gate`, the single required branch-protection check.
 name: Quality slots
@@ -24,7 +24,7 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
-      - uses: nocoo/base-ci/.github/actions/setup-js@6424d395d36a815d931f10e557762eb635d511c0 # v2026.16
+      - uses: nocoo/base-ci/.github/actions/setup-js@dc858360aa7812db61fd9d825943e4efd4dcd0e7 # v2026.17
         with:
           package-manager: bun
           runtime-version: ${{ env.BUN_VERSION }}
@@ -51,7 +51,7 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
-      - uses: nocoo/base-ci/.github/actions/setup-js@6424d395d36a815d931f10e557762eb635d511c0 # v2026.16
+      - uses: nocoo/base-ci/.github/actions/setup-js@dc858360aa7812db61fd9d825943e4efd4dcd0e7 # v2026.17
         with:
           package-manager: bun
           runtime-version: ${{ env.BUN_VERSION }}
@@ -77,19 +77,7 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
-      - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
-        with:
-          bun-version: ${{ env.BUN_VERSION }}
-      - name: Install verified actionlint
-        run: |
-          curl --fail --silent --show-error --location --retry 3 \
-            https://github.com/rhysd/actionlint/releases/download/v1.7.12/actionlint_1.7.12_linux_amd64.tar.gz \
-            -o "$RUNNER_TEMP/actionlint.tar.gz"
-          echo "8aca8db96f1b94770f1b0d72b6dddcb1ebb8123cb3712530b08cc387b349a3d8  $RUNNER_TEMP/actionlint.tar.gz" | sha256sum --check
-          tar -xzf "$RUNNER_TEMP/actionlint.tar.gz" -C "$RUNNER_TEMP" actionlint
-          echo "$RUNNER_TEMP" >> "$GITHUB_PATH"
-      - name: Lint workflows and pinned base-ci references
-        run: bun run scripts/quality/workflow-lint.ts
+      - uses: nocoo/base-ci/.github/actions/lint-workflows@dc858360aa7812db61fd9d825943e4efd4dcd0e7 # v2026.17
       - name: Record tested sha
         id: record-sha
         if: always()
@@ -108,12 +96,8 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
-      - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
-        with:
-          bun-version: ${{ env.BUN_VERSION }}
-      - uses: nocoo/base-ci/.github/actions/setup-security-scanners@6424d395d36a815d931f10e557762eb635d511c0 # v2026.16
-      - name: Scan checked-out content for secrets
-        run: bun run scripts/quality/secrets.ts --content
+          fetch-depth: 1
+      - uses: nocoo/base-ci/.github/actions/scan-secrets@dc858360aa7812db61fd9d825943e4efd4dcd0e7 # v2026.17
       - name: Record tested sha
         id: record-sha
         if: always()
@@ -132,12 +116,11 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
-      - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
+      - uses: nocoo/base-ci/.github/actions/scan-dependencies@dc858360aa7812db61fd9d825943e4efd4dcd0e7 # v2026.17
         with:
-          bun-version: ${{ env.BUN_VERSION }}
-      - uses: nocoo/base-ci/.github/actions/setup-security-scanners@6424d395d36a815d931f10e557762eb635d511c0 # v2026.16
-      - name: Scan root and worker lockfiles
-        run: bun run test:security
+          lockfiles: |
+            bun.lock
+            worker/bun.lock
       - name: Record tested sha
         id: record-sha
         if: always()
@@ -156,7 +139,7 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
-      - uses: nocoo/base-ci/.github/actions/setup-js@6424d395d36a815d931f10e557762eb635d511c0 # v2026.16
+      - uses: nocoo/base-ci/.github/actions/setup-js@dc858360aa7812db61fd9d825943e4efd4dcd0e7 # v2026.17
         with:
           package-manager: bun
           runtime-version: ${{ env.BUN_VERSION }}
@@ -182,7 +165,7 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
-      - uses: nocoo/base-ci/.github/actions/setup-js@6424d395d36a815d931f10e557762eb635d511c0 # v2026.16
+      - uses: nocoo/base-ci/.github/actions/setup-js@dc858360aa7812db61fd9d825943e4efd4dcd0e7 # v2026.17
         with:
           package-manager: bun
           runtime-version: ${{ env.BUN_VERSION }}
@@ -193,6 +176,50 @@ jobs:
         run: bun run test:coverage
       - name: Worker coverage
         run: bun run --cwd worker test:coverage
+      - name: Record tested sha
+        id: record-sha
+        if: always()
+        run: |
+          sha=$(git rev-parse HEAD)
+          test "$sha" = "$GITHUB_SHA"
+          echo "sha=$sha" >> "$GITHUB_OUTPUT"
+
+  hook-self-test:
+    name: "L1: Unit (Pre-commit Gate)"
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    outputs:
+      tested-sha: ${{ steps.record-sha.outputs.sha }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
+        with:
+          bun-version: ${{ env.BUN_VERSION }}
+      - name: Install verified scanners and actionlint
+        run: |
+          set -euo pipefail
+          curl --fail --silent --show-error --location --retry 3 \
+            "https://github.com/gitleaks/gitleaks/releases/download/v8.30.1/gitleaks_8.30.1_linux_x64.tar.gz" \
+            -o "$RUNNER_TEMP/gitleaks.tar.gz"
+          echo "551f6fc83ea457d62a0d98237cbad105af8d557003051f41f3e7ca7b3f2470eb  $RUNNER_TEMP/gitleaks.tar.gz" | sha256sum --check
+          tar -xzf "$RUNNER_TEMP/gitleaks.tar.gz" -C "$RUNNER_TEMP" gitleaks
+          chmod +x "$RUNNER_TEMP/gitleaks"
+          curl --fail --silent --show-error --location --retry 3 \
+            "https://github.com/google/osv-scanner/releases/download/v2.5.1/osv-scanner_linux_amd64" \
+            -o "$RUNNER_TEMP/osv-scanner"
+          echo "f9f25499a2c8cc367b3af45df2ea7eeca7fbccceab9c35079968f4b3652194be  $RUNNER_TEMP/osv-scanner" | sha256sum --check
+          chmod +x "$RUNNER_TEMP/osv-scanner"
+          curl --fail --silent --show-error --location --retry 3 \
+            "https://github.com/rhysd/actionlint/releases/download/v1.7.12/actionlint_1.7.12_linux_amd64.tar.gz" \
+            -o "$RUNNER_TEMP/actionlint.tar.gz"
+          echo "8aca8db96f1b94770f1b0d72b6dddcb1ebb8123cb3712530b08cc387b349a3d8  $RUNNER_TEMP/actionlint.tar.gz" | sha256sum --check
+          tar -xzf "$RUNNER_TEMP/actionlint.tar.gz" -C "$RUNNER_TEMP" actionlint
+          rm -f "$RUNNER_TEMP/gitleaks.tar.gz" "$RUNNER_TEMP/actionlint.tar.gz"
+          echo "$RUNNER_TEMP" >> "$GITHUB_PATH"
+      - name: Prove every local gate blocks what it must
+        run: bun run check:hooks
       - name: Record tested sha
         id: record-sha
         if: always()
@@ -221,7 +248,7 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
-      - uses: nocoo/base-ci/.github/actions/setup-js@6424d395d36a815d931f10e557762eb635d511c0 # v2026.16
+      - uses: nocoo/base-ci/.github/actions/setup-js@dc858360aa7812db61fd9d825943e4efd4dcd0e7 # v2026.17
         with:
           package-manager: bun
           runtime-version: ${{ env.BUN_VERSION }}
@@ -247,7 +274,7 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
-      - uses: nocoo/base-ci/.github/actions/setup-js@6424d395d36a815d931f10e557762eb635d511c0 # v2026.16
+      - uses: nocoo/base-ci/.github/actions/setup-js@dc858360aa7812db61fd9d825943e4efd4dcd0e7 # v2026.17
         with:
           package-manager: bun
           runtime-version: ${{ env.BUN_VERSION }}
@@ -266,38 +293,6 @@ jobs:
             test-results
           if-no-files-found: error
           retention-days: 14
-      - name: Record tested sha
-        id: record-sha
-        if: always()
-        run: |
-          sha=$(git rev-parse HEAD)
-          test "$sha" = "$GITHUB_SHA"
-          echo "sha=$sha" >> "$GITHUB_OUTPUT"
-
-  hook-self-test:
-    name: "L1: Unit (Pre-commit Gate)"
-    runs-on: ubuntu-latest
-    timeout-minutes: 10
-    outputs:
-      tested-sha: ${{ steps.record-sha.outputs.sha }}
-    steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          persist-credentials: false
-      - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
-        with:
-          bun-version: ${{ env.BUN_VERSION }}
-      - uses: nocoo/base-ci/.github/actions/setup-security-scanners@6424d395d36a815d931f10e557762eb635d511c0 # v2026.16
-      - name: Install verified actionlint
-        run: |
-          curl --fail --silent --show-error --location --retry 3 \
-            https://github.com/rhysd/actionlint/releases/download/v1.7.12/actionlint_1.7.12_linux_amd64.tar.gz \
-            -o "$RUNNER_TEMP/actionlint.tar.gz"
-          echo "8aca8db96f1b94770f1b0d72b6dddcb1ebb8123cb3712530b08cc387b349a3d8  $RUNNER_TEMP/actionlint.tar.gz" | sha256sum --check
-          tar -xzf "$RUNNER_TEMP/actionlint.tar.gz" -C "$RUNNER_TEMP" actionlint
-          echo "$RUNNER_TEMP" >> "$GITHUB_PATH"
-      - name: Prove every local gate blocks what it must
-        run: bun run check:hooks
       - name: Record tested sha
         id: record-sha
         if: always()
