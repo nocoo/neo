@@ -1,6 +1,6 @@
 # System1 Quality Migration
 
-Neo now follows the System1 quality standard (1.3.0) with base-ci v2026.18 in native mode. The authoritative runtime contract is [AGENTS.md](../AGENTS.md); this document records the slot mapping, evidence, and remaining gaps.
+Neo now follows the System1 quality standard (1.3.0) with base-ci v2026.19 in native mode. The authoritative runtime contract is [AGENTS.md](../AGENTS.md); this document records the slot mapping, evidence, and remaining gaps.
 
 ## Slots
 
@@ -24,7 +24,7 @@ Neo now follows the System1 quality standard (1.3.0) with base-ci v2026.18 in na
 - `scripts/quality/slot-status.json` is the single declaration. The local gate rejects missing, duplicate, unknown, or illegally justified slots.
 - `.github/workflows/ci.yml` only calls `quality-slots.yml`. The caller key is `quality`, so the required check is exactly `quality / Z1: Gate`.
 - `z1-gate` requires the exact blocking-job set: 11 slot jobs in `needs`. Implemented slots must succeed with the same `tested-sha` as `github.sha`; na slots must be skipped.
-- `.github/workflows/release.yml` deploys `ghcr.io/nocoo/neo` to jp4 `/data/neo` via base-ci v2026.18 `deploy-docker.yml` (`environment: neo / production`, `required-quality-check: "quality / Z1: Gate"` on the exact SHA). It runs automatically on green `main` push CI (`workflow_run`) or manually via `workflow_dispatch` with a successful main-push CI run ID, then verifies container `/api/live` on `:7026` and `https://neo.hexly.ai/`. Optional Worker deployment is separate (`bun run --cwd worker deploy`); apply D1 schema files before dependent code.
+- `.github/workflows/release.yml` deploys `ghcr.io/nocoo/neo` to jp4 `/data/neo` via base-ci v2026.19 `deploy-docker.yml` (`environment: neo / production`, `required-quality-check: "quality / Z1: Gate"` on the exact SHA). It runs automatically on green `main` push CI (`workflow_run`) or manually via `workflow_dispatch` with a successful main-push CI run ID, then verifies container `/api/live` on `:7026` and `https://neo.hexly.ai/`. Optional Worker deployment is separate (`bun run --cwd worker deploy`); apply D1 schema files before dependent code.
 - `bun run check:hooks` covers 29 self-test cases proving staged and pushed fake-key blocking, per-slot failures, missing tools, preparation and step timeouts, empty runs, lockfile drift, pushed-OID selection, and deleted-ref skipping.
 - L3 and L4 use repo-local lane dist directories, fail on an occupied port, and never kill another process.
 
