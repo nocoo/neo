@@ -1,4 +1,4 @@
-# System0 quality slots — native mode (base-ci v2026.17).
+# System0 quality slots — native mode (base-ci v2026.18).
 # Keep the job key `quality` without a display name so every slot renders as
 # `quality / <ID>: <Name>` and branch protection needs only `quality / Z1: Gate`.
 name: CI
