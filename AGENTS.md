@@ -35,12 +35,12 @@ No root `.env.example` exists (uses ignored `.env.local`); Worker uses `worker/w
 - Preserve Next/Webpack/Serwist compatibility; run `bun run build` after TS, Next, or bundler upgrades because typecheck alone misses path resolution and production output.
 - Preserve trigger-only effect dependencies during lint edits (`biome-ignore` when needed); install `worker/` dependencies whenever checks cross packages.
 - Local hooks validate index or pushed-OID snapshots (never working tree), never kill foreign processes, and keep real fake-key injection in `bun run check:hooks` (never allowlists).
-- `.github/workflows/release.yml` deploys `ghcr.io/nocoo/neo` to jp4 `/data/neo` via `workflow_run` (green `main` CI) or `workflow_dispatch` (`quality / Z1: Gate`).
+- `.github/workflows/pipeline.yml` runs `quality` (`quality-slots.yml`) then D1–D5 Docker CD (`neo / production`, `ghcr.io/nocoo/neo` -> jp4 `/data/neo`) on `main` push or `workflow_dispatch` (`deploy=true`).
 - No root release script; apply D1 schema before dependent code, verify `/api/live` after deploy, and deploy `worker/` separately.
 
 ## Quality & Local Gates
 
-Follows `system1-quality`; CI slots and pinned `base-ci` revision live in `.github/workflows/quality-slots.yml` (`quality / Z1: Gate` required on `main`), with `scripts/quality/slot-status.json` as the single declaration. Full slot map and timings: [docs/06-system1-quality-migration.md](docs/06-system1-quality-migration.md). Status vocabulary: `enforced`, `planned`, `manual`, `N/A`.
+Follows `system1-quality`; CI slots and pinned `base-ci` (`v2026.24`) live in `.github/workflows/pipeline.yml` and `.github/workflows/quality-slots.yml` (`quality / Z1: Gate` required on `main`), with `scripts/quality/slot-status.json` as the single declaration. Full slot map and timings: [docs/06-system1-quality-migration.md](docs/06-system1-quality-migration.md). Status vocabulary: `enforced`, `planned`, `manual`, `N/A`.
 
 - **Exceptions**: `L2 Runtime` is `N/A` (mocked-`Env` Worker tests count as `L1`, never `L2`, without workerd/Miniflare). `P1 Package` verifies the production Docker container (`/api/live`).
 - **Thresholds**: no focused/skipped tests, hook bypasses, or lowered below-floor thresholds; Web coverage >= 80% (pure View components/pages excluded in `vitest.config.ts`) and Worker >= 80% on all four metrics.

@@ -245,7 +245,7 @@ function buildFixture(): void {
     join(fixture, "worker", "package.json"),
     `${JSON.stringify(WORKER_PACKAGE, null, 2)}\n`,
   );
-  writeFileSync(join(fixture, ".github", "workflows", "ci.yml"), WORKFLOW);
+  writeFileSync(join(fixture, ".github", "workflows", "pipeline.yml"), WORKFLOW);
   writeFileSync(join(fixture, ".gitignore"), "node_modules\ncoverage\n");
 }
 
@@ -534,9 +534,9 @@ async function main(): Promise<void> {
   );
 
   const withoutActionlint = buildBinDir("bin-no-actionlint", ["actionlint"]);
-  const workflowPath = join(fixture, ".github", "workflows", "ci.yml");
+  const workflowPath = join(fixture, ".github", "workflows", "pipeline.yml");
   writeFileSync(workflowPath, `${WORKFLOW}# actionlint probe\n`);
-  await git(["add", ".github/workflows/ci.yml"]);
+  await git(["add", ".github/workflows/pipeline.yml"]);
   const missingActionlintResult = await hook("pre-commit", {
     env: { PATH: `${withoutActionlint}:/usr/bin:/bin` },
   });
@@ -545,7 +545,7 @@ async function main(): Promise<void> {
     missingActionlintResult.code !== 0 && missingActionlintResult.output.includes("actionlint"),
     tail(missingActionlintResult.output),
   );
-  await git(["restore", "--staged", "--worktree", ".github/workflows/ci.yml"]);
+  await git(["restore", "--staged", "--worktree", ".github/workflows/pipeline.yml"]);
 
   // ── a timeout blocks ───────────────────────────────────────────────────────
   writeStub("typecheck", "sleep");

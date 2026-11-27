@@ -117,7 +117,7 @@ function runtimeVersion(text: string): string | undefined {
 
 /** Bun version the CI workflow pins for this repository. */
 export function declaredRuntimeVersion(root: string): string | undefined {
-  for (const name of ["quality-slots.yml", "ci.yml"]) {
+  for (const name of ["quality-slots.yml", "pipeline.yml"]) {
     const path = join(root, ".github", "workflows", name);
     if (!existsSync(path)) continue;
     const version = runtimeVersion(readFileSync(path, "utf-8"));
@@ -137,7 +137,7 @@ export async function checkBun(root: string): Promise<ToolCheck> {
     return {
       name: "bun",
       ok: false,
-      detail: `${actual}, but no runtime-version is declared in .github/workflows/quality-slots.yml or ci.yml`,
+      detail: `${actual}, but no runtime-version is declared in .github/workflows/quality-slots.yml or pipeline.yml`,
     };
   }
   const sameMinor =
