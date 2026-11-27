@@ -15,6 +15,10 @@ test-results
 playwright-report
 blob-report
 tests
+e2e
+**/*.test.*
+**/*.spec.*
+**/*.tsbuildinfo
 
 # Development
 .env
@@ -29,12 +33,20 @@ worker
 *.swp
 *.swo
 
-# Git
+# Git & CI
 .git
+.github
 .gitignore
+.husky
 
 # Misc
+docs
+assets
+.gitleaks.toml
+biome.json
+osv-scanner.toml
 *.md
+**/*.md
 *.pem
 .DS_Store
 .turbo
