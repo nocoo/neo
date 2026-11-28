@@ -54,6 +54,7 @@ export default defineConfig({
         "**/index.ts",
         "**/types.ts",
         // View / UI layers — exercised by E2E
+        "**/*.tsx",
         "components/**",
         "views/**",
         "pages/**",
@@ -75,12 +76,12 @@ export default defineConfig({
         // Auth.js adapter (pure D1 delegation, same pattern as scoped.ts)
         "lib/auth-adapter.ts",
       ],
-      // Global thresholds — Pragmatic 80% floor across all four metrics.
+      // Global thresholds — 90% statements/functions/lines, 85% branches.
       thresholds: {
-        lines: 80,
-        functions: 80,
-        branches: 80,
-        statements: 80,
+        statements: 90,
+        lines: 90,
+        functions: 90,
+        branches: 85,
       },
     },
   },

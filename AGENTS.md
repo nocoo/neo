@@ -14,8 +14,8 @@ bun run dev                        # https://neo.dev.hexly.ai -> 127.0.0.1:7026
 bun run typecheck                  # S1: root tsc + tsconfig.scripts.json + worker tsc
 bun run lint                       # S2: Biome check-only, 0 warnings
 bun run build                      # B1: Next/Webpack/Serwist production output
-bun run test:coverage              # L1 Web >= 80% all 4 metrics (subsets: test:unit:coverage, test:api)
-bun run --cwd worker test:coverage # L1 Worker >= 80% all 4 metrics (fast: --cwd worker test)
+bun run test:coverage              # L1 Web >= 90/85% (st/fn/ln 90%, br 85%) (subsets: test:unit:coverage, test:api)
+bun run --cwd worker test:coverage # L1 Worker >= 90/85% (st/fn/ln 90%, br 85%) (fast: --cwd worker test)
 bun run test:e2e                   # L3: real HTTP on 17026 (memory adapter; export -> decrypt -> TOTP)
 bunx playwright install --with-deps chromium
 bun run test:e2e:pw                # L4: Playwright Chromium on 27026
@@ -43,7 +43,7 @@ No root `.env.example` exists (uses ignored `.env.local`); Worker uses `worker/w
 Follows `system1-quality`; CI slots and pinned `base-ci` (`v2026.24`) live in `.github/workflows/pipeline.yml` and `.github/workflows/quality-slots.yml` (`quality / Z1: Gate` required on `main`), with `scripts/quality/slot-status.json` as the single declaration. Full slot map and timings: [docs/06-system1-quality-migration.md](docs/06-system1-quality-migration.md). Status vocabulary: `enforced`, `planned`, `manual`, `N/A`.
 
 - **Exceptions**: `L2 Runtime` is `N/A` (mocked-`Env` Worker tests count as `L1`, never `L2`, without workerd/Miniflare). `P1 Package` verifies the production Docker container (`/api/live`).
-- **Thresholds**: no focused/skipped tests, hook bypasses, or lowered below-floor thresholds; Web coverage >= 80% (pure View components/pages excluded in `vitest.config.ts`) and Worker >= 80% on all four metrics.
+- **Thresholds**: no focused/skipped tests, hook bypasses, or lowered below-floor thresholds; Web coverage >= 90% st/fn/ln, >= 85% br (pure View components/pages excluded in `vitest.config.ts`) and Worker >= 90% st/fn/ln, >= 85% br.
 - **Pre-commit (`.husky/`, via `prepare`)**: runs `S1/S2/G1/L1` (plus `S3` on staged workflows) on an isolated index snapshot (target 15s, hard 30s).
 - **Pre-push (`.husky/`)**: runs `S1/S2/G1/L1/G2/B1/L3/L4` plus per-ref G1 ranges on exported pushed OIDs (target 150s, hard 300s).
 
